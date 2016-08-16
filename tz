@@ -1,0 +1,55 @@
+
+Notation:
+
+{x} == zero or more x
+[x] == zero or one x
+
+grammar ::= statement { statement }
+
+statement ::= tokenDefinition | ruleDefinition
+
+tokenDefinition ::= anyToken '=' [STATE] STRING [ STATE ] ';'
+   
+anyToken := TOKEN | IGNORED
+   
+ruleDefinition ::= NT '=' { category } { | {category}}';'
+
+macroDefinition := MACRO = STRING
+
+category ::= TOKEN | NT | LITERAL
+    
+TOKEN = "[A-Z][A-Za-z0-9_]*"
+
+IGNORED = "[$][A-Z][A-Za-z0-9_]*"    
+
+NT = "[a-z][A-Za-z0-9_]*"
+
+STATE = "@[A-Z][A-Za-z0-9_]"
+
+STRING = "\"([^\"]|\\\")\""
+
+LITERAL == "'([^']|\\')'";
+
+
+
+Regexp formal syntax
+
+start := regexp
+
+regexp :== chain {'|' chain}
+
+chain :== repeated { repeated }
+
+repeated :== primitive [ repetitions ] 
+
+repetitions :=  '*' | '?' | '+'
+ 
+primitive := set | '(' regexp ')'
+
+set := CHARACTER_NOT_DOT | '.'  | '[' ['^'] [']'] { CHARACTER } ']'
+
+CHARACTER := "[^\n\r\t\v\\]|(\\.)"
+
+CHARACTER_NOT_DOT := "[^\n\r\t\v\\.]|(\\.)"
+ 
+ 
