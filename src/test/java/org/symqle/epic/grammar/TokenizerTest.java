@@ -12,67 +12,67 @@ import java.io.StringReader;
 public class TokenizerTest extends TestCase {
 
     public void testAll() throws Exception {
-        Reader reader = new StringReader("MYTOKEN nonTerminal @MYMACRO $WHITESPACE \"regexp\" \n'literal'");
+        Reader reader = new StringReader("MYTOKEN nonTerminal @MYSTATE $WHITESPACE \"regexp\" \n'literal'");
         Tokenizer tokenizer = new Tokenizer(reader);
-        Assert.assertFalse(tokenizer.take("NT").getName().equals("NT"));
+        Assert.assertFalse(tokenizer.take(TokenType.NT).getName().equals(TokenType.NT));
 
-        Token token = tokenizer.take("TOKEN");
-        Assert.assertEquals("TOKEN", token.getName());
+        Token token = tokenizer.take(TokenType.TOKEN);
+        Assert.assertEquals(TokenType.TOKEN, token.getName());
         Assert.assertEquals("MYTOKEN", token.getValue());
         System.out.println(token);
 
-        token = tokenizer.take("NT");
-        Assert.assertEquals("NT", token.getName());
+        token = tokenizer.take(TokenType.NT);
+        Assert.assertEquals(TokenType.NT, token.getName());
         Assert.assertEquals("nonTerminal", token.getValue());
         System.out.println(token);
 
-        token = tokenizer.take("MACRO");
-        Assert.assertEquals("MACRO", token.getName());
-        Assert.assertEquals("@MYMACRO", token.getValue());
+        token = tokenizer.take(TokenType.STATE);
+        Assert.assertEquals(TokenType.STATE, token.getName());
+        Assert.assertEquals("@MYSTATE", token.getValue());
 
-        token = tokenizer.take("IGNORED");
-        Assert.assertEquals("IGNORED", token.getName());
+        token = tokenizer.take(TokenType.IGNORED);
+        Assert.assertEquals(TokenType.IGNORED, token.getName());
         Assert.assertEquals("$WHITESPACE", token.getValue());
 
-        token = tokenizer.take("REGEXP");
-        Assert.assertEquals("REGEXP", token.getName());
+        token = tokenizer.take(TokenType.REGEXP);
+        Assert.assertEquals(TokenType.REGEXP, token.getName());
         Assert.assertEquals("\"regexp\"", token.getValue());
 
-        token = tokenizer.take("LITERAL");
-        Assert.assertEquals("LITERAL", token.getName());
+        token = tokenizer.take(TokenType.LITERAL);
+        Assert.assertEquals(TokenType.LITERAL, token.getName());
         Assert.assertEquals("'literal'", token.getValue());
         System.out.println(token);
 
-        token = tokenizer.take("EOF");
-        Assert.assertEquals("EOF", token.getName());
+        token = tokenizer.take(TokenType.EOF);
+        Assert.assertEquals(TokenType.EOF, token.getName());
         Assert.assertEquals("", token.getValue());
         System.out.println(token);
     }
 
     public void testNoSpace() throws Exception {
-        Reader reader = new StringReader("@MYMACRO\"regexp\"MYTOKEN'literal'@MYMACRO");
+        Reader reader = new StringReader("@MYSTATE\"regexp\"MYTOKEN'literal'@MYSTATE");
         Tokenizer tokenizer = new Tokenizer(reader);
 
         Token token;
-        token = tokenizer.take("MACRO");
-        Assert.assertEquals("MACRO", token.getName());
-        Assert.assertEquals("@MYMACRO", token.getValue());
+        token = tokenizer.take(TokenType.STATE);
+        Assert.assertEquals(TokenType.STATE, token.getName());
+        Assert.assertEquals("@MYSTATE", token.getValue());
 
-        token = tokenizer.take("REGEXP");
-        Assert.assertEquals("REGEXP", token.getName());
+        token = tokenizer.take(TokenType.REGEXP);
+        Assert.assertEquals(TokenType.REGEXP, token.getName());
         Assert.assertEquals("\"regexp\"", token.getValue());
 
-        token = tokenizer.take("TOKEN");
-        Assert.assertEquals("TOKEN", token.getName());
+        token = tokenizer.take(TokenType.TOKEN);
+        Assert.assertEquals(TokenType.TOKEN, token.getName());
         Assert.assertEquals("MYTOKEN", token.getValue());
 
-        token = tokenizer.take("LITERAL");
-        Assert.assertEquals("LITERAL", token.getName());
+        token = tokenizer.take(TokenType.LITERAL);
+        Assert.assertEquals(TokenType.LITERAL, token.getName());
         Assert.assertEquals("'literal'", token.getValue());
 
-        token = tokenizer.take("MACRO");
-        Assert.assertEquals("MACRO", token.getName());
-        Assert.assertEquals("@MYMACRO", token.getValue());
+        token = tokenizer.take(TokenType.STATE);
+        Assert.assertEquals(TokenType.STATE, token.getName());
+        Assert.assertEquals("@MYSTATE", token.getValue());
     }
 
     public void testUnclosedRegexp() throws Exception {
@@ -80,7 +80,7 @@ public class TokenizerTest extends TestCase {
         try {
             Tokenizer tokenizer = new Tokenizer(reader);
             Token token;
-            token = tokenizer.take("REGEXP");
+            token = tokenizer.take(TokenType.REGEXP);
             Assert.fail("Expected IllegalArgumentException but returned " + token);
         } catch (IllegalArgumentException e) {
             // ok
@@ -92,11 +92,36 @@ public class TokenizerTest extends TestCase {
         try {
             Tokenizer tokenizer = new Tokenizer(reader);
             Token token;
-            token = tokenizer.take("REGEXP");
+            token = tokenizer.take(TokenType.REGEXP);
             Assert.fail("Expected IllegalArgumentException but returned " + token);
         } catch (IllegalArgumentException e) {
             // ok
         }
+    }
+    
+    public void testTokenDefinition() throws Exception {
+        Reader reader = new StringReader("IDENTIFIER=\"[A-Za-z][A-Za-z0-9]*\";");
+        Tokenizer tokenizer = new Tokenizer(reader);
+        Token token;
+
+        token = tokenizer.take(TokenType.TOKEN);
+        Assert.assertEquals(TokenType.TOKEN, token.getName());
+        Assert.assertEquals("IDENTIFIER", token.getValue());
+        
+        token = tokenizer.take(TokenType.EQ);
+        Assert.assertEquals(TokenType.EQ, token.getName());
+        Assert.assertEquals("=", token.getValue());
+
+        token = tokenizer.take(TokenType.REGEXP);
+        Assert.assertEquals(TokenType.REGEXP, token.getName());
+        Assert.assertEquals("\"[A-Za-z][A-Za-z0-9]*\"", token.getValue());
+
+        token = tokenizer.take(TokenType.SEMICOLON);
+        Assert.assertEquals(TokenType.SEMICOLON, token.getName());
+        Assert.assertEquals(";", token.getValue());
+
+        token = tokenizer.take(TokenType.EOF);
+        Assert.assertEquals(TokenType.EOF, token.getName());
 
     }
 

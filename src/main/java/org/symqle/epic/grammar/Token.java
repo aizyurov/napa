@@ -5,19 +5,19 @@ package org.symqle.epic.grammar;
  */
 public class Token {
 
-    private final String name;
+    private final TokenType name;
     private final String value;
     private final int pos;
     private final int line;
 
-    public Token(final String name, final String value, final int pos, final int line) {
+    public Token(final TokenType name, final String value, final int pos, final int line) {
         this.name = name;
         this.value = value;
         this.pos = pos;
         this.line = line;
     }
 
-    public String getName() {
+    public TokenType getName() {
         return name;
     }
 
@@ -35,7 +35,7 @@ public class Token {
 
     @Override
     public String toString() {
-        return name + '(' +value + ") at " +
+        return name + "(" +value + ") at " +
                 line + ":"  + pos;
     }
 }

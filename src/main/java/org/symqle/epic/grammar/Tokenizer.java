@@ -19,7 +19,7 @@ public class Tokenizer {
         IGNORED,
         REGEXP,
         LITERAL,
-        MACRO,
+        STATE,
         NT,
         WHITESPACE
 
@@ -42,7 +42,7 @@ public class Tokenizer {
      * @param name
      * @return token if match, null if no match
      */
-    public Token take(final String name) throws IOException {
+    public Token take(final TokenType name) throws IOException {
         Token nextToken = this.nextToken;
         if (nextToken.getName().equals(name)) {
             this.nextToken = readToken();
@@ -58,7 +58,7 @@ public class Tokenizer {
             switch(state) {
                 case START:
                     if (nextChar == -1) {
-                        return new Token("EOF", "", pos, line);
+                        return new Token(TokenType.EOF, "", pos, line);
                     } else if (nextChar == '$') {
                         builder.append((char) nextChar);
                         nextChar = readNextChar();
@@ -74,7 +74,7 @@ public class Tokenizer {
                     } else if (nextChar == '@') {
                         builder.append((char) nextChar);
                         nextChar = readNextChar();
-                        state = State.MACRO;
+                        state = State.STATE;
                     } else if (nextChar >= 'A' && nextChar <= 'Z') {
                         builder.append((char) nextChar);
                         nextChar = readNextChar();
@@ -93,7 +93,7 @@ public class Tokenizer {
                         state = State.START;
                         String value = builder.toString();
                         builder.setLength(0);
-                        return new Token("SEMICOLON", value, tokenPos, tokenLine);
+                        return new Token(TokenType.SEMICOLON, value, tokenPos, tokenLine);
                     } else if (nextChar == '=') {
                         builder.append((char) nextChar);
                         int tokenPos = pos;
@@ -104,7 +104,7 @@ public class Tokenizer {
                         state = State.START;
                         String value = builder.toString();
                         builder.setLength(0);
-                        return new Token("EQ", value, tokenPos, tokenLine);
+                        return new Token(TokenType.EQ, value, tokenPos, tokenLine);
                     } else if (nextChar == '|') {
                         builder.append((char) nextChar);
                         nextChar = readNextChar();
@@ -115,7 +115,7 @@ public class Tokenizer {
                         state = State.START;
                         String value = builder.toString();
                         builder.setLength(0);
-                        return new Token("BAR", value, tokenPos, tokenLine);
+                        return new Token(TokenType.BAR, value, tokenPos, tokenLine);
                     } else if (nextChar  == ' ' || nextChar == '\n' || nextChar == '\t' || nextChar == '\r' || nextChar == '\f') {
                         state = State.WHITESPACE;
                         nextChar = readNextChar();
@@ -123,7 +123,7 @@ public class Tokenizer {
                         throw new IllegalArgumentException("Unexpected character: " + (char) nextChar);
                     }
                     break;
-                case IGNORED: case TOKEN: case MACRO:case NT:
+                case IGNORED: case TOKEN: case STATE: case NT:
                     if (nextChar >= 'A' && nextChar <= 'Z' || nextChar >= 'a' && nextChar <= 'z' || nextChar >= '0' && nextChar <= '9') {
                         builder.append((char) nextChar); // state remains the same
                         nextChar = readNextChar();
@@ -136,7 +136,7 @@ public class Tokenizer {
                         String name = state.toString();
                         builder.setLength(0);
                         state = State.START;
-                        return new Token(name, value, tokenPos, tokenLine);
+                        return new Token(TokenType.valueOf(name), value, tokenPos, tokenLine);
                     }
                     break;
                 case LITERAL:
@@ -159,7 +159,7 @@ public class Tokenizer {
                         String value = builder.toString();
                         builder.setLength(0);
                         state = State.START;
-                        return new Token(State.LITERAL.toString(), value, tokenPos, tokenLine);
+                        return new Token(TokenType.LITERAL, value, tokenPos, tokenLine);
                     } else if (nextChar == -1 || nextChar == '\n' || nextChar == '\r') {
                         throw new IllegalArgumentException("Unclosed literal at " + line + ":" + pos);
                     } else {
@@ -187,7 +187,7 @@ public class Tokenizer {
                         String value = builder.toString();
                         builder.setLength(0);
                         state = State.START;
-                        return new Token(State.REGEXP.toString(), value, tokenPos, tokenLine);
+                        return new Token(TokenType.REGEXP, value, tokenPos, tokenLine);
                     } else if (nextChar == -1 || nextChar == '\n' || nextChar == '\r') {
                         throw new IllegalArgumentException("Unclosed regexp at " + line + ":" + pos);
                     } else {
