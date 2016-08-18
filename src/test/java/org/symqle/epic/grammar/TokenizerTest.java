@@ -14,36 +14,36 @@ public class TokenizerTest extends TestCase {
     public void testAll() throws Exception {
         Reader reader = new StringReader("MYTOKEN nonTerminal @MYSTATE $WHITESPACE \"regexp\" \n'literal'");
         Tokenizer tokenizer = new Tokenizer(reader);
-        Assert.assertFalse(tokenizer.take(TokenType.NT).getName().equals(TokenType.NT));
+        Assert.assertFalse(tokenizer.preview().getName().equals(TokenType.NT));
 
-        Token token = tokenizer.take(TokenType.TOKEN);
+        Token token = tokenizer.take();
         Assert.assertEquals(TokenType.TOKEN, token.getName());
         Assert.assertEquals("MYTOKEN", token.getValue());
         System.out.println(token);
 
-        token = tokenizer.take(TokenType.NT);
+        token = tokenizer.take();
         Assert.assertEquals(TokenType.NT, token.getName());
         Assert.assertEquals("nonTerminal", token.getValue());
         System.out.println(token);
 
-        token = tokenizer.take(TokenType.STATE);
+        token = tokenizer.take();
         Assert.assertEquals(TokenType.STATE, token.getName());
         Assert.assertEquals("@MYSTATE", token.getValue());
 
-        token = tokenizer.take(TokenType.IGNORED);
+        token = tokenizer.take();
         Assert.assertEquals(TokenType.IGNORED, token.getName());
         Assert.assertEquals("$WHITESPACE", token.getValue());
 
-        token = tokenizer.take(TokenType.REGEXP);
+        token = tokenizer.take();
         Assert.assertEquals(TokenType.REGEXP, token.getName());
         Assert.assertEquals("\"regexp\"", token.getValue());
 
-        token = tokenizer.take(TokenType.LITERAL);
+        token = tokenizer.take();
         Assert.assertEquals(TokenType.LITERAL, token.getName());
         Assert.assertEquals("'literal'", token.getValue());
         System.out.println(token);
 
-        token = tokenizer.take(TokenType.EOF);
+        token = tokenizer.take();
         Assert.assertEquals(TokenType.EOF, token.getName());
         Assert.assertEquals("", token.getValue());
         System.out.println(token);
@@ -54,23 +54,23 @@ public class TokenizerTest extends TestCase {
         Tokenizer tokenizer = new Tokenizer(reader);
 
         Token token;
-        token = tokenizer.take(TokenType.STATE);
+        token = tokenizer.take();
         Assert.assertEquals(TokenType.STATE, token.getName());
         Assert.assertEquals("@MYSTATE", token.getValue());
 
-        token = tokenizer.take(TokenType.REGEXP);
+        token = tokenizer.take();
         Assert.assertEquals(TokenType.REGEXP, token.getName());
         Assert.assertEquals("\"regexp\"", token.getValue());
 
-        token = tokenizer.take(TokenType.TOKEN);
+        token = tokenizer.take();
         Assert.assertEquals(TokenType.TOKEN, token.getName());
         Assert.assertEquals("MYTOKEN", token.getValue());
 
-        token = tokenizer.take(TokenType.LITERAL);
+        token = tokenizer.take();
         Assert.assertEquals(TokenType.LITERAL, token.getName());
         Assert.assertEquals("'literal'", token.getValue());
 
-        token = tokenizer.take(TokenType.STATE);
+        token = tokenizer.take();
         Assert.assertEquals(TokenType.STATE, token.getName());
         Assert.assertEquals("@MYSTATE", token.getValue());
     }
@@ -80,7 +80,7 @@ public class TokenizerTest extends TestCase {
         try {
             Tokenizer tokenizer = new Tokenizer(reader);
             Token token;
-            token = tokenizer.take(TokenType.REGEXP);
+            token = tokenizer.take();
             Assert.fail("Expected IllegalArgumentException but returned " + token);
         } catch (IllegalArgumentException e) {
             // ok
@@ -92,7 +92,7 @@ public class TokenizerTest extends TestCase {
         try {
             Tokenizer tokenizer = new Tokenizer(reader);
             Token token;
-            token = tokenizer.take(TokenType.REGEXP);
+            token = tokenizer.take();
             Assert.fail("Expected IllegalArgumentException but returned " + token);
         } catch (IllegalArgumentException e) {
             // ok
@@ -104,23 +104,23 @@ public class TokenizerTest extends TestCase {
         Tokenizer tokenizer = new Tokenizer(reader);
         Token token;
 
-        token = tokenizer.take(TokenType.TOKEN);
+        token = tokenizer.take();
         Assert.assertEquals(TokenType.TOKEN, token.getName());
         Assert.assertEquals("IDENTIFIER", token.getValue());
         
-        token = tokenizer.take(TokenType.EQ);
+        token = tokenizer.take();
         Assert.assertEquals(TokenType.EQ, token.getName());
         Assert.assertEquals("=", token.getValue());
 
-        token = tokenizer.take(TokenType.REGEXP);
+        token = tokenizer.take();
         Assert.assertEquals(TokenType.REGEXP, token.getName());
         Assert.assertEquals("\"[A-Za-z][A-Za-z0-9]*\"", token.getValue());
 
-        token = tokenizer.take(TokenType.SEMICOLON);
+        token = tokenizer.take();
         Assert.assertEquals(TokenType.SEMICOLON, token.getName());
         Assert.assertEquals(";", token.getValue());
 
-        token = tokenizer.take(TokenType.EOF);
+        token = tokenizer.take();
         Assert.assertEquals(TokenType.EOF, token.getName());
 
     }

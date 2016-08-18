@@ -3,6 +3,7 @@ package org.symqle.epic.grammar;
 import java.io.IOException;
 import java.io.Reader;
 
+import static org.symqle.epic.grammar.TokenType.EOF;
 import static org.symqle.epic.grammar.TokenType.NT;
 
 /**
@@ -20,11 +21,15 @@ public class GrammarReader {
         final SyntaxTree first = statement(tokenizer);
         if (first == null) {
             Token next = tokenizer.take();
-            throw new IllegalArgumentException("Syntax error at " + next.getLine() + ":" + next.getPos());
+            throw new IllegalArgumentException("Unexpected token " + next);
         }
         grammar.addChild(first);
         for (SyntaxTree statement = statement(tokenizer); statement != null; statement = statement(tokenizer)) {
             grammar.addChild(statement);
+        }
+        Token eof = tokenizer.take();
+        if (eof.getName() != EOF) {
+            throw new IllegalArgumentException("Unexpected token " + eof);
         }
         return grammar;
     }
@@ -64,7 +69,7 @@ public class GrammarReader {
         if (expectSemicolon.getName() == expectedType) {
             syntaxNode.addChild(new SyntaxLeaf(tokenizer.take()));
         } else if (!optional) {
-            throw new IllegalStateException("Unexpected token " + expectSemicolon.getName() + " at " + expectSemicolon.getLine() + ":" + expectSemicolon.getPos());
+            throw new IllegalArgumentException("Unexpected token " + expectSemicolon);
         }
     }
 
