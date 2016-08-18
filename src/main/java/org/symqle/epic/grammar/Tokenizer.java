@@ -42,11 +42,13 @@ public class Tokenizer {
      * @param name
      * @return token if match, null if no match
      */
-    public Token take(final TokenType name) throws IOException {
+    public Token take() throws IOException {
         Token nextToken = this.nextToken;
-        if (nextToken.getName().equals(name)) {
-            this.nextToken = readToken();
-        }
+        this.nextToken = readToken();
+        return nextToken;
+    }
+
+    public Token preview() throws IOException {
         return nextToken;
     }
 

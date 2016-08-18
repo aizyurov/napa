@@ -12,12 +12,12 @@ tokenDefinition ::= anyToken '=' [STATE] STRING [ STATE ] ';'
    
 anyToken := TOKEN | IGNORED
    
-ruleDefinition ::= NT '=' { category } { | {category}}';'
+ruleDefinition ::= NT '=' variant { '|' variant } ';'
+
+variant ::= { TOKEN | NT | LITERAL}
 
 macroDefinition := MACRO = STRING
 
-category ::= TOKEN | NT | LITERAL
-    
 TOKEN = "[A-Z][A-Za-z0-9_]*"
 
 IGNORED = "[$][A-Z][A-Za-z0-9_]*"    
