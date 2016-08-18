@@ -28,4 +28,9 @@ public class SyntaxLeaf implements SyntaxTree {
     public String value() {
         return token.getValue();
     }
+
+    @Override
+    public String toString() {
+        return name() + "(" + value() + ")";
+    }
 }

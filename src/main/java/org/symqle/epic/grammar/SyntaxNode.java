@@ -35,4 +35,10 @@ public class SyntaxNode implements SyntaxTree {
     public String value() {
         return String.join(" ", children.stream().map(x -> x.value()).collect(Collectors.<String>toList()));
     }
+
+    @Override
+    public String toString() {
+        return name + ' ' +
+                children;
+    }
 }

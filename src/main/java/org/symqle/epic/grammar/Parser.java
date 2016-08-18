@@ -9,9 +9,9 @@ import static org.symqle.epic.grammar.TokenType.NT;
 /**
  * @author lvovich
  */
-public class GrammarReader {
+public class Parser {
 
-    public SyntaxTree readModel(final Reader reader) throws IOException {
+    public SyntaxTree parse(final Reader reader) throws IOException {
         final Tokenizer tokenizer = new Tokenizer(reader);
         return grammar(tokenizer);
     }
