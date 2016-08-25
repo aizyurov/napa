@@ -12,7 +12,7 @@ import java.io.StringReader;
 public class TokenizerTest extends TestCase {
 
     public void testAll() throws Exception {
-        Reader reader = new StringReader("MYTOKEN nonTerminal @MYSTATE $WHITESPACE \"regexp\" \n'literal'");
+        Reader reader = new StringReader("MYTOKEN nonTerminal $WHITESPACE \"regexp\" \n'literal' [123]");
         Tokenizer tokenizer = new Tokenizer(reader);
         Assert.assertFalse(tokenizer.preview().getName().equals(TokenType.NT));
 
@@ -27,10 +27,6 @@ public class TokenizerTest extends TestCase {
         System.out.println(token);
 
         token = tokenizer.take();
-        Assert.assertEquals(TokenType.STATE, token.getName());
-        Assert.assertEquals("@MYSTATE", token.getValue());
-
-        token = tokenizer.take();
         Assert.assertEquals(TokenType.IGNORED, token.getName());
         Assert.assertEquals("$WHITESPACE", token.getValue());
 
@@ -43,20 +39,32 @@ public class TokenizerTest extends TestCase {
         Assert.assertEquals("'literal'", token.getValue());
         System.out.println(token);
 
+
         token = tokenizer.take();
-        Assert.assertEquals(TokenType.EOF, token.getName());
-        Assert.assertEquals("", token.getValue());
+        Assert.assertEquals(TokenType.LEFT_BRACKET, token.getName());
+        Assert.assertEquals("[", token.getValue());
         System.out.println(token);
+
+        token = tokenizer.take();
+        Assert.assertEquals(TokenType.NUMBER, token.getName());
+        Assert.assertEquals("123", token.getValue());
+        System.out.println(token);
+
+        token = tokenizer.take();
+        Assert.assertEquals(TokenType.RIGHT_BRACKET, token.getName());
+        Assert.assertEquals("]", token.getValue());
+        System.out.println(token);
+
     }
 
     public void testNoSpace() throws Exception {
-        Reader reader = new StringReader("@MYSTATE\"regexp\"MYTOKEN'literal'@MYSTATE");
+        Reader reader = new StringReader("myNT\"regexp\"MYTOKEN'literal'myNT");
         Tokenizer tokenizer = new Tokenizer(reader);
 
         Token token;
         token = tokenizer.take();
-        Assert.assertEquals(TokenType.STATE, token.getName());
-        Assert.assertEquals("@MYSTATE", token.getValue());
+        Assert.assertEquals(TokenType.NT, token.getName());
+        Assert.assertEquals("myNT", token.getValue());
 
         token = tokenizer.take();
         Assert.assertEquals(TokenType.REGEXP, token.getName());
@@ -71,8 +79,8 @@ public class TokenizerTest extends TestCase {
         Assert.assertEquals("'literal'", token.getValue());
 
         token = tokenizer.take();
-        Assert.assertEquals(TokenType.STATE, token.getName());
-        Assert.assertEquals("@MYSTATE", token.getValue());
+        Assert.assertEquals(TokenType.NT, token.getName());
+        Assert.assertEquals("myNT", token.getValue());
     }
 
     public void testUnclosedRegexp() throws Exception {

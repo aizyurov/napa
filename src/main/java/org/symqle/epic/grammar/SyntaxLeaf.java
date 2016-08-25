@@ -33,4 +33,14 @@ public class SyntaxLeaf implements SyntaxTree {
     public String toString() {
         return name() + "(" + value() + ")";
     }
+
+    @Override
+    public int line() {
+        return token.getLine();
+    }
+
+    @Override
+    public int pos() {
+        return token.getPos();
+    }
 }

@@ -21,7 +21,8 @@ public class Tokenizer {
         LITERAL,
         STATE,
         NT,
-        WHITESPACE
+        WHITESPACE,
+        NUMBER
 
     }
 
@@ -81,6 +82,10 @@ public class Tokenizer {
                         builder.append((char) nextChar);
                         nextChar = readNextChar();
                         state = State.TOKEN;
+                    } else if (nextChar >= '1' && nextChar <= '9') {
+                        builder.append((char) nextChar);
+                        nextChar = readNextChar();
+                        state = State.NUMBER;
                     } else if (nextChar >= 'a' && nextChar <= 'z') {
                         builder.append((char) nextChar);
                         nextChar = readNextChar();
@@ -118,6 +123,28 @@ public class Tokenizer {
                         String value = builder.toString();
                         builder.setLength(0);
                         return new Token(TokenType.BAR, value, tokenPos, tokenLine);
+                    } else if (nextChar == '[') {
+                        builder.append((char) nextChar);
+                        nextChar = readNextChar();
+                        int tokenPos = pos;
+                        int tokenLine = line;
+                        pos = this.pos;
+                        line = this.line;
+                        state = State.START;
+                        String value = builder.toString();
+                        builder.setLength(0);
+                        return new Token(TokenType.LEFT_BRACKET, value, tokenPos, tokenLine);
+                    } else if (nextChar == ']') {
+                        builder.append((char) nextChar);
+                        nextChar = readNextChar();
+                        int tokenPos = pos;
+                        int tokenLine = line;
+                        pos = this.pos;
+                        line = this.line;
+                        state = State.START;
+                        String value = builder.toString();
+                        builder.setLength(0);
+                        return new Token(TokenType.RIGHT_BRACKET, value, tokenPos, tokenLine);
                     } else if (nextChar  == ' ' || nextChar == '\n' || nextChar == '\t' || nextChar == '\r' || nextChar == '\f') {
                         state = State.WHITESPACE;
                         nextChar = readNextChar();
@@ -127,6 +154,22 @@ public class Tokenizer {
                     break;
                 case IGNORED: case TOKEN: case STATE: case NT:
                     if (nextChar >= 'A' && nextChar <= 'Z' || nextChar >= 'a' && nextChar <= 'z' || nextChar >= '0' && nextChar <= '9') {
+                        builder.append((char) nextChar); // state remains the same
+                        nextChar = readNextChar();
+                    } else {
+                        int tokenPos = pos;
+                        int tokenLine = line;
+                        pos = this.pos;
+                        line = this.line;
+                        String value = builder.toString();
+                        String name = state.toString();
+                        builder.setLength(0);
+                        state = State.START;
+                        return new Token(TokenType.valueOf(name), value, tokenPos, tokenLine);
+                    }
+                    break;
+                case NUMBER:
+                    if (nextChar >= '0' && nextChar <= '9') {
                         builder.append((char) nextChar); // state remains the same
                         nextChar = readNextChar();
                     } else {

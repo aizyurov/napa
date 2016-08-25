@@ -41,4 +41,22 @@ public class SyntaxNode implements SyntaxTree {
         return name + ' ' +
                 children;
     }
+
+    @Override
+    public int line() {
+        if (children.isEmpty()) {
+            return 0;
+        } else {
+            return  children.get(0).line();
+        }
+    }
+
+    @Override
+    public int pos() {
+        if (children.isEmpty()) {
+            return 0;
+        } else {
+            return children.get(0).pos();
+        }
+    }
 }

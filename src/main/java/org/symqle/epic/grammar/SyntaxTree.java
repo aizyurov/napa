@@ -10,4 +10,6 @@ public interface SyntaxTree {
     String name();
     List<SyntaxTree> children();
     String value();
+    int line();
+    int pos();
 }

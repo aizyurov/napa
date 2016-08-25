@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.Reader;
 
 import static org.symqle.epic.grammar.TokenType.EOF;
+import static org.symqle.epic.grammar.TokenType.LEFT_BRACKET;
 import static org.symqle.epic.grammar.TokenType.NT;
 
 /**
@@ -56,20 +57,24 @@ public class Parser {
     private SyntaxTree tokenDefinition(final Tokenizer tokenizer) throws IOException {
         SyntaxNode syntaxNode = new SyntaxNode("tokenDefinition");
         syntaxNode.addChild(new SyntaxLeaf(tokenizer.take())); // either TOKEN or IGNORED
+        Token preview = tokenizer.preview();
+        if (preview.getName().equals(LEFT_BRACKET)) {
+            acceptToken(TokenType.LEFT_BRACKET, syntaxNode, tokenizer, false);
+            acceptToken(TokenType.NUMBER, syntaxNode, tokenizer, false);
+            acceptToken(TokenType.RIGHT_BRACKET, syntaxNode, tokenizer, false);
+        }
         acceptToken(TokenType.EQ, syntaxNode, tokenizer, false);
-        acceptToken(TokenType.STATE, syntaxNode, tokenizer, true);
         acceptToken(TokenType.REGEXP, syntaxNode, tokenizer, false);
-        acceptToken(TokenType.STATE, syntaxNode, tokenizer, true);
         acceptToken(TokenType.SEMICOLON, syntaxNode, tokenizer, false);
         return syntaxNode;
     }
 
     private void acceptToken(final TokenType expectedType, final SyntaxNode syntaxNode, final Tokenizer tokenizer, boolean optional) throws IOException {
-        Token expectSemicolon = tokenizer.preview();
-        if (expectSemicolon.getName() == expectedType) {
+        Token nextToken = tokenizer.preview();
+        if (nextToken.getName() == expectedType) {
             syntaxNode.addChild(new SyntaxLeaf(tokenizer.take()));
         } else if (!optional) {
-            throw new IllegalArgumentException("Unexpected token " + expectSemicolon);
+            throw new IllegalArgumentException("Unexpected token " + nextToken);
         }
     }
 

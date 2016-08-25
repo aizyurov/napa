@@ -10,7 +10,7 @@ import java.io.StringReader;
  */
 public class ParserTest extends TestCase {
 
-    public static final String basic = "INENTIFIER = \"[a-zA-Z][a-zA-Z0-9]*\";" +
+    public static final String basic = "INENTIFIER[2] = \"[a-zA-Z][a-zA-Z0-9]*\";" +
             "expression = IDENTIFIER | expression '+' IDENTIFIER;";
 
     public void testBasic() throws Exception {

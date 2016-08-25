@@ -7,7 +7,6 @@ public class Symbol {
 
     public enum Type {
         TOKEN,
-        IGNORED,
         NONTERMINAL
     }
     private final String name;
