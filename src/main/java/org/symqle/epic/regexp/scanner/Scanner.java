@@ -20,7 +20,11 @@ public class Scanner {
         this.source = source;
     }
 
-    public LexerToken preview() throws IOException {
+    public LexerTokenType preview() {
+        return advance().getType();
+    }
+
+    public LexerToken advance() {
         if (next == null) {
             next = scan();
         }
@@ -28,13 +32,13 @@ public class Scanner {
 
     }
 
-    public LexerToken get() throws IOException {
-        LexerToken token = preview();
+    public char get() {
+        LexerToken token = advance();
         next = null;
-        return token;
+        return token.getValue();
     }
 
-    public LexerToken scan() {
+    private LexerToken scan() {
         if (pos >= source.length()) {
             return  new LexerToken(LexerTokenType.EOF, '\0');
         }
@@ -47,7 +51,7 @@ public class Scanner {
         }
     }
 
-    public LexerToken escaped() {
+    private LexerToken escaped() {
         if (pos >= source.length()) {
             return new LexerToken(LexerTokenType.CHARACTER, '\\');
         }

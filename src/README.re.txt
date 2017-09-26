@@ -1,15 +1,15 @@
 TokenType: QUOTE CHARACTER DOT QUESTION STAR PLUS LPAREN RPAREN LBRACKET RBRACKET CARET BAR MINUS
 
-regexp = QUOTE choice QUOTE
+regexp = choice
 choice = sequence { BAR sequence }
 sequence = repeate { repeate }
 repeate = primary [ multiplier ]
 multiplier = PLUS | STAR | QUESTION
-primary = CHARACTER | DOT | set | LPAREN choice RPAREN
-set = LBRACKET include RBRACKET | LBRACKET exclude RBRACKET
+primary = CHARACTER | DOT | LBRACKET set RBRACKET | LPAREN choice RPAREN
+set = include | exclude
 exclude = CARET include
 include = range { range }
-range = end { MINUS end }
+range = end [ MINUS end ]
 end = CHARACTER | DOT | PLUS | STAR | QUESTION | LPAREN | RPAREN | BAR
 
 
