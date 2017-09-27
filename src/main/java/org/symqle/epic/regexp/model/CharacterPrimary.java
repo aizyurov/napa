@@ -1,6 +1,6 @@
 package org.symqle.epic.regexp.model;
 
-import org.symqle.epic.regexp.first.FirstFaNode;
+import org.symqle.epic.regexp.first.NfaNode1;
 import org.symqle.epic.regexp.first.SingleCharacterSet;
 
 /**
@@ -22,8 +22,8 @@ public class CharacterPrimary implements Primary {
      * @return
      */
     @Override
-    public FirstFaNode endState(FirstFaNode startState) {
-        FirstFaNode endState = new FirstFaNode();
+    public NfaNode1 endState(NfaNode1 startState) {
+        NfaNode1 endState = new NfaNode1();
         startState.addEdge(new SingleCharacterSet(theCharacter), endState);
         return endState;
     }

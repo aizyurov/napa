@@ -1,13 +1,13 @@
 package org.symqle.epic.regexp.model;
 
-import org.symqle.epic.regexp.first.FirstFaNode;
+import org.symqle.epic.regexp.first.NfaNode1;
 
 import java.util.List;
 
 /**
  * @author lvovich
  */
-public class Sequence implements FirstFaBuilder {
+public class Sequence implements NfaBuilder {
 
     private final List<Repeat> repetitions;
 
@@ -26,8 +26,8 @@ public class Sequence implements FirstFaBuilder {
      * @return
      */
     @Override
-    public FirstFaNode endState(FirstFaNode startState) {
-        FirstFaNode current = startState;
+    public NfaNode1 endState(NfaNode1 startState) {
+        NfaNode1 current = startState;
         for (Repeat repeat: repetitions) {
             current = repeat.endState(current);
         }

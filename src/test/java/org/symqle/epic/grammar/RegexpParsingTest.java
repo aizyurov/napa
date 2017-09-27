@@ -3,13 +3,13 @@ package org.symqle.epic.grammar;
 import junit.framework.TestCase;
 import org.symqle.epic.regexp.Lexem;
 import org.symqle.epic.regexp.first.CharacterSetRegistry;
-import org.symqle.epic.regexp.first.FirstFaNode;
+import org.symqle.epic.regexp.first.NfaNode1;
 import org.symqle.epic.regexp.first.FirstStep;
 import org.symqle.epic.regexp.model.Regexp;
 import org.symqle.epic.regexp.parser.RegexpSyntaxTreeBuilder;
 import org.symqle.epic.regexp.scanner.Scanner;
 import org.symqle.epic.regexp.second.DfaNode;
-import org.symqle.epic.regexp.second.SecondFaNode;
+import org.symqle.epic.regexp.second.NfaNode2;
 import org.symqle.epic.regexp.second.SecondStep;
 import org.symqle.epic.regexp.second.ThirdStep;
 
@@ -26,10 +26,10 @@ public class RegexpParsingTest extends TestCase {
     public void testSimpleSequence() {
         final Scanner scanner = new Scanner("\"abc\"");
         final Regexp regexp = new RegexpSyntaxTreeBuilder(scanner).regexp();
-        final FirstFaNode start = new FirstFaNode();
-        FirstFaNode firstFaNode = regexp.endState(start);
+        final NfaNode1 start = new NfaNode1();
+        NfaNode1 nfaNode1 = regexp.endState(start);
         SecondStep secondStep = new SecondStep();
-        Collection<SecondFaNode> second = secondStep.convert(start);
+        Collection<NfaNode2> second = secondStep.convert(start);
         ThirdStep thirdStep = new ThirdStep();
         DfaNode startDfa = thirdStep.build(second);
         System.out.println(regexp);
@@ -84,7 +84,7 @@ public class RegexpParsingTest extends TestCase {
     public void testAllFeatures() {
         final Scanner scanner = new Scanner("\"(([a-bcd]+)|z*|y?)*def\"");
         final Regexp regexp = new RegexpSyntaxTreeBuilder(scanner).regexp();
-        regexp.endState(new FirstFaNode());
+        regexp.endState(new NfaNode1());
 
         System.out.println(regexp);
 
@@ -111,22 +111,22 @@ public class RegexpParsingTest extends TestCase {
         for (String pattern: ignored) {
             lexems.add(new Lexem('"' + pattern + '"', false));
         }
-        final FirstFaNode startState;
+        final NfaNode1 startState;
         {
             final long startTs = System.currentTimeMillis();
             startState = new FirstStep(lexems).automaton();
-            System.out.println("Nodes: " + FirstFaNode.count() + " in " + (System.currentTimeMillis() - startTs) + " millis");
+            System.out.println("Nodes: " + NfaNode1.count() + " in " + (System.currentTimeMillis() - startTs) + " millis");
             System.out.println("Charsets: " + CharacterSetRegistry.size());
         }
 
-        Collection<SecondFaNode> nfa;
+        Collection<NfaNode2> nfa;
         {
             final long startTs = System.currentTimeMillis();
             nfa = new SecondStep().convert(startState);
-            final SecondFaNode secondFaState = nfa.iterator().next();
+            final NfaNode2 secondFaState = nfa.iterator().next();
             long intermideateTs = System.currentTimeMillis();
-            System.out.println("NFA Nodes: " + SecondFaNode.size() + " in " + (intermideateTs - startTs) + " millis");
-            System.out.println("NFA Edges: " + SecondFaNode.edgeCount());
+            System.out.println("NFA Nodes: " + NfaNode2.size() + " in " + (intermideateTs - startTs) + " millis");
+            System.out.println("NFA Edges: " + NfaNode2.edgeCount());
 
 //            Set<CharacterSet> allCharacterSets = new HashSet<>();
 //            for (SecondFaNode node: nfa) {

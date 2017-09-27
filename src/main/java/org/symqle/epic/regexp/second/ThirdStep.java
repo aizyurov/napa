@@ -1,6 +1,5 @@
 package org.symqle.epic.regexp.second;
 
-import org.symqle.epic.regexp.Edge2;
 import org.symqle.epic.regexp.first.CharacterSet;
 
 import java.util.*;
@@ -11,42 +10,42 @@ import java.util.stream.Collectors;
  */
 public class ThirdStep {
 
-    Map<Set<SecondFaNode>, DfaNode> dfaNodeMap = new LinkedHashMap<>();
+    Map<Set<NfaNode2>, DfaNode> dfaNodeMap = new LinkedHashMap<>();
     CharacterClassRegistry registry;
 
-    public DfaNode build(Collection<SecondFaNode> secondNfa) {
-        Set<CharacterSet> allCharacterSets = secondNfa.stream().flatMap(x -> x.getEdges().stream()).map(Edge2::getCharacterSet).collect(Collectors.toSet());
+    public DfaNode build(Collection<NfaNode2> secondNfa) {
+        Set<CharacterSet> allCharacterSets = secondNfa.stream().flatMap(x -> x.getEdges().stream()).map(NfaNode2.Edge::getCharacterSet).collect(Collectors.toSet());
         registry = new CharacterClassRegistry(allCharacterSets);
 
 
-        Set<Set<SecondFaNode>> processed = new LinkedHashSet<>();
-        Set<Set<SecondFaNode>> queue = new HashSet<>();
+        Set<Set<NfaNode2>> processed = new LinkedHashSet<>();
+        Set<Set<NfaNode2>> queue = new HashSet<>();
 
-        Set<SecondFaNode> startSet = Collections.singleton(secondNfa.iterator().next());
+        Set<NfaNode2> startSet = Collections.singleton(secondNfa.iterator().next());
         queue.add(startSet);
         DfaNode startDfa = new DfaNode();
         dfaNodeMap.put(startSet, startDfa);
 
-        Set<SecondFaNode> previousNfaSet = null;
+        Set<NfaNode2> previousNfaSet = null;
         while (!queue.isEmpty()) {
-            Set<SecondFaNode> nfaSet = queue.iterator().next();
+            Set<NfaNode2> nfaSet = queue.iterator().next();
             queue.remove(nfaSet);
             processed.add(nfaSet);
             if (queue.contains(nfaSet)) {
                 throw new IllegalStateException(("element not removed"));
             }
-            Map<Integer, Set<SecondFaNode>> nodeSetsByCharacterClass = new HashMap<>();
-            for (SecondFaNode nfaNode : nfaSet) {
-                for (Edge2 edge : nfaNode.getEdges()) {
+            Map<Integer, Set<NfaNode2>> nodeSetsByCharacterClass = new HashMap<>();
+            for (NfaNode2 nfaNode : nfaSet) {
+                for (NfaNode2.Edge edge : nfaNode.getEdges()) {
                     Set<Integer> characterClasses = registry.getCharacterClasses(edge.getCharacterSet());
                     for (Integer characterClass : characterClasses) {
-                        Set<SecondFaNode> nodeSet = nodeSetsByCharacterClass.getOrDefault(characterClass, new HashSet<>());
+                        Set<NfaNode2> nodeSet = nodeSetsByCharacterClass.getOrDefault(characterClass, new HashSet<>());
                         nodeSet.add(edge.getTo());
                         nodeSetsByCharacterClass.put(characterClass, nodeSet);
                     }
                 }
             }
-            for (Set<SecondFaNode> nfaNodeSet : nodeSetsByCharacterClass.values()) {
+            for (Set<NfaNode2> nfaNodeSet : nodeSetsByCharacterClass.values()) {
                 DfaNode dfaNode = dfaNodeMap.getOrDefault(nfaNodeSet, new DfaNode());
                 dfaNodeMap.put(nfaNodeSet, dfaNode);
                 if (!processed.contains(nfaNodeSet)) {
@@ -54,7 +53,7 @@ public class ThirdStep {
                 }
             }
             DfaNode currentDfaNode = dfaNodeMap.get(nfaSet);
-            for (Map.Entry<Integer, Set<SecondFaNode>> entry: nodeSetsByCharacterClass.entrySet()) {
+            for (Map.Entry<Integer, Set<NfaNode2>> entry: nodeSetsByCharacterClass.entrySet()) {
                 currentDfaNode.addEdge(entry.getKey(), dfaNodeMap.get(entry.getValue()));
             }
         }

@@ -1,13 +1,13 @@
 package org.symqle.epic.regexp.model;
 
-import org.symqle.epic.regexp.first.FirstFaNode;
+import org.symqle.epic.regexp.first.NfaNode1;
 
 import java.util.List;
 
 /**
  * @author lvovich
  */
-public class Choice implements FirstFaBuilder {
+public class Choice implements NfaBuilder {
 
     private final List<Sequence> variants;
 
@@ -23,8 +23,8 @@ public class Choice implements FirstFaBuilder {
      * @return
      */
     @Override
-    public FirstFaNode endState(FirstFaNode startState) {
-        final FirstFaNode endState = new FirstFaNode();
+    public NfaNode1 endState(NfaNode1 startState) {
+        final NfaNode1 endState = new NfaNode1();
         for (Sequence variant: variants) {
             variant.endState(startState).addEmptyEdge(endState);
         }
