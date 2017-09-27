@@ -1,7 +1,7 @@
 package org.symqle.epic.regexp.model;
 
 import org.symqle.epic.regexp.first.AnyCharacterSet;
-import org.symqle.epic.regexp.first.FirstFaState;
+import org.symqle.epic.regexp.first.FirstFaNode;
 
 /**
  * @author lvovich
@@ -16,8 +16,8 @@ public class DotPrimary implements Primary {
      * @return
      */
     @Override
-    public FirstFaState endState(FirstFaState startState) {
-        FirstFaState endState = new FirstFaState();
+    public FirstFaNode endState(FirstFaNode startState) {
+        FirstFaNode endState = new FirstFaNode();
         startState.addEdge(new AnyCharacterSet(), endState);
         return endState;
     }

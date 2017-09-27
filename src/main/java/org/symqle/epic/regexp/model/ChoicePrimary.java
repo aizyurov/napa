@@ -1,6 +1,6 @@
 package org.symqle.epic.regexp.model;
 
-import org.symqle.epic.regexp.first.FirstFaState;
+import org.symqle.epic.regexp.first.FirstFaNode;
 
 /**
  * Created by aizyurov on 9/27/17.
@@ -20,7 +20,7 @@ public class ChoicePrimary implements Primary {
      * @return
      */
     @Override
-    public FirstFaState endState(FirstFaState startState) {
+    public FirstFaNode endState(FirstFaNode startState) {
         return choice.endState(startState);
     }
 }

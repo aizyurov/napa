@@ -1,8 +1,6 @@
 package org.symqle.epic.regexp.model;
 
 import org.symqle.epic.regexp.first.AbstractCharacterSet;
-import org.symqle.epic.regexp.first.CharacterSet;
-import org.symqle.epic.regexp.first.FirstFaState;
 import org.symqle.epic.regexp.first.RangeCharacterSet;
 
 /**

@@ -1,7 +1,7 @@
 package org.symqle.epic.regexp.model;
 
 import org.symqle.epic.regexp.first.ComplementSet;
-import org.symqle.epic.regexp.first.FirstFaState;
+import org.symqle.epic.regexp.first.FirstFaNode;
 
 /**
  * Created by aizyurov on 9/27/17.
@@ -21,9 +21,9 @@ public class ExcludeSet implements CharSet {
      * @return
      */
     @Override
-    public FirstFaState endState(FirstFaState startState) {
+    public FirstFaNode endState(FirstFaNode startState) {
         final ComplementSet characterSet = new ComplementSet(includeSet.characterSet());
-        FirstFaState endState = new FirstFaState();
+        FirstFaNode endState = new FirstFaNode();
         startState.addEdge(characterSet, endState);
         return endState;
     }

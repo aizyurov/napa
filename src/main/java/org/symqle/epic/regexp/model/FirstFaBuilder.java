@@ -1,6 +1,6 @@
 package org.symqle.epic.regexp.model;
 
-import org.symqle.epic.regexp.first.FirstFaState;
+import org.symqle.epic.regexp.first.FirstFaNode;
 
 /**
  * Created by aizyurov on 9/27/17.
@@ -12,5 +12,5 @@ public interface FirstFaBuilder {
      * @param startState
      * @return
      */
-    FirstFaState endState(FirstFaState startState);
+    FirstFaNode endState(FirstFaNode startState);
 }

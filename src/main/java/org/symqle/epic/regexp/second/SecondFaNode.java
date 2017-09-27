@@ -1,35 +1,39 @@
 package org.symqle.epic.regexp.second;
 
-import org.symqle.epic.regexp.Edge;
+import org.symqle.epic.regexp.Edge2;
 import org.symqle.epic.regexp.Lexem;
-import org.symqle.epic.regexp.first.NfaState;
+import org.symqle.epic.regexp.first.FirstFaNode;
+import org.symqle.epic.regexp.first.NfaNode;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created by aizyurov on 9/27/17.
  */
-public class SecondFaState extends NfaState {
+public class SecondFaNode extends NfaNode {
 
-    private static List<SecondFaState> allStates = new ArrayList<>();
+    private static List<SecondFaNode> allStates = new ArrayList<>();
     private final int index;
     private final List<Lexem> lexems;
+    protected Set<FirstFaNode> emptyEdges = new HashSet<>();
 
-    public SecondFaState(List<Lexem> lexems) {
+    public SecondFaNode(List<Lexem> lexems) {
         this.lexems = lexems;
         index = allStates.size();
         allStates.add(this);
     }
 
-    private final List<Edge> edges = new ArrayList<>();
+    private final List<Edge2> edges = new ArrayList<>();
 
-    public void addEdge(Edge edge) {
+    public void addEdge(Edge2 edge) {
         edges.add(edge);
     }
 
-    public List<Edge> getEdges() {
+    public List<Edge2> getEdges() {
         return Collections.unmodifiableList(edges);
     }
 
@@ -43,7 +47,7 @@ public class SecondFaState extends NfaState {
 
     public static int edgeCount() {
         int count = 0;
-        for (SecondFaState state: allStates) {
+        for (SecondFaNode state: allStates) {
             count += state.getEdges().size();
         }
         return count;

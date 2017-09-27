@@ -1,6 +1,6 @@
 package org.symqle.epic.regexp.model;
 
-import org.symqle.epic.regexp.first.FirstFaState;
+import org.symqle.epic.regexp.first.FirstFaNode;
 
 /**
  * @author lvovich
@@ -30,8 +30,8 @@ public class Repeat implements FirstFaBuilder {
      * @return
      */
     @Override
-    public FirstFaState endState(FirstFaState startState) {
-        final FirstFaState endState = primary.endState(startState);
+    public FirstFaNode endState(FirstFaNode startState) {
+        final FirstFaNode endState = primary.endState(startState);
         switch (repetitions) {
             case ZERO_OR_MORE:
                 startState.addEmptyEdge(endState);

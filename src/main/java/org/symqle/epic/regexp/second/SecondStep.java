@@ -1,9 +1,9 @@
 package org.symqle.epic.regexp.second;
 
-import org.symqle.epic.regexp.Edge;
+import org.symqle.epic.regexp.Edge1;
+import org.symqle.epic.regexp.Edge2;
 import org.symqle.epic.regexp.Lexem;
-import org.symqle.epic.regexp.first.FirstFaState;
-import org.symqle.epic.regexp.model.CharSet;
+import org.symqle.epic.regexp.first.FirstFaNode;
 
 import java.util.*;
 
@@ -12,19 +12,19 @@ import java.util.*;
  */
 public class SecondStep {
 
-    public SecondFaState convert(FirstFaState startState) {
-        Map<FirstFaState, Set<FirstFaState>> closureMap = new HashMap<>();
-        Set<FirstFaState> queue = new HashSet<>();
+    public Collection<SecondFaNode> convert(FirstFaNode startState) {
+        Map<FirstFaNode, Set<FirstFaNode>> closureMap = new LinkedHashMap<>();
+        Set<FirstFaNode> queue = new HashSet<>();
         queue.add(startState);
         while (!queue.isEmpty()) {
-            final FirstFaState next = queue.iterator().next();
-            for (FirstFaState emptyEdge: next.getEmptyEdges()) {
+            final FirstFaNode next = queue.iterator().next();
+            for (FirstFaNode emptyEdge: next.getEmptyEdges()) {
                 if (!closureMap.keySet().contains(emptyEdge)) {
                     queue.add(emptyEdge);
                 }
             }
-            for (Edge edge: next.getEdges()) {
-                final FirstFaState to = edge.getTo();
+            for (Edge1 edge: next.getEdges()) {
+                final FirstFaNode to = edge.getTo();
                 if (!closureMap.keySet().contains(to)) {
                     queue.add(to);
                 }
@@ -33,39 +33,40 @@ public class SecondStep {
             queue.remove(next);
         }
 
-        Map<Set<FirstFaState>, SecondFaState> stateMap = new HashMap<>();
-        for (FirstFaState first: closureMap.keySet()) {
-            final Set<FirstFaState> stateSet = closureMap.get(first);
+        Map<Set<FirstFaNode>, SecondFaNode> stateMap = new LinkedHashMap<>();
+        for (FirstFaNode first: closureMap.keySet()) {
+            final Set<FirstFaNode> stateSet = closureMap.get(first);
             if (!stateMap.containsKey(stateSet)) {
                 final List<Lexem> lexems = new ArrayList<>();
-                for (FirstFaState state: stateSet) {
+                for (FirstFaNode state: stateSet) {
                     final Lexem lexem = state.getLexem();
                     if (lexem != null) {
                         lexems.add(lexem);
                     }
                 }
-                SecondFaState second = new SecondFaState(lexems);
+                SecondFaNode second = new SecondFaNode(lexems);
                 stateMap.put(closureMap.get(first), second);
             }
         }
-        for (Set<FirstFaState> stateSet: stateMap.keySet()) {
-            final SecondFaState second = stateMap.get(stateSet);
-            for (FirstFaState state: stateSet) {
-                for (Edge edge: state.getEdges()) {
-                    second.addEdge(edge);
+        for (Set<FirstFaNode> stateSet: stateMap.keySet()) {
+            final SecondFaNode second = stateMap.get(stateSet);
+            for (FirstFaNode state: stateSet) {
+                for (Edge1 edge: state.getEdges()) {
+                    Set<FirstFaNode> toNodeSet = closureMap.get(edge.getTo());
+                    second.addEdge(new Edge2(edge.getCharacterSet(), stateMap.get(toNodeSet)));
                 }
             }
         }
-        return stateMap.get(closureMap.get(startState));
+        return stateMap.values();
     }
 
-    private Set<FirstFaState> closure(FirstFaState origin) {
-        Set<FirstFaState> processed = new HashSet<>();
-        Set<FirstFaState> queue = new HashSet<>();
+    private Set<FirstFaNode> closure(FirstFaNode origin) {
+        Set<FirstFaNode> processed = new LinkedHashSet<>();
+        Set<FirstFaNode> queue = new HashSet<>();
         queue.add(origin);
         while (!queue.isEmpty()) {
-            final FirstFaState next = queue.iterator().next();
-            for (FirstFaState emptyEdge: next.getEmptyEdges()) {
+            final FirstFaNode next = queue.iterator().next();
+            for (FirstFaNode emptyEdge: next.getEmptyEdges()) {
                 if (!processed.contains(emptyEdge)) {
                     queue.add(emptyEdge);
                 }

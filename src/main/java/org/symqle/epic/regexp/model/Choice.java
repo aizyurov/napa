@@ -1,6 +1,6 @@
 package org.symqle.epic.regexp.model;
 
-import org.symqle.epic.regexp.first.FirstFaState;
+import org.symqle.epic.regexp.first.FirstFaNode;
 
 import java.util.List;
 
@@ -23,8 +23,8 @@ public class Choice implements FirstFaBuilder {
      * @return
      */
     @Override
-    public FirstFaState endState(FirstFaState startState) {
-        final FirstFaState endState = new FirstFaState();
+    public FirstFaNode endState(FirstFaNode startState) {
+        final FirstFaNode endState = new FirstFaNode();
         for (Sequence variant: variants) {
             variant.endState(startState).addEmptyEdge(endState);
         }

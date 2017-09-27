@@ -3,16 +3,19 @@ package org.symqle.epic.grammar;
 import junit.framework.TestCase;
 import org.symqle.epic.regexp.Lexem;
 import org.symqle.epic.regexp.first.CharacterSetRegistry;
-import org.symqle.epic.regexp.first.FirstFaState;
+import org.symqle.epic.regexp.first.FirstFaNode;
 import org.symqle.epic.regexp.first.FirstStep;
 import org.symqle.epic.regexp.model.Regexp;
 import org.symqle.epic.regexp.parser.RegexpSyntaxTreeBuilder;
 import org.symqle.epic.regexp.scanner.Scanner;
-import org.symqle.epic.regexp.second.SecondFaState;
+import org.symqle.epic.regexp.second.DfaNode;
+import org.symqle.epic.regexp.second.SecondFaNode;
 import org.symqle.epic.regexp.second.SecondStep;
+import org.symqle.epic.regexp.second.ThirdStep;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -23,8 +26,12 @@ public class RegexpParsingTest extends TestCase {
     public void testSimpleSequence() {
         final Scanner scanner = new Scanner("\"abc\"");
         final Regexp regexp = new RegexpSyntaxTreeBuilder(scanner).regexp();
-        final FirstFaState start = new FirstFaState();
-        regexp.endState(start);
+        final FirstFaNode start = new FirstFaNode();
+        FirstFaNode firstFaNode = regexp.endState(start);
+        SecondStep secondStep = new SecondStep();
+        Collection<SecondFaNode> second = secondStep.convert(start);
+        ThirdStep thirdStep = new ThirdStep();
+        DfaNode startDfa = thirdStep.build(second);
         System.out.println(regexp);
     }
 
@@ -77,7 +84,7 @@ public class RegexpParsingTest extends TestCase {
     public void testAllFeatures() {
         final Scanner scanner = new Scanner("\"(([a-bcd]+)|z*|y?)*def\"");
         final Regexp regexp = new RegexpSyntaxTreeBuilder(scanner).regexp();
-        regexp.endState(new FirstFaState());
+        regexp.endState(new FirstFaNode());
 
         System.out.println(regexp);
 
@@ -104,20 +111,53 @@ public class RegexpParsingTest extends TestCase {
         for (String pattern: ignored) {
             lexems.add(new Lexem('"' + pattern + '"', false));
         }
-        final FirstFaState startState;
+        final FirstFaNode startState;
         {
             final long startTs = System.currentTimeMillis();
             startState = new FirstStep(lexems).automaton();
-            System.out.println("Nodes: " + FirstFaState.count() + " in " + (System.currentTimeMillis() - startTs) + " millis");
+            System.out.println("Nodes: " + FirstFaNode.count() + " in " + (System.currentTimeMillis() - startTs) + " millis");
             System.out.println("Charsets: " + CharacterSetRegistry.size());
+        }
+
+        Collection<SecondFaNode> nfa;
+        {
+            final long startTs = System.currentTimeMillis();
+            nfa = new SecondStep().convert(startState);
+            final SecondFaNode secondFaState = nfa.iterator().next();
+            long intermideateTs = System.currentTimeMillis();
+            System.out.println("NFA Nodes: " + SecondFaNode.size() + " in " + (intermideateTs - startTs) + " millis");
+            System.out.println("NFA Edges: " + SecondFaNode.edgeCount());
+
+//            Set<CharacterSet> allCharacterSets = new HashSet<>();
+//            for (SecondFaNode node: nfa) {
+//                allCharacterSets.addAll(node.getEdges().stream().map(Edge2::getCharacterSet).collect(Collectors.toSet()));
+//            }
+//            CharacterClassRegistry registry = new CharacterClassRegistry(allCharacterSets);
+//
+//            System.out.println("Character classes: " + registry.size() + " in " + (System.currentTimeMillis() - intermideateTs));
+//
+//            for (char c = 'a'; c < 'z'; c++) {
+//                System.out.println(c + ": " + registry.classOf(c));
+//            }
+//            for (char c = 'A'; c < 'C'; c++) {
+//                System.out.println(c + ": " + registry.classOf(c));
+//            }
+//            for (char c = '0'; c < '3'; c++) {
+//                System.out.println(c + ": " + registry.classOf(c));
+//            }
+            System.out.println("=============");
+
         }
 
         {
             final long startTs = System.currentTimeMillis();
-            final SecondFaState secondFaState = new SecondStep().convert(startState);
-            System.out.println("Nodes: " + SecondFaState.size() + " in " + (System.currentTimeMillis() - startTs) + " millis");
-            System.out.println("Edges: " + SecondFaState.edgeCount());
+            ThirdStep thirdStep = new ThirdStep();
+            DfaNode dfaNode = thirdStep.build(nfa);
+            System.out.println("DFA Nodes: " + thirdStep.size() + " in " + (System.currentTimeMillis() - startTs) + " millis");
+            System.out.println("DFA Edges: " + thirdStep.edges());
         }
+
+
 
     }
 

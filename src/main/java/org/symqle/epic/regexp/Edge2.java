@@ -1,16 +1,16 @@
 package org.symqle.epic.regexp;
 
 import org.symqle.epic.regexp.first.CharacterSet;
-import org.symqle.epic.regexp.first.FirstFaState;
+import org.symqle.epic.regexp.second.SecondFaNode;
 
 /**
 * Created by aizyurov on 9/27/17.
 */
-public class Edge {
+public class Edge2 {
     private final CharacterSet characterSet;
-    private final FirstFaState to;
+    private final SecondFaNode to;
 
-    public Edge(CharacterSet characterSet, FirstFaState to) {
+    public Edge2(CharacterSet characterSet, SecondFaNode to) {
         this.characterSet = characterSet;
         this.to = to;
     }
@@ -19,7 +19,7 @@ public class Edge {
         return characterSet;
     }
 
-    public FirstFaState getTo() {
+    public SecondFaNode getTo() {
         return to;
     }
 }

@@ -4,16 +4,16 @@ package org.symqle.epic.regexp;
  * Created by aizyurov on 9/27/17.
  */
 public class Lexem {
-    private final String source;
+    private final String pattern;
     private final boolean meaningiful;
 
-    public Lexem(String source, boolean meaningiful) {
-        this.source = source;
+    public Lexem(String pattern, boolean meaningiful) {
+        this.pattern = pattern;
         this.meaningiful = meaningiful;
     }
 
-    public String getSource() {
-        return source;
+    public String getPattern() {
+        return pattern;
     }
 
     public boolean isMeaningiful() {

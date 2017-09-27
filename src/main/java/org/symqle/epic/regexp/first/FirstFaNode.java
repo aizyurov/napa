@@ -1,7 +1,7 @@
 package org.symqle.epic.regexp.first;
 
 
-import org.symqle.epic.regexp.Edge;
+import org.symqle.epic.regexp.Edge1;
 import org.symqle.epic.regexp.Lexem;
 
 import java.util.*;
@@ -9,32 +9,34 @@ import java.util.*;
 /**
  * Created by aizyurov on 9/27/17.
  */
-public class FirstFaState extends NfaState {
+public class FirstFaNode extends NfaNode {
 
-    private static List<FirstFaState> allStates = new ArrayList<>();
+    private static List<FirstFaNode> allStates = new ArrayList<>();
     protected final Lexem lexem;
+    protected final List<Edge1> edges = new ArrayList<>();
 
     private final int index;
+    protected Set<FirstFaNode> emptyEdges = new HashSet<>();
 
-    public FirstFaState() {
+    public FirstFaNode() {
         this(null);
     }
 
-    public FirstFaState(Lexem lexem) {
+    public FirstFaNode(Lexem lexem) {
         this.lexem = lexem;
         index = allStates.size();
         allStates.add(this);
     }
 
-    public List<Edge> getEdges() {
+    public List<Edge1> getEdges() {
         return Collections.unmodifiableList(edges);
     }
 
-    public Set<FirstFaState> getEmptyEdges() {
+    public Set<FirstFaNode> getEmptyEdges() {
         return Collections.unmodifiableSet(emptyEdges);
     }
 
-    public void addEmptyEdge(FirstFaState to) {
+    public void addEmptyEdge(FirstFaNode to) {
         emptyEdges.add(to);
     }
 
@@ -54,5 +56,9 @@ public class FirstFaState extends NfaState {
 
     public Lexem getLexem() {
         return lexem;
+    }
+
+    public void addEdge(CharacterSet characterSet, FirstFaNode to) {
+        edges.add(new Edge1(characterSet, to));
     }
 }

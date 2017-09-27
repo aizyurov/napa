@@ -1,6 +1,6 @@
 package org.symqle.epic.regexp.model;
 
-import org.symqle.epic.regexp.first.FirstFaState;
+import org.symqle.epic.regexp.first.FirstFaNode;
 
 import java.util.List;
 
@@ -26,8 +26,8 @@ public class Sequence implements FirstFaBuilder {
      * @return
      */
     @Override
-    public FirstFaState endState(FirstFaState startState) {
-        FirstFaState current = startState;
+    public FirstFaNode endState(FirstFaNode startState) {
+        FirstFaNode current = startState;
         for (Repeat repeat: repetitions) {
             current = repeat.endState(current);
         }
