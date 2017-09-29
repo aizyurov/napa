@@ -16,6 +16,7 @@ import org.symqle.epic.regexp.second.ThirdStep;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -24,15 +25,12 @@ import java.util.List;
 public class RegexpParsingTest extends TestCase {
 
     public void testSimpleSequence() {
-        final Scanner scanner = new Scanner("\"abc\"");
-        final Regexp regexp = new RegexpSyntaxTreeBuilder(scanner).regexp();
-        final NfaNode1 start = new NfaNode1();
-        NfaNode1 nfaNode1 = regexp.endState(start);
+        NfaNode1 start = new FirstStep(Collections.singletonList(new Lexem("\"abc\"", true))).automaton();
         SecondStep secondStep = new SecondStep();
         Collection<NfaNode2> second = secondStep.convert(start);
         ThirdStep thirdStep = new ThirdStep();
         DfaNode startDfa = thirdStep.build(second);
-        System.out.println(regexp);
+        System.out.println(startDfa.getEdges().keySet());
     }
 
     public void testChoice() {

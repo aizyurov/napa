@@ -24,7 +24,7 @@ public class FirstStep {
             Scanner scanner = new Scanner(lexem.getPattern());
             final NfaNode1 regexpEndState = new RegexpSyntaxTreeBuilder(scanner).regexp().endState(startState);
             NfaNode1 lexemEndState = new NfaNode1(lexem);
-            regexpEndState.addEmptyEdge(regexpEndState);
+            regexpEndState.addEmptyEdge(lexemEndState);
         }
         return startState;
     }
