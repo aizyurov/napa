@@ -23,7 +23,7 @@ public class FirstStep {
         }
     }
 
-    public NfaNode1 automaton() {
+    public NfaNode1 makeNfa() {
         NfaNode1 startState = new NfaNode1();
         for (TokenDefinition tokenDefinition : tokenDefinitions) {
             Scanner scanner = new Scanner(tokenDefinition.getPattern());

@@ -14,7 +14,7 @@ public class ThirdStep {
     Map<Set<NfaNode2>, DfaNode> dfaNodeMap = new LinkedHashMap<>();
     CharacterClassRegistry registry;
 
-    public DfaNode build(Collection<NfaNode2> secondNfa) {
+    public Dfa build(Collection<NfaNode2> secondNfa) {
         Set<CharacterSet> allCharacterSets = secondNfa.stream().flatMap(x -> x.getEdges().stream()).map(NfaNode2.Edge::getCharacterSet).collect(Collectors.toSet());
         registry = new CharacterClassRegistry(allCharacterSets);
 
@@ -27,7 +27,6 @@ public class ThirdStep {
         DfaNode startDfa = new DfaNode(extractTypes(startSet));
         dfaNodeMap.put(startSet, startDfa);
 
-        Set<NfaNode2> previousNfaSet = null;
         while (!queue.isEmpty()) {
             Set<NfaNode2> nfaSet = queue.iterator().next();
             queue.remove(nfaSet);
@@ -58,7 +57,7 @@ public class ThirdStep {
                 currentDfaNode.addEdge(entry.getKey(), dfaNodeMap.get(entry.getValue()));
             }
         }
-        return startDfa;
+        return new Dfa(new ArrayList<>(dfaNodeMap.values()), registry);
     }
 
     private Set<Integer> extractTypes(final Set<NfaNode2> nfaNodeSet) {

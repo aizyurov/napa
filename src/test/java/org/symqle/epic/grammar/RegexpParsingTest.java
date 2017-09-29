@@ -26,11 +26,11 @@ import java.util.stream.Collectors;
 public class RegexpParsingTest extends TestCase {
 
     public void testSimpleSequence() {
-        NfaNode1 start = new FirstStep(Collections.singletonList("\"abc\""), Collections.emptyList()).automaton();
+        NfaNode1 start = new FirstStep(Collections.singletonList("\"abc\""), Collections.emptyList()).makeNfa();
         SecondStep secondStep = new SecondStep();
         Collection<NfaNode2> second = secondStep.convert(start);
         ThirdStep thirdStep = new ThirdStep();
-        DfaNode startDfa = thirdStep.build(second);
+        DfaNode startDfa = thirdStep.build(second).getNodes().get(0);
         System.out.println(startDfa.getEdges().keySet());
     }
 
@@ -111,7 +111,7 @@ public class RegexpParsingTest extends TestCase {
         final NfaNode1 startState;
         {
             final long startTs = System.currentTimeMillis();
-            startState = new FirstStep(quoteAll(meaningful), quoteAll(ignored)).automaton();
+            startState = new FirstStep(quoteAll(meaningful), quoteAll(ignored)).makeNfa();
             System.out.println("Nodes: " + NfaNode1.count() + " in " + (System.currentTimeMillis() - startTs) + " millis");
             System.out.println("Charsets: " + CharacterSetRegistry.size());
         }
@@ -149,7 +149,7 @@ public class RegexpParsingTest extends TestCase {
         {
             final long startTs = System.currentTimeMillis();
             ThirdStep thirdStep = new ThirdStep();
-            DfaNode dfaNode = thirdStep.build(nfa);
+            DfaNode dfaNode = thirdStep.build(nfa).getNodes().get(0);
             System.out.println("DFA Nodes: " + thirdStep.size() + " in " + (System.currentTimeMillis() - startTs) + " millis");
             System.out.println("DFA Edges: " + thirdStep.edges());
         }
