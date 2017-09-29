@@ -1,6 +1,6 @@
 package org.symqle.epic.regexp.second;
 
-import org.symqle.epic.regexp.Lexem;
+import org.symqle.epic.regexp.TokenDefinition;
 import org.symqle.epic.regexp.first.CharacterSet;
 
 import java.util.*;
@@ -24,7 +24,7 @@ public class ThirdStep {
 
         Set<NfaNode2> startSet = Collections.singleton(secondNfa.iterator().next());
         queue.add(startSet);
-        DfaNode startDfa = new DfaNode(extractLabels(startSet));
+        DfaNode startDfa = new DfaNode(extractTypes(startSet));
         dfaNodeMap.put(startSet, startDfa);
 
         Set<NfaNode2> previousNfaSet = null;
@@ -47,7 +47,7 @@ public class ThirdStep {
                 }
             }
             for (Set<NfaNode2> nfaNodeSet : nodeSetsByCharacterClass.values()) {
-                DfaNode dfaNode = dfaNodeMap.getOrDefault(nfaNodeSet, new DfaNode(extractLabels(nfaNodeSet)));
+                DfaNode dfaNode = dfaNodeMap.getOrDefault(nfaNodeSet, new DfaNode(extractTypes(nfaNodeSet)));
                 dfaNodeMap.put(nfaNodeSet, dfaNode);
                 if (!processed.contains(nfaNodeSet)) {
                     queue.add(new HashSet<>(nfaNodeSet));
@@ -61,12 +61,13 @@ public class ThirdStep {
         return startDfa;
     }
 
-    private Set<String> extractLabels(final Set<NfaNode2> nfaNodeSet) {
-        Map<Boolean, Set<String>> labelsMap = nfaNodeSet.stream()
-                .flatMap(n -> n.getLexems().stream())
-                .collect(Collectors.partitioningBy(Lexem::isMeaningiful, Collectors.mapping(Lexem::getPattern, Collectors.toSet())));
+    private Set<Integer> extractTypes(final Set<NfaNode2> nfaNodeSet) {
+        Map<Boolean, Set<Integer>> partitioned = nfaNodeSet.stream()
+                .flatMap(n -> n.getTokenDefinitions().stream())
+                .map(TokenDefinition::getType)
+                .collect(Collectors.partitioningBy(t -> t >= 0, Collectors.toSet()));
         // try first meaningful lexems, then ignored
-        return labelsMap.getOrDefault(true, labelsMap.getOrDefault(false, Collections.emptySet()));
+        return partitioned.getOrDefault(true, partitioned.getOrDefault(false, Collections.emptySet()));
     }
 
     public int size() {
@@ -81,4 +82,7 @@ public class ThirdStep {
         return edges;
     }
 
+    public CharacterClassRegistry getRegistry() {
+        return registry;
+    }
 }

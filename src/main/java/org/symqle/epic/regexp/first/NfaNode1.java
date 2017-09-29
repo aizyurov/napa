@@ -1,7 +1,7 @@
 package org.symqle.epic.regexp.first;
 
 
-import org.symqle.epic.regexp.Lexem;
+import org.symqle.epic.regexp.TokenDefinition;
 
 import java.util.*;
 
@@ -11,7 +11,7 @@ import java.util.*;
 public class NfaNode1 {
 
     private static List<NfaNode1> allStates = new ArrayList<>();
-    protected final Lexem lexem;
+    protected final TokenDefinition tokenDefinition;
     protected final List<Edge> edges = new ArrayList<>();
 
     private final int index;
@@ -21,8 +21,8 @@ public class NfaNode1 {
         this(null);
     }
 
-    public NfaNode1(Lexem lexem) {
-        this.lexem = lexem;
+    public NfaNode1(TokenDefinition tokenDefinition) {
+        this.tokenDefinition = tokenDefinition;
         index = allStates.size();
         allStates.add(this);
     }
@@ -53,8 +53,8 @@ public class NfaNode1 {
         return allStates.size();
     }
 
-    public Lexem getLexem() {
-        return lexem;
+    public TokenDefinition getTokenDefinition() {
+        return tokenDefinition;
     }
 
     public void addEdge(CharacterSet characterSet, NfaNode1 to) {

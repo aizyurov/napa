@@ -12,9 +12,9 @@ public class DfaNode {
 
     private Map<Integer, DfaNode> edges = new HashMap<>();
 
-    private final Set<String> labels;
+    private final Set<Integer> labels;
 
-    public DfaNode(final Set<String> labels) {
+    public DfaNode(final Set<Integer> labels) {
         this.labels = labels;
     }
 
@@ -29,4 +29,7 @@ public class DfaNode {
         return Collections.unmodifiableMap(edges);
     }
 
+    public Set<Integer> getLabels() {
+        return labels;
+    }
 }

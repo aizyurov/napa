@@ -1,6 +1,6 @@
 package org.symqle.epic.regexp.second;
 
-import org.symqle.epic.regexp.Lexem;
+import org.symqle.epic.regexp.TokenDefinition;
 import org.symqle.epic.regexp.first.NfaNode1;
 
 import java.util.*;
@@ -35,14 +35,14 @@ public class SecondStep {
         for (NfaNode1 first: closureMap.keySet()) {
             final Set<NfaNode1> stateSet = closureMap.get(first);
             if (!stateMap.containsKey(stateSet)) {
-                final List<Lexem> lexems = new ArrayList<>();
+                final List<TokenDefinition> tokenDefinitions = new ArrayList<>();
                 for (NfaNode1 state: stateSet) {
-                    final Lexem lexem = state.getLexem();
-                    if (lexem != null) {
-                        lexems.add(lexem);
+                    final TokenDefinition tokenDefinition = state.getTokenDefinition();
+                    if (tokenDefinition != null) {
+                        tokenDefinitions.add(tokenDefinition);
                     }
                 }
-                NfaNode2 second = new NfaNode2(lexems);
+                NfaNode2 second = new NfaNode2(tokenDefinitions);
                 stateMap.put(closureMap.get(first), second);
             }
         }

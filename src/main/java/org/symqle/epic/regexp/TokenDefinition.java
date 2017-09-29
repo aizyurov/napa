@@ -3,20 +3,20 @@ package org.symqle.epic.regexp;
 /**
  * Created by aizyurov on 9/27/17.
  */
-public class Lexem {
+public class TokenDefinition {
     private final String pattern;
-    private final boolean meaningiful;
+    private final int type;
 
-    public Lexem(String pattern, boolean meaningiful) {
+    public TokenDefinition(final String pattern, final int type) {
         this.pattern = pattern;
-        this.meaningiful = meaningiful;
+        this.type = type;
     }
 
     public String getPattern() {
         return pattern;
     }
 
-    public boolean isMeaningiful() {
-        return meaningiful;
+    public int getType() {
+        return type;
     }
 }

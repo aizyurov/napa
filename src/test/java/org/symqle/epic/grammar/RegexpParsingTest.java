@@ -1,7 +1,7 @@
 package org.symqle.epic.grammar;
 
 import junit.framework.TestCase;
-import org.symqle.epic.regexp.Lexem;
+import org.symqle.epic.regexp.TokenDefinition;
 import org.symqle.epic.regexp.first.CharacterSetRegistry;
 import org.symqle.epic.regexp.first.NfaNode1;
 import org.symqle.epic.regexp.first.FirstStep;
@@ -18,6 +18,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Created by aizyurov on 9/27/17.
@@ -25,7 +26,7 @@ import java.util.List;
 public class RegexpParsingTest extends TestCase {
 
     public void testSimpleSequence() {
-        NfaNode1 start = new FirstStep(Collections.singletonList(new Lexem("\"abc\"", true))).automaton();
+        NfaNode1 start = new FirstStep(Collections.singletonList("\"abc\""), Collections.emptyList()).automaton();
         SecondStep secondStep = new SecondStep();
         Collection<NfaNode2> second = secondStep.convert(start);
         ThirdStep thirdStep = new ThirdStep();
@@ -88,6 +89,10 @@ public class RegexpParsingTest extends TestCase {
 
     }
 
+    private List<String> quoteAll(List<String> patterns) {
+        return patterns.stream().map(p -> '"' + p + '"').collect(Collectors.toList());
+    }
+
     public void testFullLexis() {
         final String comment = "/[*]([^*]|[*][^/])*[*]/";
         final String whitespace = "[ \\n\\r\\t]+";
@@ -97,22 +102,16 @@ public class RegexpParsingTest extends TestCase {
         List<String> separators = Arrays.asList("[.]", ",", ";", "[+]", "-", "[*]", "/", "<", ">", "=", "==", "<=", ">=", "!=", "!");
         List<String> keywords = Arrays.asList("class", "interface", "package", "extends", "implements", "private", "public", "final", "void", "int", "long", "boolean", "char", "import", "volatile", "transient", "default");
 
-        final List<Lexem> lexems = new ArrayList<>();
+        final List<TokenDefinition> tokenDefinitions = new ArrayList<>();
         final List<String> meaningful = new ArrayList<>();
         meaningful.addAll(keywords);
         meaningful.addAll(separators);
         meaningful.add(identifier);
         meaningful.add(number);
-        for (String pattern: meaningful) {
-            lexems.add(new Lexem('"' + pattern + '"', true));
-        }
-        for (String pattern: ignored) {
-            lexems.add(new Lexem('"' + pattern + '"', false));
-        }
         final NfaNode1 startState;
         {
             final long startTs = System.currentTimeMillis();
-            startState = new FirstStep(lexems).automaton();
+            startState = new FirstStep(quoteAll(meaningful), quoteAll(ignored)).automaton();
             System.out.println("Nodes: " + NfaNode1.count() + " in " + (System.currentTimeMillis() - startTs) + " millis");
             System.out.println("Charsets: " + CharacterSetRegistry.size());
         }
