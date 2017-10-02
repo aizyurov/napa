@@ -5,15 +5,15 @@ import java.util.BitSet;
 /**
  * Created by aizyurov on 9/27/17.
  */
-public class AbstractCharacterSet {
+public class CharacterSet {
     private BitSet bitSet = new BitSet(1 + Character.MAX_VALUE);
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || ! (o instanceof AbstractCharacterSet)) return false;
+        if (o == null || ! (o instanceof CharacterSet)) return false;
 
-        AbstractCharacterSet that = (AbstractCharacterSet) o;
+        CharacterSet that = (CharacterSet) o;
 
         if (!bitSet.equals(that.bitSet)) return false;
 
@@ -29,24 +29,24 @@ public class AbstractCharacterSet {
         return bitSet.get(c);
     }
 
-    public static AbstractCharacterSet any() {
-        AbstractCharacterSet set = new AbstractCharacterSet();
+    public static CharacterSet any() {
+        CharacterSet set = new CharacterSet();
         set.bitSet.set(Character.MIN_VALUE, Character.MAX_VALUE + 1, true);
         return  set;
     }
 
-    public static AbstractCharacterSet complement(AbstractCharacterSet complemented) {
-        AbstractCharacterSet set = new AbstractCharacterSet();
+    public static CharacterSet complement(CharacterSet complemented) {
+        CharacterSet set = new CharacterSet();
         set.bitSet.xor(complemented.bitSet);
         return set;
     }
 
-    public static AbstractCharacterSet empty() {
-        return new AbstractCharacterSet();
+    public static CharacterSet empty() {
+        return new CharacterSet();
     }
 
-    public static AbstractCharacterSet range(char from, char to) {
-        AbstractCharacterSet set = new AbstractCharacterSet();
+    public static CharacterSet range(char from, char to) {
+        CharacterSet set = new CharacterSet();
         if (from > to) {
             throw new IllegalArgumentException("Invalid range " + from + "-" + to);
         }
@@ -54,14 +54,14 @@ public class AbstractCharacterSet {
         return set;
     }
 
-    public static AbstractCharacterSet single(char c) {
-        AbstractCharacterSet set = new AbstractCharacterSet();
+    public static CharacterSet single(char c) {
+        CharacterSet set = new CharacterSet();
         set.bitSet.set(c, true);
         return set;
     }
 
-    public static AbstractCharacterSet union(AbstractCharacterSet first, AbstractCharacterSet second) {
-        AbstractCharacterSet set = new AbstractCharacterSet();
+    public static CharacterSet union(CharacterSet first, CharacterSet second) {
+        CharacterSet set = new CharacterSet();
         set.bitSet.or(first.bitSet);
         set.bitSet.or(second.bitSet);
         return set;
