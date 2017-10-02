@@ -1,7 +1,7 @@
 package org.symqle.epic.regexp.first;
 
 import org.symqle.epic.regexp.TokenDefinition;
-import org.symqle.epic.regexp.parser.RegexpSyntaxTreeBuilder;
+import org.symqle.epic.regexp.model.RegexpSyntaxTreeBuilder;
 import org.symqle.epic.regexp.scanner.Scanner;
 
 import java.util.ArrayList;

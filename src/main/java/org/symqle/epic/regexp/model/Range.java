@@ -1,7 +1,6 @@
 package org.symqle.epic.regexp.model;
 
 import org.symqle.epic.regexp.first.AbstractCharacterSet;
-import org.symqle.epic.regexp.first.RangeCharacterSet;
 
 /**
  * Created by aizyurov on 9/26/17.
@@ -15,14 +14,7 @@ public class Range {
         this.to = to;
     }
 
-    /**
-     * Builds as many states as needed and returns end state.
-     * May modify startState
-     *
-     * @param startState
-     * @return
-     */
     public AbstractCharacterSet characterSet() {
-        return new RangeCharacterSet(from, to);
+        return AbstractCharacterSet.range(from, to);
     }
 }

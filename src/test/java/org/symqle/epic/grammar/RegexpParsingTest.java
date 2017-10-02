@@ -2,11 +2,10 @@ package org.symqle.epic.grammar;
 
 import junit.framework.TestCase;
 import org.symqle.epic.regexp.TokenDefinition;
-import org.symqle.epic.regexp.first.CharacterSetRegistry;
-import org.symqle.epic.regexp.first.NfaNode1;
 import org.symqle.epic.regexp.first.FirstStep;
+import org.symqle.epic.regexp.first.NfaNode1;
 import org.symqle.epic.regexp.model.Regexp;
-import org.symqle.epic.regexp.parser.RegexpSyntaxTreeBuilder;
+import org.symqle.epic.regexp.model.RegexpSyntaxTreeBuilder;
 import org.symqle.epic.regexp.scanner.Scanner;
 import org.symqle.epic.regexp.second.DfaNode;
 import org.symqle.epic.regexp.second.NfaNode2;
@@ -113,7 +112,6 @@ public class RegexpParsingTest extends TestCase {
             final long startTs = System.currentTimeMillis();
             startState = new FirstStep(quoteAll(meaningful), quoteAll(ignored)).makeNfa();
             System.out.println("Nodes: " + NfaNode1.count() + " in " + (System.currentTimeMillis() - startTs) + " millis");
-            System.out.println("Charsets: " + CharacterSetRegistry.size());
         }
 
         Collection<NfaNode2> nfa;

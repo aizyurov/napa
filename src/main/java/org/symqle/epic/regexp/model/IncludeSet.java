@@ -34,9 +34,9 @@ public class IncludeSet implements CharSet {
     }
 
     AbstractCharacterSet characterSet() {
-        AbstractCharacterSet accumulator = new EmptyCharacterSet();
+        AbstractCharacterSet accumulator = AbstractCharacterSet.empty();
         for (Range range: ranges) {
-            accumulator = new UnionSet(range.characterSet(), accumulator);
+            accumulator = AbstractCharacterSet.union(range.characterSet(), accumulator);
         }
         return accumulator;
     }

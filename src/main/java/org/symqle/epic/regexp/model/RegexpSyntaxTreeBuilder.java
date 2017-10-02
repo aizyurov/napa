@@ -1,10 +1,9 @@
-package org.symqle.epic.regexp.parser;
+package org.symqle.epic.regexp.model;
 
-import org.symqle.epic.regexp.model.*;
-import org.symqle.epic.regexp.model.CharSet;
 import org.symqle.epic.regexp.scanner.Scanner;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by aizyurov on 9/26/17.
@@ -93,7 +92,7 @@ public class RegexpSyntaxTreeBuilder {
     private CharSet set() {
         if (scanner.preview() == LexerTokenType.CARET) {
             scanner.get();
-            return new ExcludeSet(includeSet());
+            return new ExcludeSet(includeSet().characterSet());
         } else {
             return includeSet();
         }

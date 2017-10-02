@@ -1,6 +1,7 @@
 package org.symqle.epic.regexp.first;
 
 import java.util.BitSet;
+import java.util.List;
 
 /**
  * Created by aizyurov on 9/27/17.
@@ -41,4 +42,51 @@ public class AbstractCharacterSet implements CharacterSet {
     protected void or(AbstractCharacterSet other) {
         bitSet.or(other.bitSet);
     }
+
+    public static AbstractCharacterSet any() {
+        AbstractCharacterSet set = new AbstractCharacterSet();
+        set.bitSet.set(Character.MIN_VALUE, Character.MAX_VALUE + 1, true);
+        return  set;
+    }
+
+    public static AbstractCharacterSet complement(AbstractCharacterSet complemented) {
+        AbstractCharacterSet set = new AbstractCharacterSet();
+        set.bitSet.xor(complemented.bitSet);
+        return set;
+    }
+
+    public static AbstractCharacterSet empty() {
+        return new AbstractCharacterSet();
+    }
+
+    public static AbstractCharacterSet range(char from, char to) {
+        AbstractCharacterSet set = new AbstractCharacterSet();
+        if (from > to) {
+            throw new IllegalArgumentException("Invalid range " + from + "-" + to);
+        }
+        set.bitSet.set(from, to + 1, true);
+        return set;
+    }
+
+    public static AbstractCharacterSet single(char c) {
+        AbstractCharacterSet set = new AbstractCharacterSet();
+        set.bitSet.set(c, true);
+        return set;
+    }
+
+    public static AbstractCharacterSet union(AbstractCharacterSet first, AbstractCharacterSet second) {
+        AbstractCharacterSet set = new AbstractCharacterSet();
+        set.bitSet.or(first.bitSet);
+        set.bitSet.or(second.bitSet);
+        return set;
+    }
+
+    public static AbstractCharacterSet unionAll(List<AbstractCharacterSet> characterSets) {
+        AbstractCharacterSet set = new AbstractCharacterSet();
+        for (AbstractCharacterSet characterSet: characterSets) {
+            set.bitSet.or(characterSet.bitSet);
+        }
+        return set;
+    }
+
 }

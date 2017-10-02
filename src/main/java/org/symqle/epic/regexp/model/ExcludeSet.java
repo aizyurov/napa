@@ -1,15 +1,15 @@
 package org.symqle.epic.regexp.model;
 
-import org.symqle.epic.regexp.first.ComplementSet;
+import org.symqle.epic.regexp.first.AbstractCharacterSet;
 import org.symqle.epic.regexp.first.NfaNode1;
 
 /**
  * Created by aizyurov on 9/27/17.
  */
 public class ExcludeSet implements CharSet {
-    private final IncludeSet includeSet;
+    private final AbstractCharacterSet includeSet;
 
-    public ExcludeSet(IncludeSet includeSet) {
+    public ExcludeSet(AbstractCharacterSet includeSet) {
         this.includeSet = includeSet;
     }
 
@@ -22,7 +22,7 @@ public class ExcludeSet implements CharSet {
      */
     @Override
     public NfaNode1 endState(NfaNode1 startState) {
-        final ComplementSet characterSet = new ComplementSet(includeSet.characterSet());
+        AbstractCharacterSet characterSet = AbstractCharacterSet.complement(includeSet);
         NfaNode1 endState = new NfaNode1();
         startState.addEdge(characterSet, endState);
         return endState;
