@@ -1,6 +1,6 @@
 package org.symqle.epic.regexp.second;
 
-import org.symqle.epic.regexp.first.CharacterSet;
+import org.symqle.epic.regexp.first.AbstractCharacterSet;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -12,24 +12,24 @@ import java.util.Set;
  */
 public class CharacterClassRegistry {
 
-    private final Set<CharacterSet> allCharacterSets;
+    private final Set<AbstractCharacterSet> allCharacterSets;
 
     private final int[]  characterClasses = new int[1 + Character.MAX_VALUE];
 
-    private final Map<Set<CharacterSet>, Integer> index = new HashMap<>();
+    private final Map<Set<AbstractCharacterSet>, Integer> index = new HashMap<>();
 
-    private final Map<CharacterSet, Set<Integer>> reverseIndex = new HashMap<>();
+    private final Map<AbstractCharacterSet, Set<Integer>> reverseIndex = new HashMap<>();
 
-    public CharacterClassRegistry(final Set<CharacterSet> allCharacterSets) {
+    public CharacterClassRegistry(final Set<AbstractCharacterSet> allCharacterSets) {
         this.allCharacterSets = allCharacterSets;
         init();
         revertIndex();
     }
 
     private void revertIndex() {
-        for (CharacterSet characterSet: allCharacterSets) {
+        for (AbstractCharacterSet characterSet: allCharacterSets) {
             Set<Integer> characterClasses = new HashSet<>();
-            for (Set<CharacterSet> key: index.keySet()) {
+            for (Set<AbstractCharacterSet> key: index.keySet()) {
                 if (key.contains(characterSet)) {
                     Integer setIndex = index.get(key);
                     characterClasses.add(setIndex);
@@ -39,7 +39,7 @@ public class CharacterClassRegistry {
         }
     }
 
-    public Set<Integer> getCharacterClasses(CharacterSet characterSet) {
+    public Set<Integer> getCharacterClasses(AbstractCharacterSet characterSet) {
         return reverseIndex.get(characterSet);
     }
 
@@ -51,8 +51,8 @@ public class CharacterClassRegistry {
     }
 
     private void addChar(char c) {
-        Set<CharacterSet> characterSets = new HashSet<>();
-        for (CharacterSet candidate: allCharacterSets) {
+        Set<AbstractCharacterSet> characterSets = new HashSet<>();
+        for (AbstractCharacterSet candidate: allCharacterSets) {
             if (candidate.contains(c)) {
                 characterSets.add(candidate);
             }
@@ -68,7 +68,7 @@ public class CharacterClassRegistry {
         return index.size();
     }
 
-    private int indexOf(Set<CharacterSet> characterClass) {
+    private int indexOf(Set<AbstractCharacterSet> characterClass) {
         Integer i = this.index.getOrDefault(characterClass, this.index.size());
         index.put(characterClass, i);
         return i;

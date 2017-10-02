@@ -1,7 +1,7 @@
 package org.symqle.epic.regexp.second;
 
 import org.symqle.epic.regexp.TokenDefinition;
-import org.symqle.epic.regexp.first.CharacterSet;
+import org.symqle.epic.regexp.first.AbstractCharacterSet;
 import org.symqle.epic.regexp.first.NfaNode1;
 
 import java.util.ArrayList;
@@ -56,15 +56,15 @@ public class NfaNode2 {
     * Created by aizyurov on 9/27/17.
     */
     public static class Edge {
-        private final CharacterSet characterSet;
+        private final AbstractCharacterSet characterSet;
         private final NfaNode2 to;
 
-        public Edge(CharacterSet characterSet, NfaNode2 to) {
+        public Edge(AbstractCharacterSet characterSet, NfaNode2 to) {
             this.characterSet = characterSet;
             this.to = to;
         }
 
-        public CharacterSet getCharacterSet() {
+        public AbstractCharacterSet getCharacterSet() {
             return characterSet;
         }
 

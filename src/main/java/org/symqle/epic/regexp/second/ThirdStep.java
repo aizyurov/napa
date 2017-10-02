@@ -1,7 +1,7 @@
 package org.symqle.epic.regexp.second;
 
 import org.symqle.epic.regexp.TokenDefinition;
-import org.symqle.epic.regexp.first.CharacterSet;
+import org.symqle.epic.regexp.first.AbstractCharacterSet;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -15,7 +15,7 @@ public class ThirdStep {
     CharacterClassRegistry registry;
 
     public Dfa build(Collection<NfaNode2> secondNfa) {
-        Set<CharacterSet> allCharacterSets = secondNfa.stream().flatMap(x -> x.getEdges().stream()).map(NfaNode2.Edge::getCharacterSet).collect(Collectors.toSet());
+        Set<AbstractCharacterSet> allCharacterSets = secondNfa.stream().flatMap(x -> x.getEdges().stream()).map(NfaNode2.Edge::getCharacterSet).collect(Collectors.toSet());
         registry = new CharacterClassRegistry(allCharacterSets);
 
 

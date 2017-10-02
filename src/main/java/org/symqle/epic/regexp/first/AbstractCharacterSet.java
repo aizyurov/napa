@@ -1,12 +1,11 @@
 package org.symqle.epic.regexp.first;
 
 import java.util.BitSet;
-import java.util.List;
 
 /**
  * Created by aizyurov on 9/27/17.
  */
-public class AbstractCharacterSet implements CharacterSet {
+public class AbstractCharacterSet {
     private BitSet bitSet = new BitSet(1 + Character.MAX_VALUE);
 
     @Override
@@ -26,21 +25,8 @@ public class AbstractCharacterSet implements CharacterSet {
         return bitSet.hashCode();
     }
 
-    @Override
     public boolean contains(char c) {
         return bitSet.get(c);
-    }
-
-    protected void set(int from, int to, boolean value) {
-        bitSet.set(from, to, value);
-    }
-
-    protected void xor(AbstractCharacterSet other) {
-        bitSet.xor(other.bitSet);
-    }
-
-    protected void or(AbstractCharacterSet other) {
-        bitSet.or(other.bitSet);
     }
 
     public static AbstractCharacterSet any() {
@@ -78,14 +64,6 @@ public class AbstractCharacterSet implements CharacterSet {
         AbstractCharacterSet set = new AbstractCharacterSet();
         set.bitSet.or(first.bitSet);
         set.bitSet.or(second.bitSet);
-        return set;
-    }
-
-    public static AbstractCharacterSet unionAll(List<AbstractCharacterSet> characterSets) {
-        AbstractCharacterSet set = new AbstractCharacterSet();
-        for (AbstractCharacterSet characterSet: characterSets) {
-            set.bitSet.or(characterSet.bitSet);
-        }
         return set;
     }
 

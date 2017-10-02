@@ -57,7 +57,7 @@ public class NfaNode1 {
         return tokenDefinition;
     }
 
-    public void addEdge(CharacterSet characterSet, NfaNode1 to) {
+    public void addEdge(AbstractCharacterSet characterSet, NfaNode1 to) {
         edges.add(new Edge(characterSet, to));
     }
 
@@ -65,15 +65,15 @@ public class NfaNode1 {
     * Created by aizyurov on 9/27/17.
     */
     public static class Edge {
-        private final CharacterSet characterSet;
+        private final AbstractCharacterSet characterSet;
         private final NfaNode1 to;
 
-        public Edge(CharacterSet characterSet, NfaNode1 to) {
+        public Edge(AbstractCharacterSet characterSet, NfaNode1 to) {
             this.characterSet = characterSet;
             this.to = to;
         }
 
-        public CharacterSet getCharacterSet() {
+        public AbstractCharacterSet getCharacterSet() {
             return characterSet;
         }
 

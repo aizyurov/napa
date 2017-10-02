@@ -28,7 +28,7 @@ public class IncludeSet implements CharSet {
     @Override
     public NfaNode1 endState(NfaNode1 startState) {
         NfaNode1 endState = new NfaNode1();
-        CharacterSet accumulator = characterSet();
+        AbstractCharacterSet accumulator = characterSet();
         startState.addEdge(accumulator, endState);
         return endState;
     }
