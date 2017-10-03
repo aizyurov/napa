@@ -22,11 +22,16 @@ public class Lexer<T> {
     }
 
     public PackedDfa<Set<T>> compile() {
-        return createNfa()
-                .removeEmptyEdges()
-                .toDfa()
-                .pack()
-                .transform(this::transformTags);
+        long start = System.currentTimeMillis();
+        try {
+            return createNfa()
+                    .removeEmptyEdges()
+                    .toDfa()
+                    .pack()
+                    .transform(this::transformTags);
+        } finally {
+            System.out.println("Compilation time: " + (System.currentTimeMillis() - start));
+        }
     }
 
     private Set<T> transformTags(Set<Integer> tags) {

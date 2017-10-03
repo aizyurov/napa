@@ -36,7 +36,7 @@ public class CharacterSet {
     }
 
     public static CharacterSet complement(CharacterSet complemented) {
-        CharacterSet set = new CharacterSet();
+        CharacterSet set = any();
         set.bitSet.xor(complemented.bitSet);
         return set;
     }

@@ -87,7 +87,7 @@ public class Tokenizer<T> {
         String value = valueBuilder.toString();
         T tag = dfa.tag(state);
         if (tag == null) {
-            throw new IllegalStateException("Unexpected character " + nextChar);
+            throw new IllegalStateException("Unexpected character " + nextChar + " at " + line + ":" + pos);
         }
         valueBuilder.setLength(0);
         state = 0;

@@ -88,6 +88,18 @@ public class RegexpParsingTest extends TestCase {
         return '"' + pattern + '"';
     }
 
+    public void testComment() throws Exception {
+        final String comment = "/[*]([^*]|[*][^/])*[*]/";
+        List<TokenDefinition<String>> tokenDefinitions = new ArrayList<>();
+        tokenDefinitions.add(new TokenDefinition<>(quote(comment), quote(comment)));
+        PackedDfa<Set<String>> packedDfa = new Lexer<>(tokenDefinitions).compile();
+        Reader reader = new StringReader("/** comment */");
+        Tokenizer<Set<String>> tokenizer = new Tokenizer<>(packedDfa, reader);
+        System.out.println(tokenizer.nextToken());
+
+
+    }
+
     public void testFullLexis() throws Exception {
         final String comment = "/[*]([^*]|[*][^/])*[*]/";
         final String whitespace = "[ \\n\\r\\t]+";
@@ -109,7 +121,7 @@ public class RegexpParsingTest extends TestCase {
         packedDfa.printStats();
         System.out.println("==================");
 //        Reader reader = new StringReader("public  class  Lexer {}");
-        Reader reader = new StringReader("    class");
+        Reader reader = new StringReader("/** comment */ public class Abc implements Def {}");
         Tokenizer<Set<String>> tokenizer = new Tokenizer<>(packedDfa, reader);
         for (Token<Set<String>> token = tokenizer.nextToken(); token != null; token = tokenizer.nextToken()) {
             System.out.println(token);
