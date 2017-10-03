@@ -42,7 +42,8 @@ public class Dfa {
                 int toIndex = index.get(entry.getValue());
                 edges[index.get(node) * classCount + entry.getKey()] = toIndex;
             }
-            tagsByNode.add(node.getTags());
+            Set<Integer> tags = node.getTags();
+            tagsByNode.add(tags.isEmpty() ? null : tags);
         }
         return new PackedDfa<>(classCount, characterClasses, edges, tagsByNode);
     }

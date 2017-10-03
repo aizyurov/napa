@@ -35,11 +35,7 @@ public class Lexer<T> {
     }
 
     private Set<T> transformTags(Set<Integer> tags) {
-        if (tags.isEmpty()) {
-            return null;
-        } else {
-            return  tags.stream().map(t -> tokenDefinitions.get(t).getTag()).collect(Collectors.toSet());
-        }
+        return  tags.stream().map(t -> tokenDefinitions.get(t).getTag()).collect(Collectors.toSet());
     }
 
     private Nfa1 createNfa() {

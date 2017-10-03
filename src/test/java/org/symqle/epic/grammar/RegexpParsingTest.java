@@ -96,6 +96,22 @@ public class RegexpParsingTest extends TestCase {
         Reader reader = new StringReader("/** comment */");
         Tokenizer<Set<String>> tokenizer = new Tokenizer<>(packedDfa, reader);
         System.out.println(tokenizer.nextToken());
+    }
+
+    public void testControlInBrackets() throws Exception {
+        final String cr = "[\n]";
+        List<TokenDefinition<String>> tokenDefinitions = new ArrayList<>();
+        tokenDefinitions.add(new TokenDefinition<>(quote(cr), quote(cr)));
+        PackedDfa<Set<String>> packedDfa = null;
+        try {
+            packedDfa = new Lexer<>(tokenDefinitions).compile();
+            fail("LF in brackets accepted");
+        } catch (IllegalStateException e) {
+            // expected
+        }
+        Reader reader = new StringReader("\n");
+        Tokenizer<Set<String>> tokenizer = new Tokenizer<>(packedDfa, reader);
+        System.out.println(tokenizer.nextToken());
 
 
     }

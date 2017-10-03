@@ -128,6 +128,8 @@ public class RegexpSyntaxTreeBuilder {
         switch (scanner.preview()) {
             case CHARACTER:case DOT:case QUESTION:case STAR:case PLUS:case LPAREN:case RPAREN:
                 return scanner.get();
+            case CR:case LF:case TAB:
+                throw new IllegalStateException("Illegal character in brackets: " + scanner.preview());
             default:
                 return null;
         }

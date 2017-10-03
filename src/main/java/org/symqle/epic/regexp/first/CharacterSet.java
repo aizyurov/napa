@@ -6,7 +6,7 @@ import java.util.BitSet;
  * Created by aizyurov on 9/27/17.
  */
 public class CharacterSet {
-    private BitSet bitSet = new BitSet(1 + Character.MAX_VALUE);
+    private BitSet bitSet = new BitSet(128);
 
     @Override
     public boolean equals(Object o) {

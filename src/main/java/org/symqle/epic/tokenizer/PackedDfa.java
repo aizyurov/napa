@@ -35,7 +35,7 @@ public class PackedDfa<T> {
     }
 
     public <U> PackedDfa<U> transform(Function<T, U> tagConverter) {
-        return new PackedDfa<>(characterClassCount, characterClasses, edges, tokenTypes.stream().map(tagConverter).collect(Collectors.toList()));
+        return new PackedDfa<>(characterClassCount, characterClasses, edges, tokenTypes.stream().map(x -> x == null ? null : tagConverter.apply(x)).collect(Collectors.toList()));
     }
 
     public void printStats() {
