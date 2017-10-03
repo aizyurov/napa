@@ -3,20 +3,20 @@ package org.symqle.epic.regexp;
 /**
  * Created by aizyurov on 9/27/17.
  */
-public class TokenDefinition {
+public class TokenDefinition<T> {
     private final String pattern;
-    private final int type;
+    private final T tag;
 
-    public TokenDefinition(final String pattern, final int type) {
+    public TokenDefinition(final String pattern, final T tag) {
         this.pattern = pattern;
-        this.type = type;
+        this.tag = tag;
     }
 
     public String getPattern() {
         return pattern;
     }
 
-    public int getType() {
-        return type;
+    public T getTag() {
+        return tag;
     }
 }

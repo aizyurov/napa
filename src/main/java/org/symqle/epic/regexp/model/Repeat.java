@@ -31,17 +31,19 @@ public class Repeat implements NfaBuilder {
      */
     @Override
     public NfaNode1 endState(NfaNode1 startState) {
-        final NfaNode1 endState = primary.endState(startState);
+        final NfaNode1 newStartState = new NfaNode1();
+        startState.addEmptyEdge(newStartState);
+        final NfaNode1 endState = primary.endState(newStartState);
         switch (repetitions) {
             case ZERO_OR_MORE:
                 startState.addEmptyEdge(endState);
-                endState.addEmptyEdge(startState);
+                endState.addEmptyEdge(newStartState);
                 break;
             case ONE_OR_MORE:
-                endState.addEmptyEdge(startState);
+                endState.addEmptyEdge(newStartState);
                 break;
             case ZERO_OR_ONE:
-                startState.addEmptyEdge(endState);
+                startState.addEmptyEdge(newStartState);
                 break;
             case EXACTLY_ONE:
                 // do nothing

@@ -1,6 +1,5 @@
 package org.symqle.epic.regexp.second;
 
-import org.symqle.epic.regexp.TokenDefinition;
 import org.symqle.epic.regexp.first.CharacterSet;
 
 import java.util.*;
@@ -9,22 +8,27 @@ import java.util.stream.Collectors;
 /**
  * @author lvovich
  */
-public class ThirdStep {
+public class Nfa2 {
 
-    Map<Set<NfaNode2>, DfaNode> dfaNodeMap = new LinkedHashMap<>();
-    CharacterClassRegistry registry;
+    private final Collection<NfaNode2> nodes;
 
-    public Dfa build(Collection<NfaNode2> secondNfa) {
-        Set<CharacterSet> allCharacterSets = secondNfa.stream().flatMap(x -> x.getEdges().stream()).map(NfaNode2.Edge::getCharacterSet).collect(Collectors.toSet());
-        registry = new CharacterClassRegistry(allCharacterSets);
+    public Nfa2(final Collection<NfaNode2> nodes) {
+        this.nodes = nodes;
+    }
 
+    public Dfa toDfa() {
 
+        Set<CharacterSet> allCharacterSets = nodes.stream().flatMap(x -> x.getEdges().stream()).map(NfaNode2.Edge::getCharacterSet).collect(Collectors.toSet());
+        CharacterClassRegistry registry = new CharacterClassRegistry(allCharacterSets);
+
+        Map<Set<NfaNode2>, DfaNode> dfaNodeMap = new LinkedHashMap<>();
         Set<Set<NfaNode2>> processed = new LinkedHashSet<>();
         Set<Set<NfaNode2>> queue = new HashSet<>();
 
-        Set<NfaNode2> startSet = Collections.singleton(secondNfa.iterator().next());
+
+        Set<NfaNode2> startSet = Collections.singleton(nodes.iterator().next());
         queue.add(startSet);
-        DfaNode startDfa = new DfaNode(extractTypes(startSet));
+        DfaNode startDfa = new DfaNode(collectTags(startSet));
         dfaNodeMap.put(startSet, startDfa);
 
         while (!queue.isEmpty()) {
@@ -46,7 +50,7 @@ public class ThirdStep {
                 }
             }
             for (Set<NfaNode2> nfaNodeSet : nodeSetsByCharacterClass.values()) {
-                DfaNode dfaNode = dfaNodeMap.getOrDefault(nfaNodeSet, new DfaNode(extractTypes(nfaNodeSet)));
+                DfaNode dfaNode = dfaNodeMap.getOrDefault(nfaNodeSet, new DfaNode(collectTags(nfaNodeSet)));
                 dfaNodeMap.put(nfaNodeSet, dfaNode);
                 if (!processed.contains(nfaNodeSet)) {
                     queue.add(new HashSet<>(nfaNodeSet));
@@ -60,28 +64,10 @@ public class ThirdStep {
         return new Dfa(new ArrayList<>(dfaNodeMap.values()), registry);
     }
 
-    private Set<Integer> extractTypes(final Set<NfaNode2> nfaNodeSet) {
-        Map<Boolean, Set<Integer>> partitioned = nfaNodeSet.stream()
-                .flatMap(n -> n.getTokenDefinitions().stream())
-                .map(TokenDefinition::getType)
-                .collect(Collectors.partitioningBy(t -> t >= 0, Collectors.toSet()));
-        // try first meaningful lexems, then ignored
-        return partitioned.getOrDefault(true, partitioned.getOrDefault(false, Collections.emptySet()));
+    private Set<Integer> collectTags(final Set<NfaNode2> nfaNodeSet) {
+        return nfaNodeSet.stream()
+                .flatMap(n -> n.getTags().stream())
+                .collect(Collectors.toSet());
     }
 
-    public int size() {
-        return this.dfaNodeMap.size();
-    }
-
-    public int edges() {
-        int edges = 0;
-        for (DfaNode node: dfaNodeMap.values()) {
-            edges += node.getEdges().size();
-        }
-        return edges;
-    }
-
-    public CharacterClassRegistry getRegistry() {
-        return registry;
-    }
 }

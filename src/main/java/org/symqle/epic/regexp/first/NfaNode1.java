@@ -1,30 +1,28 @@
 package org.symqle.epic.regexp.first;
 
 
-import org.symqle.epic.regexp.TokenDefinition;
-
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Created by aizyurov on 9/27/17.
  */
 public class NfaNode1 {
 
-    private static List<NfaNode1> allStates = new ArrayList<>();
-    protected final TokenDefinition tokenDefinition;
-    protected final List<Edge> edges = new ArrayList<>();
+    private final int tag;
+    private final List<Edge> edges = new ArrayList<>();
 
-    private final int index;
-    protected Set<NfaNode1> emptyEdges = new HashSet<>();
+    private Set<NfaNode1> emptyEdges = new HashSet<>();
 
     public NfaNode1() {
-        this(null);
+        this(-1);
     }
 
-    public NfaNode1(TokenDefinition tokenDefinition) {
-        this.tokenDefinition = tokenDefinition;
-        index = allStates.size();
-        allStates.add(this);
+    public NfaNode1(int tag) {
+        this.tag = tag;
     }
 
     public List<Edge> getEdges() {
@@ -49,12 +47,8 @@ public class NfaNode1 {
         return super.hashCode();
     }
 
-    public static int count() {
-        return allStates.size();
-    }
-
-    public TokenDefinition getTokenDefinition() {
-        return tokenDefinition;
+    public int getTag() {
+        return tag;
     }
 
     public void addEdge(CharacterSet characterSet, NfaNode1 to) {
@@ -81,4 +75,5 @@ public class NfaNode1 {
             return to;
         }
     }
+
 }

@@ -1,6 +1,5 @@
 package org.symqle.epic.regexp.second;
 
-import org.symqle.epic.regexp.TokenDefinition;
 import org.symqle.epic.regexp.first.CharacterSet;
 import org.symqle.epic.regexp.first.NfaNode1;
 
@@ -17,11 +16,11 @@ public class NfaNode2 {
 
     private static List<NfaNode2> allStates = new ArrayList<>();
     private final int index;
-    private final List<TokenDefinition> tokenDefinitions;
+    private final Set<Integer> tags;
     protected Set<NfaNode1> emptyEdges = new HashSet<>();
 
-    public NfaNode2(List<TokenDefinition> tokenDefinitions) {
-        this.tokenDefinitions = tokenDefinitions;
+    public NfaNode2(Set<Integer> tags) {
+        this.tags = new HashSet<>(tags);
         index = allStates.size();
         allStates.add(this);
     }
@@ -36,8 +35,8 @@ public class NfaNode2 {
         return Collections.unmodifiableList(edges);
     }
 
-    public List<TokenDefinition> getTokenDefinitions() {
-        return tokenDefinitions;
+    public Set<Integer> getTags() {
+        return Collections.unmodifiableSet(tags);
     }
 
     public static int size() {
