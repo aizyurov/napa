@@ -14,15 +14,11 @@ import java.util.Set;
  */
 public class NfaNode2 {
 
-    private static List<NfaNode2> allStates = new ArrayList<>();
-    private final int index;
     private final Set<Integer> tags;
     protected Set<NfaNode1> emptyEdges = new HashSet<>();
 
     public NfaNode2(Set<Integer> tags) {
         this.tags = new HashSet<>(tags);
-        index = allStates.size();
-        allStates.add(this);
     }
 
     private final List<Edge> edges = new ArrayList<>();
@@ -39,21 +35,6 @@ public class NfaNode2 {
         return Collections.unmodifiableSet(tags);
     }
 
-    public static int size() {
-        return allStates.size();
-    }
-
-    public static int edgeCount() {
-        int count = 0;
-        for (NfaNode2 state: allStates) {
-            count += state.getEdges().size();
-        }
-        return count;
-    }
-
-    /**
-    * Created by aizyurov on 9/27/17.
-    */
     public static class Edge {
         private final CharacterSet characterSet;
         private final NfaNode2 to;

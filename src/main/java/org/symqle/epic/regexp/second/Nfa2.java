@@ -35,9 +35,6 @@ public class Nfa2 {
             Set<NfaNode2> nfaSet = queue.iterator().next();
             queue.remove(nfaSet);
             processed.add(nfaSet);
-            if (queue.contains(nfaSet)) {
-                throw new IllegalStateException(("element not removed"));
-            }
             Map<Integer, Set<NfaNode2>> nodeSetsByCharacterClass = new HashMap<>();
             for (NfaNode2 nfaNode : nfaSet) {
                 for (NfaNode2.Edge edge : nfaNode.getEdges()) {

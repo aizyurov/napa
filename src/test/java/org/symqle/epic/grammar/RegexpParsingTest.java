@@ -3,7 +3,6 @@ package org.symqle.epic.grammar;
 import junit.framework.TestCase;
 import org.symqle.epic.regexp.TokenDefinition;
 import org.symqle.epic.regexp.first.Lexer;
-import org.symqle.epic.regexp.first.NfaNode1;
 import org.symqle.epic.regexp.model.Regexp;
 import org.symqle.epic.regexp.model.RegexpSyntaxTreeBuilder;
 import org.symqle.epic.regexp.scanner.Scanner;
@@ -15,7 +14,6 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -24,16 +22,6 @@ import java.util.stream.Collectors;
  * Created by aizyurov on 9/27/17.
  */
 public class RegexpParsingTest extends TestCase {
-
-    public void testSimpleSequence() {
-        Collections.singletonList("\"abc\"");
-    }
-
-    public void testChoice() {
-        final Scanner scanner = new Scanner("\"ab|cd\"");
-        final Regexp regexp = new RegexpSyntaxTreeBuilder(scanner).regexp();
-        System.out.println(regexp);
-    }
 
     public void testNoQuoteBefore() {
         final Scanner scanner = new Scanner("ab|cd\"");
@@ -68,22 +56,6 @@ public class RegexpParsingTest extends TestCase {
         }
     }
 
-    public void testCharacterSet() {
-        final Scanner scanner = new Scanner("\"[a-bcd]\"");
-        final Regexp regexp = new RegexpSyntaxTreeBuilder(scanner).regexp();
-        System.out.println(regexp);
-
-    }
-
-    public void testAllFeatures() {
-        final Scanner scanner = new Scanner("\"(([a-bcd]+)|z*|y?)*def\"");
-        final Regexp regexp = new RegexpSyntaxTreeBuilder(scanner).regexp();
-        regexp.endState(new NfaNode1());
-
-        System.out.println(regexp);
-
-    }
-
     private String quote(String pattern) {
         return '"' + pattern + '"';
     }
@@ -102,16 +74,12 @@ public class RegexpParsingTest extends TestCase {
         final String cr = "[\n]";
         List<TokenDefinition<String>> tokenDefinitions = new ArrayList<>();
         tokenDefinitions.add(new TokenDefinition<>(quote(cr), quote(cr)));
-        PackedDfa<Set<String>> packedDfa = null;
         try {
-            packedDfa = new Lexer<>(tokenDefinitions).compile();
+            PackedDfa<Set<String>> packedDfa = new Lexer<>(tokenDefinitions).compile();
             fail("LF in brackets accepted");
         } catch (IllegalStateException e) {
             // expected
         }
-        Reader reader = new StringReader("\n");
-        Tokenizer<Set<String>> tokenizer = new Tokenizer<>(packedDfa, reader);
-        System.out.println(tokenizer.nextToken());
     }
 
     public void testAny() throws Exception {
