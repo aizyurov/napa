@@ -112,8 +112,16 @@ public class RegexpParsingTest extends TestCase {
         Reader reader = new StringReader("\n");
         Tokenizer<Set<String>> tokenizer = new Tokenizer<>(packedDfa, reader);
         System.out.println(tokenizer.nextToken());
+    }
 
-
+    public void testAny() throws Exception {
+        final String any = ".*a";
+        List<TokenDefinition<String>> tokenDefinitions = new ArrayList<>();
+        tokenDefinitions.add(new TokenDefinition<>(quote(any), any));
+        PackedDfa<Set<String>> packedDfa = new Lexer<>(tokenDefinitions).compile();
+        Reader reader = new StringReader("defa");
+        Tokenizer<Set<String>> tokenizer = new Tokenizer<>(packedDfa, reader);
+        System.out.println(tokenizer.nextToken());
     }
 
     public void testFullLexis() throws Exception {
@@ -137,7 +145,7 @@ public class RegexpParsingTest extends TestCase {
         packedDfa.printStats();
         System.out.println("==================");
 //        Reader reader = new StringReader("public  class  Lexer {}");
-        Reader reader = new StringReader("/** comment */ public class Abc implements Def {}");
+        Reader reader = new StringReader("/** comment */ public class Abc implements Def {\n   int i;\r   long j;\r\n}\n\r\nhaha");
         Tokenizer<Set<String>> tokenizer = new Tokenizer<>(packedDfa, reader);
         for (Token<Set<String>> token = tokenizer.nextToken(); token != null; token = tokenizer.nextToken()) {
             System.out.println(token);

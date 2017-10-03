@@ -34,6 +34,27 @@ public class Token<T> {
     }
 
     public String toString() {
-        return type + " (" + text + ") at "+line+":"+pos;
+        return type + " (" + quote(text) + ") at "+line+":"+pos;
+    }
+
+    private String quote(String source) {
+        StringBuilder builder = new StringBuilder();
+        for (int i=0; i < source.length(); i++) {
+            char c = source.charAt(i);
+            switch (c) {
+                case '\n':
+                    builder.append("\\n");
+                    break;
+                case '\r':
+                    builder.append("\\r");
+                    break;
+                case '\t':
+                    builder.append("\\t");
+                    break;
+                default:
+                    builder.append(c);
+            }
+        }
+        return builder.toString();
     }
 }

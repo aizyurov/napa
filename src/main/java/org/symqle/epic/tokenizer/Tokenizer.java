@@ -10,7 +10,7 @@ public class Tokenizer<T> {
 
     private final PackedDfa<T> dfa;
     private final Reader reader;
-    private int line = 0;
+    private int line = 1;
     private int pos = 0;
     private int state = 0;
     private StringBuilder valueBuilder = new StringBuilder();
@@ -30,7 +30,7 @@ public class Tokenizer<T> {
                 switch(position) {
                     case AFTER_CR: case END_OF_LINE:
                         line += 1;
-                        pos = 0;
+                        pos = 1;
                         position = Position.AFTER_CR;
                         break;
                     default:
@@ -43,10 +43,12 @@ public class Tokenizer<T> {
                     case AFTER_CR:
                         position = Position.END_OF_LINE;
                         break;
-                    default:
+                    case END_OF_LINE:
                         line += 1;
                         pos = 0;
-                        position = Position.AFTER_CR;
+                        break;
+                    default:
+                        position = Position.END_OF_LINE;
                         break;
                 }
                 break;
@@ -54,8 +56,15 @@ public class Tokenizer<T> {
                 // EOF
                 break;
             default: {
-                pos += 1;
-                position = Position.REGULAR;
+                switch (position) {
+                    case AFTER_CR: case END_OF_LINE:
+                        line += 1;
+                        pos = 1;
+                        position = Position.REGULAR;
+                        break;
+                    default:
+                        pos += 1;
+                }
             }
         }
     }
