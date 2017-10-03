@@ -4,7 +4,6 @@ package org.symqle.epic.lexer.model;
  * @author lvovich
  */
 enum LexerTokenType {
-    QUOTE,
     CHARACTER,
     DOT,
     QUESTION,
@@ -24,8 +23,6 @@ enum LexerTokenType {
 
     public static LexerTokenType of(char c) {
         switch (c) {
-            case '"':
-                return QUOTE;
             case '.':
                 return DOT;
             case '?':

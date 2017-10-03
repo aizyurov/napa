@@ -12,6 +12,10 @@ public class TokenDefinition<T> {
         this.tag = tag;
     }
 
+    public static <T> TokenDefinition<T> def(final String pattern, final T tag) {
+        return new TokenDefinition<>(pattern, tag);
+    }
+
     public String getPattern() {
         return pattern;
     }
