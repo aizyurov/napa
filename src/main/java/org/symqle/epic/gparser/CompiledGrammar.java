@@ -3,6 +3,7 @@ package org.symqle.epic.gparser;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * @author lvovich
@@ -29,5 +30,14 @@ public class CompiledGrammar {
 
     public String getNonTerminalName(int index) {
         return nonTerminals.get(index);
+    }
+
+    public Optional<Integer> findNonTerminalByName(String name) {
+        for (int i = 0; i < nonTerminals.size(); i++ ) {
+            if (nonTerminals.get(i).equals(name)) {
+                return Optional.of(i);
+            }
+        }
+        return Optional.empty();
     }
 }

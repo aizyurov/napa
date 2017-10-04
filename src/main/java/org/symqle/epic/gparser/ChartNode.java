@@ -11,6 +11,14 @@ import java.util.stream.Stream;
  */
 public class ChartNode {
 
+    public enum Action {
+        PREDICT,
+        REDUCE,
+        EXPAND,
+        SHIFT,
+        ACCEPT
+    }
+
     private final int target;
     private final List<RuleItem> items;
     private int offset;
@@ -25,26 +33,41 @@ public class ChartNode {
         this.syntaxNodes = syntaxNodes;
     }
 
+    public Action availableAction() {
+        if (offset < items.size()) {
+            switch (items.get(offset).getType()) {
+                case NON_TERMINAL:
+                    return Action.PREDICT;
+                case TERMINAL:
+                    return Action.SHIFT;
+                case ZERO_OR_ONE: case ZERO_OR_MORE:
+                    return Action.EXPAND;
+                default:
+                    throw new IllegalStateException("Should never get here");
+            }
+        } else {
+            return target >=0 ? Action.REDUCE : Action.ACCEPT;
+        }
+    }
+
+    public SyntaxTreeNode accept() {
+        assert availableAction() == Action.ACCEPT;
+        return syntaxNodes.get(0);
+    }
+
     public List<ChartNode> predict(CompiledGrammar compiledGrammar) {
-        if (offset >=items.size()) {
-            return Collections.emptyList();
-        }
+        assert offset < items.size();
         RuleItem currentItem = items.get(offset);
-        if (currentItem.getType() != RuleItem.Type.NON_TERMINAL) {
-            return Collections.emptyList();
-        }
+        assert currentItem.getType() == RuleItem.Type.NON_TERMINAL;
         return compiledGrammar.getRules(currentItem.getValue()).stream()
                 .map(cr -> new ChartNode(cr.getTarget(), cr.getItems(), 0, this, Collections.emptyList())).collect(Collectors.toList());
     }
 
     public List<ChartNode> reduce(CompiledGrammar compiledGrammar) {
-        if (offset < items.size()) {
-            return Collections.emptyList();
-        } else {
-            NonTerminalNode newNode = new NonTerminalNode(compiledGrammar.getNonTerminalName(target),
-                    syntaxNodes);
-            return enclosing.acceptNonTerminal(newNode);
-        }
+        assert offset == items.size();
+        NonTerminalNode newNode = new NonTerminalNode(compiledGrammar.getNonTerminalName(target),
+                syntaxNodes);
+        return enclosing.acceptNonTerminal(newNode);
     }
 
     private List<ChartNode> acceptNonTerminal(NonTerminalNode node) {
@@ -54,13 +77,9 @@ public class ChartNode {
     }
 
     public List<ChartNode> expand() {
-        if (offset >=items.size()) {
-            return Collections.emptyList();
-        }
+        assert offset < items.size();
         RuleItem currentItem = items.get(offset);
         switch(currentItem.getType()) {
-            case TERMINAL: case NON_TERMINAL:
-                return Collections.emptyList();
             case ZERO_OR_ONE:
                 List<ChartNode> newNodes = new ArrayList<>(2);
             {
@@ -98,22 +117,15 @@ public class ChartNode {
             }
             return moreNodes;
             default:
-                throw new IllegalArgumentException("Unknown type: " + currentItem.getType());
+                assert false;
+                return null;
         }
-    }
-
-    public List<ChartNode> noshift(CompiledGrammar compiledGrammar) {
-        return Stream.concat(predict(compiledGrammar).stream(), Stream.concat(expand().stream(), reduce(compiledGrammar).stream())).collect(Collectors.toList());
     }
 
     public List<ChartNode> shift(ParserToken parserToken, CompiledGrammar compiledGrammar) {
-        if (offset >=items.size()) {
-            return Collections.emptyList();
-        }
+        assert offset < items.size();
         RuleItem currentItem = items.get(offset);
-        if (currentItem.getType() != RuleItem.Type.TERMINAL) {
-            return Collections.emptyList();
-        }
+        assert currentItem.getType() == RuleItem.Type.TERMINAL;
         if (!parserToken.matches(currentItem.getValue())) {
             return Collections.emptyList();
         }
