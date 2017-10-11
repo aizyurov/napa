@@ -2,7 +2,9 @@
 
 grammar = { ignore_statement | rule } ;
 
-ignore_statement = "!" regexp { regexp } ";"
+ignore_statement = "!" ignored { ignored } ";" ;
+
+ignored = regexp ;
 
 regexp = "\"[^\"]+\"" ;
 

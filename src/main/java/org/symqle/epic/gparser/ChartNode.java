@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * @author lvovich
@@ -40,7 +39,7 @@ public class ChartNode {
                     return Action.PREDICT;
                 case TERMINAL:
                     return Action.SHIFT;
-                case ZERO_OR_ONE: case ZERO_OR_MORE:
+                case COMPOUND:
                     return Action.EXPAND;
                 default:
                     throw new IllegalStateException("Should never get here");
@@ -58,9 +57,9 @@ public class ChartNode {
     public List<ChartNode> predict(CompiledGrammar compiledGrammar) {
         assert offset < items.size();
         RuleItem currentItem = items.get(offset);
-        assert currentItem.getType() == RuleItem.Type.NON_TERMINAL;
+        assert currentItem.getType() == RuleItemType.NON_TERMINAL;
         return compiledGrammar.getRules(currentItem.getValue()).stream()
-                .map(cr -> new ChartNode(cr.getTarget(), cr.getItems(), 0, this, Collections.emptyList())).collect(Collectors.toList());
+                        .map(cr -> new ChartNode(cr.getTarget(), cr.getItems(), 0, this, Collections.emptyList())).collect(Collectors.toList());
     }
 
     public List<ChartNode> reduce(CompiledGrammar compiledGrammar) {
@@ -79,53 +78,22 @@ public class ChartNode {
     public List<ChartNode> expand() {
         assert offset < items.size();
         RuleItem currentItem = items.get(offset);
-        switch(currentItem.getType()) {
-            case ZERO_OR_ONE:
-                List<ChartNode> newNodes = new ArrayList<>(2);
-            {
-                //zero
-                List<RuleItem> expansion = new ArrayList<>();
-                expansion.addAll(items.subList(0, offset));
-                expansion.addAll(items.subList(offset +1, items.size()));
-                newNodes.add(new ChartNode(target, expansion, offset, enclosing, new ArrayList<>(syntaxNodes)));
-            }
-            {
-                // one
-                List<RuleItem> expansion = new ArrayList<>();
-                expansion.addAll(items.subList(0, offset));
-                expansion.addAll(currentItem.getItems());
-                expansion.addAll(items.subList(offset +1, items.size()));
-                newNodes.add(new ChartNode(target, expansion, offset, enclosing, new ArrayList<>(syntaxNodes)));
-            }
-            return newNodes;
-            case ZERO_OR_MORE:
-                List<ChartNode> moreNodes = new ArrayList<>(2);
-            {
-                // zero
-                List<RuleItem> expansion = new ArrayList<>();
-                expansion.addAll(items.subList(0, offset));
-                expansion.addAll(items.subList(offset +1, items.size()));
-                moreNodes.add(new ChartNode(target, expansion, offset, enclosing, new ArrayList<>(syntaxNodes)));
-            }
-            {
-                // more
-                List<RuleItem> expansion = new ArrayList<>();
-                expansion.addAll(items.subList(0, offset));
-                expansion.add(currentItem);
-                expansion.addAll(items.subList(offset +1, items.size()));
-                moreNodes.add(new ChartNode(target, expansion, offset, enclosing, new ArrayList<>(syntaxNodes)));
-            }
-            return moreNodes;
-            default:
-                assert false;
-                return null;
+        assert currentItem.getType() == RuleItemType.COMPOUND;
+        List<ChartNode> newNodes = new ArrayList<>();
+        for (List<RuleItem> expansion: currentItem.expand()) {
+            List<RuleItem> expanded = new ArrayList<>();
+            expanded.addAll(items.subList(0, offset));
+            expanded.addAll(expansion);
+            expanded.addAll(items.subList(offset +1, items.size()));
+            newNodes.add(new ChartNode(target, expanded, offset, enclosing, new ArrayList<>(syntaxNodes)));
         }
+        return newNodes;
     }
 
     public List<ChartNode> shift(ParserToken parserToken, CompiledGrammar compiledGrammar) {
         assert offset < items.size();
         RuleItem currentItem = items.get(offset);
-        assert currentItem.getType() == RuleItem.Type.TERMINAL;
+        assert currentItem.getType() == RuleItemType.TERMINAL;
         if (!parserToken.matches(currentItem.getValue())) {
             return Collections.emptyList();
         }

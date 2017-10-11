@@ -22,7 +22,7 @@ public class Parser {
     }
 
     public Set<SyntaxTreeNode> parse() {
-        final ChartNode startNode = new ChartNode(-1, Collections.singletonList(new RuleItem(RuleItem.Type.NON_TERMINAL, target, Collections.emptyList())), 0, null, Collections.emptyList());
+        final ChartNode startNode = new ChartNode(-1, Collections.singletonList(new NonTerminalItem(target)), 0, null, Collections.emptyList());
         workSet.add(startNode);
         while (true) {
             while (!workSet.isEmpty()) {
