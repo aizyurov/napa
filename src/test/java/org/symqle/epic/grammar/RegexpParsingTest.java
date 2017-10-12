@@ -5,6 +5,7 @@ import org.symqle.epic.lexer.TokenDefinition;
 import org.symqle.epic.lexer.build.Lexer;
 import org.symqle.epic.tokenizer.PackedDfa;
 import org.symqle.epic.tokenizer.Token;
+import org.symqle.epic.tokenizer.DfaTokenizer;
 import org.symqle.epic.tokenizer.Tokenizer;
 
 import java.io.InputStreamReader;
@@ -31,7 +32,7 @@ public class RegexpParsingTest extends TestCase {
         tokenDefinitions.add(new TokenDefinition<>(quote(comment), quote(comment)));
         PackedDfa<Set<String>> packedDfa = new Lexer<>(tokenDefinitions).compile();
         Reader reader = new StringReader("/** comment */");
-        Tokenizer<Set<String>> tokenizer = new Tokenizer<>(packedDfa, reader);
+        Tokenizer<Set<String>> tokenizer = new DfaTokenizer<>(packedDfa, reader);
         System.out.println(tokenizer.nextToken());
     }
 
@@ -53,7 +54,7 @@ public class RegexpParsingTest extends TestCase {
         tokenDefinitions.add(new TokenDefinition<>(quote(any), any));
         PackedDfa<Set<String>> packedDfa = new Lexer<>(tokenDefinitions).compile();
         Reader reader = new StringReader("defa");
-        Tokenizer<Set<String>> tokenizer = new Tokenizer<>(packedDfa, reader);
+        Tokenizer<Set<String>> tokenizer = new DfaTokenizer<>(packedDfa, reader);
         System.out.println(tokenizer.nextToken());
     }
 
@@ -79,7 +80,7 @@ public class RegexpParsingTest extends TestCase {
         System.out.println("==================");
 //        Reader reader = new StringReader("public  class  Lexer {}");
         Reader reader = new StringReader("/** comment */ public class Abc implements Def {\n   int i;\r   long j;\r\n}\n\r\nhaha");
-        Tokenizer<Set<String>> tokenizer = new Tokenizer<>(packedDfa, reader);
+        Tokenizer<Set<String>> tokenizer = new DfaTokenizer<>(packedDfa, reader);
         for (Token<Set<String>> token = tokenizer.nextToken(); token != null; token = tokenizer.nextToken()) {
             System.out.println(token);
         }
@@ -109,7 +110,7 @@ public class RegexpParsingTest extends TestCase {
 //        Reader reader = new StringReader("public  class  Lexer {}");
         Reader reader = new InputStreamReader(getClass().getClassLoader().getResourceAsStream("sample.txt"), "UTF-8");
         final long startTokens = System.currentTimeMillis();
-        Tokenizer<Set<String>> tokenizer = new Tokenizer<>(packedDfa, reader);
+        Tokenizer<Set<String>> tokenizer = new DfaTokenizer<>(packedDfa, reader);
         for (Token<Set<String>> token = tokenizer.nextToken(); token != null; token = tokenizer.nextToken()) {
             System.out.println(token);
         }

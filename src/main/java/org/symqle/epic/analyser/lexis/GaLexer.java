@@ -3,7 +3,6 @@ package org.symqle.epic.analyser.lexis;
 import org.symqle.epic.lexer.TokenDefinition;
 import org.symqle.epic.lexer.build.Lexer;
 import org.symqle.epic.tokenizer.PackedDfa;
-import org.symqle.epic.tokenizer.Tokenizer;
 
 import java.util.Arrays;
 import java.util.List;

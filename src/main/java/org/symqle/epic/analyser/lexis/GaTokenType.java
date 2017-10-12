@@ -11,6 +11,8 @@ public enum GaTokenType {
     RIGHT_BRACE,
     LEFT_BRACKET,
     RIGHT_BRACKET,
+    LPAREN,
+    RPAREN,
     EXCLAMATION,
     IGNORE,
     STRING,

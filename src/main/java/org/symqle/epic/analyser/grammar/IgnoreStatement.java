@@ -1,18 +1,20 @@
 package org.symqle.epic.analyser.grammar;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
  * @author lvovich
  */
-// ignore_statement = "!" ignored { ignored } ";" ;
-// ignored = regexp
+// ignore_statement = "!" STRING { STRING } ";" ;
 public class IgnoreStatement {
 
-    private final List<Ignored> ignoredList = new ArrayList<>();
+    private final List<String> ignoredList;
 
-    public void addIgnored(Ignored ignored) {
-        ignoredList.add(ignored);
+    public IgnoreStatement(final List<String> ignoredList) {
+        this.ignoredList = ignoredList;
+    }
+
+    public List<String> getIgnoredList() {
+        return ignoredList;
     }
 }

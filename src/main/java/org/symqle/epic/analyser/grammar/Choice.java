@@ -1,31 +1,28 @@
 package org.symqle.epic.analyser.grammar;
 
+import org.symqle.epic.gparser.ChoiceItem;
 import org.symqle.epic.gparser.RuleItem;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author lvovich
  */
 public class Choice implements RuleItemsSupplier {
 
-    private List<Chain> options = new ArrayList<>();
+    private final List<Chain> options;
 
-    public void addOption(Chain chain) {
-        options.add(chain);
+    public Choice(final List<Chain> options) {
+        this.options = options;
     }
 
     @Override
     public RuleItem toRuleItem(final Dictionary dictionary) {
-        switch (options.size()) {
-            case 0:
-                throw new IllegalStateException("Empty sequence not allowed");
-            case 1:
-                // optimization
-                return options.get(0).toRuleItem(dictionary);
-            default:
-                throw new UnsupportedOperationException("not implemented");
-        }
+        return new ChoiceItem(toRuleItemLists(dictionary));
+    }
+
+    public List<List<RuleItem>> toRuleItemLists(final Dictionary dictionary) {
+        return options.stream().map(c -> c.toRuleItems(dictionary)).collect(Collectors.toList());
     }
 }

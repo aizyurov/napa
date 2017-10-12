@@ -1,9 +1,9 @@
 package org.symqle.epic.analyser.grammar;
 
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * @author lvovich
@@ -11,7 +11,6 @@ import java.util.Set;
 public class Dictionary {
 
     private Map<String, Integer> regexpList = new HashMap<>();
-    private Set<String> ignoredSet = new HashSet<>();
     private Map<String, Integer> nonTerminals = new HashMap<>();
 
     public Integer registerRegexp(String regexp) {
@@ -20,13 +19,25 @@ public class Dictionary {
         return index;
     }
 
-    public void registerIgnored(String ignored) {
-        ignoredSet.add(ignored);
-    }
-
     public Integer registerNonTerminal(String name) {
         Integer index = nonTerminals.getOrDefault(name, nonTerminals.size() + 1);
         nonTerminals.put(name, index);
         return index;
+    }
+
+    public List<String> nonTerminals() {
+        List<String> nonTerminalNames = new ArrayList<>(nonTerminals.size());
+        for (Map.Entry<String, Integer> entry : nonTerminals.entrySet()) {
+            nonTerminalNames.set(entry.getValue(), entry.getKey());
+        }
+        return nonTerminalNames;
+    }
+
+    public List<String> terminals() {
+        List<String> patterns = new ArrayList<>(regexpList.size());
+        for (Map.Entry<String, Integer> entry : regexpList.entrySet()) {
+            patterns.set(entry.getValue(), entry.getKey());
+        }
+        return patterns;
     }
 }

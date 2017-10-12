@@ -8,14 +8,14 @@ import org.symqle.epic.gparser.TerminalItem;
  */
 public class Terminal implements RuleItemsSupplier {
 
-    private final Regexp regexp;
+    private final String regexp;
 
-    public Terminal(final Regexp regexp) {
+    public Terminal(final String regexp) {
         this.regexp = regexp;
     }
 
     @Override
     public RuleItem toRuleItem(final Dictionary dictionary) {
-        return new TerminalItem(dictionary.registerRegexp(regexp.getValue()));
+        return new TerminalItem(dictionary.registerRegexp(regexp));
     }
 }
