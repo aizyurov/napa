@@ -1,45 +1,22 @@
 package org.symqle.epic.gparser;
 
-import org.symqle.epic.tokenizer.Token;
-
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * @author lvovich
  */
-public class ParserToken {
+public interface ParserToken {
 
-    private final List<Token<Set<Integer>>> tokens;
 
-    public ParserToken(final List<Token<Set<Integer>>> tokens) {
-        this.tokens = tokens;
-    }
+    boolean matches(int tag);
 
-    public boolean matches(int tag) {
-        return lastToken().getType().contains(tag);
-    }
+    public List<String> preface();
 
-    private Token<Set<Integer>> lastToken() {
-        return tokens.get(tokens.size() - 1);
-    }
+    String text();
 
-    public List<String> preface() {
-        return tokens.subList(1, tokens.size()).stream().map(Token::getText).collect(Collectors.toList());
-    }
+    int line();
 
-    public String text() {
-        return lastToken().getText();
-    }
-
-    public int line() {
-        return lastToken().getLine();
-    }
-
-    public int pos() {
-        return lastToken().getPos();
-    }
+    int pos();
 
 
 }

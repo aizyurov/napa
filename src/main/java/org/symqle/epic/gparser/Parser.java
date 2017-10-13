@@ -1,5 +1,9 @@
 package org.symqle.epic.gparser;
 
+import org.symqle.epic.tokenizer.DfaTokenizer;
+
+import java.io.IOException;
+import java.io.Reader;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -14,14 +18,14 @@ public class Parser {
     private final int target;
     private final int complexityLimit;
 
-    public Parser(final CompiledGrammar grammar, final String target, final ParserTokenizer tokenizer, final int complexityLimit) {
+    public Parser(final CompiledGrammar grammar, final String target, final Reader reader, final int complexityLimit) throws IOException {
         this.grammar = grammar;
-        this.tokenizer = tokenizer;
+        this.tokenizer = new ParserTokenizerImpl(new DfaTokenizer<>(grammar.getTokenizerDfa(), reader));
         this.target = grammar.findNonTerminalByName(target).orElseThrow(() -> new IllegalArgumentException("NonTerminal not found: " + grammar));
         this.complexityLimit = complexityLimit;
     }
 
-    public Set<SyntaxTreeNode> parse() {
+    public Set<SyntaxTreeNode> parse() throws IOException {
         final ChartNode startNode = new ChartNode(-1, Collections.singletonList(new NonTerminalItem(target)), 0, null, Collections.emptyList());
         workSet.add(startNode);
         while (true) {

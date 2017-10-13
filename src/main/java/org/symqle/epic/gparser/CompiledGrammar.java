@@ -13,10 +13,10 @@ import java.util.Set;
  */
 public class CompiledGrammar {
 
-    final List<String> nonTerminals;
-    final List<String> terminals;
-    final Map<Integer, List<CompiledRule>> rules;
-    final PackedDfa<Set<Integer>> tokenizerDfa;
+    private final List<String> nonTerminals;
+    private final List<String> terminals;
+    private final Map<Integer, List<CompiledRule>> rules;
+    private final PackedDfa<Set<Integer>> tokenizerDfa;
 
     public CompiledGrammar(final List<String> nonTerminals, final List<String> terminals, final Map<Integer, List<CompiledRule>> rules, final PackedDfa<Set<Integer>> tokenizerDfa) {
         this.nonTerminals = nonTerminals;
@@ -44,5 +44,9 @@ public class CompiledGrammar {
             }
         }
         return Optional.empty();
+    }
+
+    public PackedDfa<Set<Integer>> getTokenizerDfa() {
+        return tokenizerDfa;
     }
 }
