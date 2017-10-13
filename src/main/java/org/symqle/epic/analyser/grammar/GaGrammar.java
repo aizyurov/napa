@@ -60,12 +60,12 @@ public class GaGrammar {
         List<CompiledRule> compiledRules = rules.stream()
                 .flatMap(r -> r.toCompiledRules(dictionary).stream()).collect(Collectors.toList());
         Set<String> ignoredPatterns = ignored.stream().flatMap(s -> s.getIgnoredList().stream()).collect(Collectors.toSet());
-        List<String> nonTerminals = dictionary.nonTerminals();
-        List<String> terminals = dictionary.terminals();
+        String[] nonTerminals = dictionary.nonTerminals();
+        String[] terminals = dictionary.terminals();
 
         List<TokenDefinition<Integer>> tokenDefinitions = new ArrayList<>();
-        for (int i = 0;i < terminals.size(); i++) {
-            String terminal = terminals.get(i);
+        for (int i = 0;i < terminals.length; i++) {
+            String terminal = terminals[i];
             String regexp = terminal.substring(1, terminal.length() - 1);
             tokenDefinitions.add(new TokenDefinition<>(regexp, i));
         }
@@ -84,6 +84,7 @@ public class GaGrammar {
     }
 
     private Rule rule() throws IOException {
+        System.out.println("rule");
         Token<GaTokenType> target = this.nextToken;
 
         nextToken = tokenizer.nextToken();
@@ -113,6 +114,7 @@ public class GaGrammar {
     }
 
     private IgnoreStatement ignoreStatement() throws IOException {
+        System.out.println("ignore");
         List<String> ignoredPatterns = new ArrayList<>();
         nextToken = tokenizer.nextToken();
         while (nextToken != null && nextToken.getType() == GaTokenType.STRING) {
@@ -128,21 +130,23 @@ public class GaGrammar {
     }
 
     private Choice choice() throws IOException {
+        System.out.println("choice");
         List<Chain> chains = new ArrayList<>();
         while (true) {
             chains.add(chain());
-            nextToken = tokenizer.nextToken();
             if (nextToken == null) {
                 throw unexpectedTokenException();
             }
             if (nextToken.getType() != GaTokenType.BAR) {
                 break;
             }
+            nextToken = tokenizer.nextToken();
         }
         return new Choice(chains);
     }
 
     private Chain chain() throws IOException {
+        System.out.println("chain");
         List<RuleItemsSupplier> items = new ArrayList<>();
         while(true) {
             if (nextToken == null) {
@@ -167,7 +171,7 @@ public class GaGrammar {
                     items.add(exactlyOne());
                     break;
                 default:
-                    throw unexpectedTokenException();
+                    return new Chain(items);
 
             }
         }

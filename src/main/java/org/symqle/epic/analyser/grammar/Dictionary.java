@@ -1,8 +1,6 @@
 package org.symqle.epic.analyser.grammar;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -14,29 +12,29 @@ public class Dictionary {
     private Map<String, Integer> nonTerminals = new HashMap<>();
 
     public Integer registerRegexp(String regexp) {
-        Integer index = regexpList.getOrDefault(regexp, regexpList.size() + 1);
+        Integer index = regexpList.getOrDefault(regexp, regexpList.size());
         regexpList.put(regexp, index);
         return index;
     }
 
     public Integer registerNonTerminal(String name) {
-        Integer index = nonTerminals.getOrDefault(name, nonTerminals.size() + 1);
+        Integer index = nonTerminals.getOrDefault(name, nonTerminals.size());
         nonTerminals.put(name, index);
         return index;
     }
 
-    public List<String> nonTerminals() {
-        List<String> nonTerminalNames = new ArrayList<>(nonTerminals.size());
+    public String[] nonTerminals() {
+        String[] nonTerminalNames = new String[nonTerminals.size()];
         for (Map.Entry<String, Integer> entry : nonTerminals.entrySet()) {
-            nonTerminalNames.set(entry.getValue(), entry.getKey());
+            nonTerminalNames[entry.getValue()] = entry.getKey();
         }
         return nonTerminalNames;
     }
 
-    public List<String> terminals() {
-        List<String> patterns = new ArrayList<>(regexpList.size());
+    public String[] terminals() {
+        String[] patterns = new String[regexpList.size()];
         for (Map.Entry<String, Integer> entry : regexpList.entrySet()) {
-            patterns.set(entry.getValue(), entry.getKey());
+            patterns[entry.getValue()] = entry.getKey();
         }
         return patterns;
     }

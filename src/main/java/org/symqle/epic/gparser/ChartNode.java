@@ -29,7 +29,7 @@ public class ChartNode {
         this.items = items;
         this.offset = offset;
         this.enclosing = enclosing;
-        this.syntaxNodes = syntaxNodes;
+        this.syntaxNodes = new ArrayList<>(syntaxNodes);
     }
 
     public Action availableAction() {

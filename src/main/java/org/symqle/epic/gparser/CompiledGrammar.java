@@ -13,12 +13,12 @@ import java.util.Set;
  */
 public class CompiledGrammar {
 
-    private final List<String> nonTerminals;
-    private final List<String> terminals;
+    private final String[] nonTerminals;
+    private final String[] terminals;
     private final Map<Integer, List<CompiledRule>> rules;
     private final PackedDfa<Set<Integer>> tokenizerDfa;
 
-    public CompiledGrammar(final List<String> nonTerminals, final List<String> terminals, final Map<Integer, List<CompiledRule>> rules, final PackedDfa<Set<Integer>> tokenizerDfa) {
+    public CompiledGrammar(final String[] nonTerminals, final String[] terminals, final Map<Integer, List<CompiledRule>> rules, final PackedDfa<Set<Integer>> tokenizerDfa) {
         this.nonTerminals = nonTerminals;
         this.terminals = terminals;
         this.rules = rules;
@@ -30,16 +30,16 @@ public class CompiledGrammar {
     }
 
     public String getTerminalName(int index) {
-        return terminals.get(index);
+        return terminals[index];
     }
 
     public String getNonTerminalName(int index) {
-        return nonTerminals.get(index);
+        return nonTerminals[index];
     }
 
     public Optional<Integer> findNonTerminalByName(String name) {
-        for (int i = 0; i < nonTerminals.size(); i++ ) {
-            if (nonTerminals.get(i).equals(name)) {
+        for (int i = 0; i < nonTerminals.length; i++ ) {
+            if (nonTerminals[i].equals(name)) {
                 return Optional.of(i);
             }
         }
