@@ -23,7 +23,18 @@ public class CompiledGrammar {
         this.terminals = terminals;
         this.rules = rules;
         this.tokenizerDfa = tokenizerDfa;
+        verify();
     }
+
+    private void verify() {
+        for (int i = 0; i < nonTerminals.length; i++) {
+            if (!rules.containsKey(i)) {
+                throw new GrammarException("No rule for " + nonTerminals[i]);
+            }
+        }
+    }
+
+
 
     public List<CompiledRule> getRules(int index) {
         return Collections.unmodifiableList(rules.get(index));

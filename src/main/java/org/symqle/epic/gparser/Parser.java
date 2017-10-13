@@ -21,7 +21,7 @@ public class Parser {
     public Parser(final CompiledGrammar grammar, final String target, final Reader reader, final int complexityLimit) throws IOException {
         this.grammar = grammar;
         this.tokenizer = new ParserTokenizerImpl(new DfaTokenizer<>(grammar.getTokenizerDfa(), reader));
-        this.target = grammar.findNonTerminalByName(target).orElseThrow(() -> new IllegalArgumentException("NonTerminal not found: " + grammar));
+        this.target = grammar.findNonTerminalByName(target).orElseThrow(() -> new GrammarException("NonTerminal not found: " + grammar));
         this.complexityLimit = complexityLimit;
     }
 
@@ -31,7 +31,7 @@ public class Parser {
         while (true) {
             while (!workSet.isEmpty()) {
                 if (workSet.size() > complexityLimit) {
-                    throw new IllegalStateException("Too ambiguous or too complex to parse");
+                    throw new GrammarException("Too ambiguous or too complex to parse");
                 }
                 final ChartNode next = workSet.iterator().next();
                 workSet.remove(next);
@@ -66,7 +66,7 @@ public class Parser {
                 workSet.addAll(next.shift(nextToken, grammar));
             }
             if (workSet.isEmpty()) {
-                throw new IllegalStateException("Unrecognized input " + nextToken.text() + " at " + nextToken.line() +":" + nextToken.pos());
+                throw new GrammarException("Unrecognized input " + nextToken.text() + " at " + nextToken.line() +":" + nextToken.pos());
             }
         }
 

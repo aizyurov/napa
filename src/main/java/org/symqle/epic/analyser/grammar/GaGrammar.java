@@ -5,6 +5,7 @@ import org.symqle.epic.analyser.lexis.GaTokenType;
 import org.symqle.epic.analyser.lexis.GaTokenizer;
 import org.symqle.epic.gparser.CompiledGrammar;
 import org.symqle.epic.gparser.CompiledRule;
+import org.symqle.epic.gparser.GrammarException;
 import org.symqle.epic.lexer.TokenDefinition;
 import org.symqle.epic.lexer.build.Lexer;
 import org.symqle.epic.tokenizer.DfaTokenizer;
@@ -104,10 +105,10 @@ public class GaGrammar {
 
 
 
-    private IllegalStateException unexpectedTokenException() {
+    private GrammarException unexpectedTokenException() {
         return  nextToken == null
-                ?  new IllegalStateException("Unexpected end of input")
-                : new IllegalStateException("Unexpected token: "
+                ?  new GrammarException("Unexpected end of input")
+                : new GrammarException("Unexpected token: "
                 + nextToken.getType()
                 + "(" + nextToken.getText() + ") at "
                 + nextToken.getLine() + ":" +nextToken.getPos());

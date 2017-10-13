@@ -4,6 +4,7 @@ import junit.framework.Assert;
 import junit.framework.TestCase;
 import org.symqle.epic.analyser.grammar.GaGrammar;
 import org.symqle.epic.gparser.CompiledGrammar;
+import org.symqle.epic.gparser.GrammarException;
 import org.symqle.epic.gparser.Parser;
 import org.symqle.epic.gparser.SyntaxTreeNode;
 
@@ -25,5 +26,18 @@ public class AnalyzerTest extends TestCase {
         Assert.assertEquals(1, tree.size());
         System.out.println(tree.iterator().next().text());
 
+    }
+
+    public void testUndefinedNonTerminal() throws Exception {
+        String grammar = "identifier = \"[a-zA-Z][a-zA-Z0-9]*\";\n" +
+                // mistype below
+                "class_declaration = \"class\" identifeir \";\" ;\n" +
+                "! \" +\" ;";
+        try {
+            CompiledGrammar g = new GaGrammar().parse(new StringReader(grammar));
+            fail("GrammarException expected");
+        } catch (GrammarException e) {
+            Assert.assertTrue(e.getMessage().contains("identifeir"));
+        }
     }
 }
