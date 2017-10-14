@@ -37,7 +37,7 @@ public class TerminalNode implements SyntaxTreeNode {
 
     @Override
     public String value() {
-        return value();
+        return value;
     }
 
     @Override

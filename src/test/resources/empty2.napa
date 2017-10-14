@@ -1,0 +1,4 @@
+! " +" ;
+declaration = modifier "class" name ";" ;
+modifier = "public" | "private" | ;
+name = "[a-z]+" ;

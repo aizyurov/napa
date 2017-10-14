@@ -60,6 +60,7 @@ public class Parser {
             if (nextToken == null) {
                 return syntaxTreeCandidates;
             }
+            syntaxTreeCandidates.clear();
             while (!shiftCandidates.isEmpty()) {
                 final ChartNode next = shiftCandidates.iterator().next();
                 shiftCandidates.remove(next);

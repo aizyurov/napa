@@ -10,14 +10,10 @@ import java.util.List;
 public class NonTerminalNode implements SyntaxTreeNode {
 
     private final String name;
-    // at least one element: we do not allow empty productions
     private final List<SyntaxTreeNode> children;
 
     public NonTerminalNode(String name, final List<SyntaxTreeNode> children) {
         this.name = name;
-        if (children.isEmpty()) {
-            throw new IllegalStateException("NonTerminal cannot be expanded to empty sequence");
-        }
         this.children = new ArrayList<>(children);
     }
 
@@ -28,12 +24,12 @@ public class NonTerminalNode implements SyntaxTreeNode {
 
     @Override
     public String value() {
-        return children.get(0).value();
+        return children.isEmpty() ? null : children.get(0).value();
     }
 
     @Override
     public List<String> preface() {
-        return children.get(0).preface();
+        return children.isEmpty() ? Collections.emptyList() : children.get(0).preface();
     }
 
     @Override

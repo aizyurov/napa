@@ -45,7 +45,7 @@ public class ChartNode {
                     throw new IllegalStateException("Should never get here");
             }
         } else {
-            return target >=0 ? Action.REDUCE : Action.ACCEPT;
+            return enclosing != null ? Action.REDUCE : Action.ACCEPT;
         }
     }
 
