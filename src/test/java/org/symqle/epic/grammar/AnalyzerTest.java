@@ -11,6 +11,7 @@ import org.symqle.epic.gparser.SyntaxTreeNode;
 import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -86,8 +87,7 @@ public class AnalyzerTest extends TestCase {
 
     public void testLeftZeroOrMore() throws Exception {
         CompiledGrammar g = new GaGrammar().parse(new InputStreamReader(getClass().getClassLoader().getResourceAsStream("leftZeroOrMore.napa"), "UTF-8"));
-        String source = "java.lang.S" +
-                "tring s;";
+        String source = "java.lang.String s;";
         Set<SyntaxTreeNode> forest = new Parser(g, "field_definition", new StringReader(source), 100).parse();
         Assert.assertEquals(1, forest.size());
         SyntaxTreeNode tree = forest.iterator().next();
@@ -97,6 +97,33 @@ public class AnalyzerTest extends TestCase {
         Assert.assertEquals(5, type.children().size());
         Assert.assertEquals(Arrays.asList("java", "lang", "String"), type.children().stream().filter(c -> c.name().equals("name")).map(c -> c.value()).collect(Collectors.toList()));
         Assert.assertEquals(source, tree.text());
+    }
+
+    public void testEarlyExample() throws Exception {
+        String grammar = "B = A A ; A = \"x\" | \"x\" \"x\" ;";
+        String source = "xxx";
+        CompiledGrammar g = new GaGrammar().parse(new StringReader(grammar));
+        Set<SyntaxTreeNode> forest = new Parser(g, "B", new StringReader(source), 100).parse();
+        Assert.assertEquals(2, forest.size());
+        for (SyntaxTreeNode tree : forest) {
+            Assert.assertEquals(source, tree.text());
+        }
+    }
+
+    public void testIngorable() throws Exception {
+        CompiledGrammar g = new GaGrammar().parse(new InputStreamReader(getClass().getClassLoader().getResourceAsStream("ignorable.napa"), "UTF-8"));
+        String source = "/*comment*/class/*garbage*/abc";
+        Set<SyntaxTreeNode> forest = new Parser(g, "class_definition", new StringReader(source), 100).parse();
+        Assert.assertEquals(1, forest.size());
+        SyntaxTreeNode tree = forest.iterator().next();
+        Assert.assertEquals(3, tree.children().size());
+        SyntaxTreeNode comment = tree.children().get(0);
+        Assert.assertEquals("comment", comment.name());
+        Assert.assertEquals("/*comment*/", comment.value());
+        SyntaxTreeNode name = tree.children().get(2);
+        Assert.assertEquals("name", name.name());
+        Assert.assertEquals("abc", name.value());
+        Assert.assertEquals(Collections.singletonList("/*garbage*/"), name.preface());
     }
 
 }
