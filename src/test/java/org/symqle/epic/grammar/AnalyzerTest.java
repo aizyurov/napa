@@ -10,7 +10,9 @@ import org.symqle.epic.gparser.SyntaxTreeNode;
 
 import java.io.InputStreamReader;
 import java.io.StringReader;
+import java.util.Arrays;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author lvovich
@@ -79,6 +81,21 @@ public class AnalyzerTest extends TestCase {
         SyntaxTreeNode tree = forest.iterator().next();
         Assert.assertEquals(4, tree.children().size());
         Assert.assertNull(tree.children().get(0).value());
+        Assert.assertEquals(source, tree.text());
+    }
+
+    public void testLeftZeroOrMore() throws Exception {
+        CompiledGrammar g = new GaGrammar().parse(new InputStreamReader(getClass().getClassLoader().getResourceAsStream("leftZeroOrMore.napa"), "UTF-8"));
+        String source = "java.lang.S" +
+                "tring s;";
+        Set<SyntaxTreeNode> forest = new Parser(g, "field_definition", new StringReader(source), 100).parse();
+        Assert.assertEquals(1, forest.size());
+        SyntaxTreeNode tree = forest.iterator().next();
+        Assert.assertEquals(3, tree.children().size());
+        SyntaxTreeNode type = tree.children().get(0);
+        Assert.assertEquals("type", type.name());
+        Assert.assertEquals(5, type.children().size());
+        Assert.assertEquals(Arrays.asList("java", "lang", "String"), type.children().stream().filter(c -> c.name().equals("name")).map(c -> c.value()).collect(Collectors.toList()));
         Assert.assertEquals(source, tree.text());
     }
 
