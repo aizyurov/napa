@@ -6,6 +6,7 @@ import org.symqle.epic.analyser.lexis.GaTokenizer;
 import org.symqle.epic.gparser.CompiledGrammar;
 import org.symqle.epic.gparser.CompiledRule;
 import org.symqle.epic.gparser.GrammarException;
+import org.symqle.epic.gparser.TokenProperties;
 import org.symqle.epic.lexer.TokenDefinition;
 import org.symqle.epic.lexer.build.Lexer;
 import org.symqle.epic.tokenizer.DfaTokenizer;
@@ -16,6 +17,9 @@ import org.symqle.epic.tokenizer.Tokenizer;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -63,25 +67,39 @@ public class GaGrammar {
         Set<String> ignoredPatterns = ignored.stream().flatMap(s -> s.getIgnoredList().stream()).collect(Collectors.toSet());
         String[] nonTerminals = dictionary.nonTerminals();
         String[] terminals = dictionary.terminals();
+        Set<String> terminalSet = Arrays.stream(terminals).collect(Collectors.toSet());
 
+        Set<Integer> ignorableTags = new HashSet<>();
         List<TokenDefinition<Integer>> tokenDefinitions = new ArrayList<>();
         for (int i = 0;i < terminals.length; i++) {
             String terminal = terminals[i];
             String regexp = terminal.substring(1, terminal.length() - 1);
             tokenDefinitions.add(new TokenDefinition<>(regexp, i));
+            if (ignoredPatterns.contains(terminal)) {
+                ignorableTags.add(i);
+            }
+        }
+        int ignoredTag = terminals.length;
+        for (String ignored: ignoredPatterns) {
+            if (!terminalSet.contains(ignored)) {
+                String regexp = ignored.substring(1, ignored.length() - 1);
+                tokenDefinitions.add(new TokenDefinition<>(regexp, ignoredTag));
+            }
         }
 
-        for (String pattern: ignoredPatterns) {
-            String regexp = pattern.substring(1, pattern.length() - 1);
-            tokenDefinitions.add(new TokenDefinition<>(regexp, Integer.MAX_VALUE));
-        }
+        ignorableTags.add(ignoredTag);
 
+        Set<Integer> ignoredTagSet = Collections.singleton(ignoredTag);
         PackedDfa<Set<Integer>> packedDfa= new Lexer<Integer>(tokenDefinitions).compile();
+        PackedDfa<TokenProperties> napaDfa = packedDfa.transform(s -> {
+            boolean ignoreOnly = s.equals(ignoredTagSet);
+            Set<Integer> difference = new HashSet<Integer>(s);
+            difference.retainAll(ignorableTags);
+            boolean ignorable = !difference.isEmpty();
+            return new TokenProperties(ignoreOnly, ignorable, s);
+        });
 
-        return new CompiledGrammar(nonTerminals, terminals, compiledRules.stream().collect(Collectors.groupingBy(CompiledRule::getTarget)), packedDfa);
-
-
-
+        return new CompiledGrammar(nonTerminals, terminals, compiledRules.stream().collect(Collectors.groupingBy(CompiledRule::getTarget)), napaDfa);
     }
 
     private Rule rule() throws IOException {

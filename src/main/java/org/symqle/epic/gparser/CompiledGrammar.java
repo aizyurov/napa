@@ -6,7 +6,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 
 /**
  * @author lvovich
@@ -16,9 +15,9 @@ public class CompiledGrammar {
     private final String[] nonTerminals;
     private final String[] terminals;
     private final Map<Integer, List<CompiledRule>> rules;
-    private final PackedDfa<Set<Integer>> tokenizerDfa;
+    private final PackedDfa<TokenProperties> tokenizerDfa;
 
-    public CompiledGrammar(final String[] nonTerminals, final String[] terminals, final Map<Integer, List<CompiledRule>> rules, final PackedDfa<Set<Integer>> tokenizerDfa) {
+    public CompiledGrammar(final String[] nonTerminals, final String[] terminals, final Map<Integer, List<CompiledRule>> rules, final PackedDfa<TokenProperties> tokenizerDfa) {
         this.nonTerminals = nonTerminals;
         this.terminals = terminals;
         this.rules = rules;
@@ -57,7 +56,7 @@ public class CompiledGrammar {
         return Optional.empty();
     }
 
-    public PackedDfa<Set<Integer>> getTokenizerDfa() {
+    public PackedDfa<TokenProperties> getTokenizerDfa() {
         return tokenizerDfa;
     }
 }

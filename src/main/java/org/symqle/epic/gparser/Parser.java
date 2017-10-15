@@ -1,11 +1,15 @@
 package org.symqle.epic.gparser;
 
 import org.symqle.epic.tokenizer.DfaTokenizer;
+import org.symqle.epic.tokenizer.Token;
+import org.symqle.epic.tokenizer.Tokenizer;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -14,13 +18,13 @@ import java.util.Set;
 public class Parser {
 
     private final CompiledGrammar grammar;
-    private final ParserTokenizer tokenizer;
+    private final Tokenizer<TokenProperties> tokenizer;
     private final int target;
     private final int complexityLimit;
 
     public Parser(final CompiledGrammar grammar, final String target, final Reader reader, final int complexityLimit) throws IOException {
         this.grammar = grammar;
-        this.tokenizer = new ParserTokenizerImpl(new DfaTokenizer<>(grammar.getTokenizerDfa(), reader));
+        this.tokenizer = new DfaTokenizer<>(grammar.getTokenizerDfa(), reader);
         this.target = grammar.findNonTerminalByName(target).orElseThrow(() -> new GrammarException("NonTerminal not found: " + grammar));
         this.complexityLimit = complexityLimit;
     }
@@ -56,19 +60,32 @@ public class Parser {
                 }
             }
             // now shift
-            final ParserToken nextToken = tokenizer.nextToken();
-            if (nextToken == null) {
-                return syntaxTreeCandidates;
+            List<String> preface = new ArrayList<>();
+            while (true) {
+                final Token<TokenProperties> nextToken = tokenizer.nextToken();
+                if (nextToken == null) {
+                    return syntaxTreeCandidates;
+                }
+                if (nextToken.getType().isIgnoreOnly()) {
+                    preface.add(nextToken.getText());
+                    continue;
+                }
+                for (ChartNode candidate: shiftCandidates) {
+                    workSet.addAll(candidate.shift(nextToken, preface, grammar));
+                }
+                if (workSet.isEmpty()) {
+                    if (nextToken.getType().isIgnorable()) {
+                        preface.add(nextToken.getText());
+                    } else {
+                        throw new GrammarException("Unrecognized input " + nextToken.getText() + " at " + nextToken.getLine() + ":" + nextToken.getPos());
+                    }
+                } else {
+                    break;
+                }
             }
+            // token accepted
             syntaxTreeCandidates.clear();
-            while (!shiftCandidates.isEmpty()) {
-                final ChartNode next = shiftCandidates.iterator().next();
-                shiftCandidates.remove(next);
-                workSet.addAll(next.shift(nextToken, grammar));
-            }
-            if (workSet.isEmpty()) {
-                throw new GrammarException("Unrecognized input " + nextToken.text() + " at " + nextToken.line() +":" + nextToken.pos());
-            }
+            shiftCandidates.clear();
         }
 
     }

@@ -1,5 +1,7 @@
 package org.symqle.epic.gparser;
 
+import org.symqle.epic.tokenizer.Token;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -90,15 +92,15 @@ public class ChartNode {
         return newNodes;
     }
 
-    public List<ChartNode> shift(ParserToken parserToken, CompiledGrammar compiledGrammar) {
+    public List<ChartNode> shift(Token<TokenProperties> tokenProperties, List<String> preface, CompiledGrammar compiledGrammar) {
         assert offset < items.size();
         RuleItem currentItem = items.get(offset);
         assert currentItem.getType() == RuleItemType.TERMINAL;
-        if (!parserToken.matches(currentItem.getValue())) {
+        if (!tokenProperties.getType().matches(currentItem.getValue())) {
             return Collections.emptyList();
         }
         offset += 1;
-        syntaxNodes.add(new TerminalNode(compiledGrammar.getTerminalName(currentItem.getValue()), parserToken.preface(), parserToken.text(), null, parserToken.line(), parserToken.pos()));
+        syntaxNodes.add(new TerminalNode(compiledGrammar.getTerminalName(currentItem.getValue()), preface, tokenProperties.getText(), null, tokenProperties.getLine(), tokenProperties.getPos()));
         return Collections.singletonList(this);
     }
 }
