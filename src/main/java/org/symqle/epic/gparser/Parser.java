@@ -18,19 +18,19 @@ import java.util.Set;
 public class Parser {
 
     private final CompiledGrammar grammar;
-    private final Tokenizer<TokenProperties> tokenizer;
-    private final int target;
-    private final int complexityLimit;
+    private Tokenizer<TokenProperties> tokenizer;
 
-    public Parser(final CompiledGrammar grammar, final String target, final Reader reader, final int complexityLimit) throws IOException {
+    public Parser(final CompiledGrammar grammar) throws IOException {
         this.grammar = grammar;
-        this.tokenizer = new DfaTokenizer<>(grammar.getTokenizerDfa(), reader);
-        this.target = grammar.findNonTerminalByName(target).orElseThrow(() -> new GrammarException("NonTerminal not found: " + grammar));
-        this.complexityLimit = complexityLimit;
     }
 
-    public Set<SyntaxTreeNode> parse() throws IOException {
-        final ChartNode startNode = new ChartNode(-1, Collections.singletonList(new NonTerminalItem(target)), 0, null, Collections.emptyList());
+    public Set<SyntaxTreeNode> parse(final String target, final Reader reader, final int complexityLimit) throws IOException {
+        this.tokenizer = new DfaTokenizer<>(grammar.getTokenizerDfa(), reader);
+        int targetTag = grammar.findNonTerminalByName(target).orElseThrow(() -> new GrammarException("NonTerminal not found: " + grammar));
+        workSet.clear();
+        shiftCandidates.clear();
+        syntaxTreeCandidates.clear();
+        final ChartNode startNode = new ChartNode(-1, Collections.singletonList(new NonTerminalItem(targetTag)), 0, null, Collections.emptyList());
         workSet.add(startNode);
         while (true) {
             while (!workSet.isEmpty()) {

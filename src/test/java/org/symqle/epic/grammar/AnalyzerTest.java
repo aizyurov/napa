@@ -26,7 +26,7 @@ public class AnalyzerTest extends TestCase {
                 "! \" +\" ;";
         CompiledGrammar g = new GaGrammar().parse(new StringReader(grammar));
         String source = "class wow ;";
-        Set<SyntaxTreeNode> tree = new Parser(g, "class_declaration", new StringReader(source), 100).parse();
+        Set<SyntaxTreeNode> tree = new Parser(g).parse("class_declaration", new StringReader(source), 100);
         Assert.assertEquals(1, tree.size());
         System.out.println(tree.iterator().next().text());
 
@@ -48,7 +48,7 @@ public class AnalyzerTest extends TestCase {
     public void testExpression() throws Exception {
         CompiledGrammar g = new GaGrammar().parse(new InputStreamReader(getClass().getClassLoader().getResourceAsStream("expression.napa"), "UTF-8"));
         String source = "a + 2 * b + c/3/4";
-        Set<SyntaxTreeNode> expressions = new Parser(g, "expression", new StringReader(source), 100).parse();
+        Set<SyntaxTreeNode> expressions = new Parser(g).parse("expression", new StringReader(source), 100);
         Assert.assertEquals(1, expressions.size());
         SyntaxTreeNode expression = expressions.iterator().next();
         Assert.assertEquals("expression", expression.name());
@@ -67,7 +67,7 @@ public class AnalyzerTest extends TestCase {
     public void testEmpty1() throws Exception {
         CompiledGrammar g = new GaGrammar().parse(new InputStreamReader(getClass().getClassLoader().getResourceAsStream("empty1.napa"), "UTF-8"));
         String source = "class a;";
-        Set<SyntaxTreeNode> forest = new Parser(g, "declaration", new StringReader(source), 100).parse();
+        Set<SyntaxTreeNode> forest = new Parser(g).parse("declaration", new StringReader(source), 100);
         Assert.assertEquals(1, forest.size());
         SyntaxTreeNode tree = forest.iterator().next();
         Assert.assertEquals(3, tree.children().size());
@@ -77,7 +77,7 @@ public class AnalyzerTest extends TestCase {
     public void testEmpty2() throws Exception {
         CompiledGrammar g = new GaGrammar().parse(new InputStreamReader(getClass().getClassLoader().getResourceAsStream("empty2.napa"), "UTF-8"));
         String source = "class a;";
-        Set<SyntaxTreeNode> forest = new Parser(g, "declaration", new StringReader(source), 100).parse();
+        Set<SyntaxTreeNode> forest = new Parser(g).parse("declaration", new StringReader(source), 100);
         Assert.assertEquals(1, forest.size());
         SyntaxTreeNode tree = forest.iterator().next();
         Assert.assertEquals(4, tree.children().size());
@@ -88,7 +88,7 @@ public class AnalyzerTest extends TestCase {
     public void testLeftZeroOrMore() throws Exception {
         CompiledGrammar g = new GaGrammar().parse(new InputStreamReader(getClass().getClassLoader().getResourceAsStream("leftZeroOrMore.napa"), "UTF-8"));
         String source = "java.lang.String s;";
-        Set<SyntaxTreeNode> forest = new Parser(g, "field_definition", new StringReader(source), 100).parse();
+        Set<SyntaxTreeNode> forest = new Parser(g).parse("field_definition", new StringReader(source), 100);
         Assert.assertEquals(1, forest.size());
         SyntaxTreeNode tree = forest.iterator().next();
         Assert.assertEquals(3, tree.children().size());
@@ -103,7 +103,7 @@ public class AnalyzerTest extends TestCase {
         String grammar = "B = A A ; A = \"x\" | \"x\" \"x\" ;";
         String source = "xxx";
         CompiledGrammar g = new GaGrammar().parse(new StringReader(grammar));
-        Set<SyntaxTreeNode> forest = new Parser(g, "B", new StringReader(source), 100).parse();
+        Set<SyntaxTreeNode> forest = new Parser(g).parse("B", new StringReader(source), 100);
         Assert.assertEquals(2, forest.size());
         for (SyntaxTreeNode tree : forest) {
             Assert.assertEquals(source, tree.text());
@@ -113,7 +113,7 @@ public class AnalyzerTest extends TestCase {
     public void testIngorable() throws Exception {
         CompiledGrammar g = new GaGrammar().parse(new InputStreamReader(getClass().getClassLoader().getResourceAsStream("ignorable.napa"), "UTF-8"));
         String source = "/*comment*/class/*garbage*/abc";
-        Set<SyntaxTreeNode> forest = new Parser(g, "class_definition", new StringReader(source), 100).parse();
+        Set<SyntaxTreeNode> forest = new Parser(g).parse("class_definition", new StringReader(source), 100);
         Assert.assertEquals(1, forest.size());
         SyntaxTreeNode tree = forest.iterator().next();
         Assert.assertEquals(3, tree.children().size());
