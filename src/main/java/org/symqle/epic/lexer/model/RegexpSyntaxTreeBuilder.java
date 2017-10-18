@@ -12,8 +12,8 @@ public class RegexpSyntaxTreeBuilder {
 
     private final Scanner scanner;
 
-    public RegexpSyntaxTreeBuilder(String pattern) {
-        this.scanner = new Scanner(pattern);
+    public RegexpSyntaxTreeBuilder(Scanner scanner) {
+        this.scanner = scanner;
     }
 
     public NfaBuilder regexp() {

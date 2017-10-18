@@ -6,10 +6,18 @@ package org.symqle.epic.lexer;
 public class TokenDefinition<T> {
     private final String pattern;
     private final T tag;
+    private boolean literal;
 
     public TokenDefinition(final String pattern, final T tag) {
         this.pattern = pattern;
         this.tag = tag;
+        this.literal = false;
+    }
+
+    public TokenDefinition(final String pattern, final T tag, final boolean literal) {
+        this.pattern = pattern;
+        this.tag = tag;
+        this.literal = literal;
     }
 
     public static <T> TokenDefinition<T> def(final String pattern, final T tag) {
@@ -22,5 +30,9 @@ public class TokenDefinition<T> {
 
     public T getTag() {
         return tag;
+    }
+
+    public boolean isLiteral() {
+        return literal;
     }
 }

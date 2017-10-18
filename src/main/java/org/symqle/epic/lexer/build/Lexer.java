@@ -1,6 +1,7 @@
 package org.symqle.epic.lexer.build;
 
 import org.symqle.epic.lexer.TokenDefinition;
+import org.symqle.epic.lexer.model.Scanner;
 import org.symqle.epic.lexer.model.RegexpSyntaxTreeBuilder;
 import org.symqle.epic.tokenizer.PackedDfa;
 
@@ -40,7 +41,10 @@ public class Lexer<T> {
     private Nfa1 createNfa() {
         NfaNode1 startState = new NfaNode1();
         for (int i = 0; i < tokenDefinitions.size(); i++) {
-            final NfaNode1 regexpEndState = new RegexpSyntaxTreeBuilder(tokenDefinitions.get(i).getPattern()).regexp().endState(startState);
+            TokenDefinition<T> tokenDefinition = tokenDefinitions.get(i);
+            final NfaNode1 regexpEndState = new RegexpSyntaxTreeBuilder(
+                    new Scanner(tokenDefinition.getPattern(), tokenDefinition.isLiteral()))
+                    .regexp().endState(startState);
             NfaNode1 lexemEndState = new NfaNode1(i);
             regexpEndState.addEmptyEdge(lexemEndState);
         }

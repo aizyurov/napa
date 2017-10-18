@@ -110,6 +110,17 @@ public class AnalyzerTest extends TestCase {
         }
     }
 
+    public void testLalrFail() throws Exception {
+        CompiledGrammar g = new GaGrammar().parse(new InputStreamReader(getClass().getClassLoader().getResourceAsStream("lalr_fail.napa")));
+        String source = "bed";
+        Set<SyntaxTreeNode> forest = new Parser(g).parse("S", new StringReader(source), 100);
+        Assert.assertEquals(1, forest.size());
+        SyntaxTreeNode tree = forest.iterator().next();
+        Assert.assertEquals(3, tree.children().size());
+        Assert.assertEquals("E", tree.children().get(1).name());
+
+    }
+
     public void testIngorable() throws Exception {
         CompiledGrammar g = new GaGrammar().parse(new InputStreamReader(getClass().getClassLoader().getResourceAsStream("ignorable.napa"), "UTF-8"));
         String source = "/*comment*/class/*garbage*/abc";

@@ -3,16 +3,18 @@ package org.symqle.epic.lexer.model;
 /**
  * @author lvovich
  */
-class Scanner {
+public class Scanner {
 
     private final String source;
+    private final boolean literal;
 
     private int pos = 0;
 
     private LexerToken next;
 
-    public Scanner(final String source) {
+    public Scanner(final String source, final boolean literal) {
         this.source = source;
+        this.literal = literal;
     }
 
     public LexerTokenType preview() {
@@ -42,7 +44,9 @@ class Scanner {
             case '\\':
                 return escaped();
             default:
-                return new LexerToken(LexerTokenType.of(nextChar), nextChar);
+                return literal
+                        ? new LexerToken(LexerTokenType.CHARACTER, nextChar)
+                        : new LexerToken(LexerTokenType.of(nextChar), nextChar);
         }
     }
 

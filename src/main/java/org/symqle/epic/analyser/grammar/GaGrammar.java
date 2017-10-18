@@ -74,7 +74,7 @@ public class GaGrammar {
         for (int i = 0;i < terminals.length; i++) {
             String terminal = terminals[i];
             String regexp = terminal.substring(1, terminal.length() - 1);
-            tokenDefinitions.add(new TokenDefinition<>(regexp, i));
+            tokenDefinitions.add(new TokenDefinition<>(regexp, i, terminal.charAt(0) == '\''));
             if (ignoredPatterns.contains(terminal)) {
                 ignorableTags.add(i);
             }
