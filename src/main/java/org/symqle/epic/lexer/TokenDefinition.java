@@ -9,13 +9,11 @@ public class TokenDefinition<T> {
     private boolean literal;
 
     public TokenDefinition(final String pattern, final T tag) {
-        this.pattern = pattern;
-        this.tag = tag;
-        this.literal = false;
+        this(pattern, tag, false);
     }
 
     public TokenDefinition(final String pattern, final T tag, final boolean literal) {
-        this.pattern = pattern;
+        this.pattern = pattern; // .replaceAll("\\\"", "\"").replaceAll("\\\'", "\'");
         this.tag = tag;
         this.literal = literal;
     }

@@ -36,8 +36,8 @@ public class GaLexer {
         def("!", EXCLAMATION),
         def("[ \\r\\n\\t]+", IGNORE),
         def("#[^\\r\\n]*[\\r\\n]", IGNORE),
-        def("\"[^\"]+\"", STRING),
-        def("'[^']+'", STRING),
+        def("\"([^\"]|[\\\\][\"])+\"", STRING),
+        def("'([^']|\\\\')+'", STRING),
         def("\\|", BAR)
     );
 

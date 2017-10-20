@@ -72,4 +72,11 @@ public class Scanner {
         return new LexerToken(LexerTokenType.CHARACTER, value);
     }
 
+    public String getSource() {
+        return source;
+    }
+
+    public int getPos() {
+        return pos;
+    }
 }

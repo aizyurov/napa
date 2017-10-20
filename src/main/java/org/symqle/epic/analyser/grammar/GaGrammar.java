@@ -73,7 +73,7 @@ public class GaGrammar {
         List<TokenDefinition<Integer>> tokenDefinitions = new ArrayList<>();
         for (int i = 0;i < terminals.length; i++) {
             String terminal = terminals[i];
-            String regexp = terminal.substring(1, terminal.length() - 1);
+            String regexp = normalize(terminal);
             tokenDefinitions.add(new TokenDefinition<>(regexp, i, terminal.charAt(0) == '\''));
             if (ignoredPatterns.contains(terminal)) {
                 ignorableTags.add(i);
@@ -82,7 +82,7 @@ public class GaGrammar {
         int ignoredTag = terminals.length;
         for (String ignored: ignoredPatterns) {
             if (!terminalSet.contains(ignored)) {
-                String regexp = ignored.substring(1, ignored.length() - 1);
+                String regexp = normalize(ignored);
                 tokenDefinitions.add(new TokenDefinition<>(regexp, ignoredTag));
             }
         }
@@ -100,6 +100,30 @@ public class GaGrammar {
         });
 
         return new CompiledGrammar(nonTerminals, terminals, compiledRules.stream().collect(Collectors.groupingBy(CompiledRule::getTarget)), napaDfa);
+    }
+
+    private String normalize(final String terminal) {
+        return terminal.substring(1, terminal.length() - 1);
+//        StringBuilder builder = new StringBuilder(terminal.length());
+//        boolean afterBackslash = false;
+//        for (int i = 1; i < terminal.length() - 1; i++) {
+//            char next = terminal.charAt(i);
+//            if (afterBackslash) {
+//                if (next == '\'' || next == '"') {
+//                    builder.append(next);
+//                } else {
+//                    builder.append('\\').append(next);
+//                }
+//                afterBackslash = false;
+//            } else {
+//                if (next == '\\') {
+//                    afterBackslash = true;
+//                } else {
+//                    builder.append(next);
+//                }
+//            }
+//        }
+//        return builder.toString();
     }
 
     private Rule rule() throws IOException {

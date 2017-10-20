@@ -97,7 +97,7 @@ public class DfaTokenizer<T> implements Tokenizer<T> {
         String value = valueBuilder.toString();
         T tag = dfa.tag(state);
         if (tag == null) {
-            String wrong = Character.isISOControl(nextChar) ? "(" + nextChar + ")" : "'" + (char)nextChar + "'";
+            String wrong = Character.isISOControl(nextChar) ? "(" + nextChar + ")" : "'" + (char)nextChar + "'" + "(" + nextChar + ")";
             throw new IllegalStateException("Unexpected character " + wrong + " at " + line + ":" + pos);
         }
         valueBuilder.setLength(0);

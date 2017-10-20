@@ -44,7 +44,7 @@ class Repeat implements NfaBuilder {
                 endState.addEmptyEdge(newStartState);
                 break;
             case ZERO_OR_ONE:
-                startState.addEmptyEdge(newStartState);
+                startState.addEmptyEdge(endState);
                 break;
             case EXACTLY_ONE:
                 // do nothing

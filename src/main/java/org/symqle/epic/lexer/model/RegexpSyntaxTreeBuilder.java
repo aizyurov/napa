@@ -133,7 +133,7 @@ public class RegexpSyntaxTreeBuilder {
 
     private void ensureSame(LexerTokenType expected, LexerTokenType actual) {
         if (expected != actual) {
-            throw new IllegalArgumentException(actual + " expected " + " but " + expected + " found");
+            throw new IllegalArgumentException(actual + " expected " + " but " + expected + " found in " + scanner.getSource() +":" + scanner.getPos());
         }
     }
 
