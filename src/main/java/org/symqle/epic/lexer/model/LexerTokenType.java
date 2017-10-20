@@ -19,6 +19,7 @@ enum LexerTokenType {
     CR,
     LF,
     TAB,
+    FF,
     EOF;
 
     public static LexerTokenType of(char c) {
@@ -47,6 +48,8 @@ enum LexerTokenType {
                 return MINUS;
             case '\n':
                 return LF;
+            case '\f':
+                return FF;
             case '\r':
                 return CR;
             case '\t':

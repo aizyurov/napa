@@ -66,6 +66,9 @@ public class Scanner {
             case 't':
                 value = '\t';
                 break;
+            case 'f':
+                value = '\f';
+                break;
             default:
                 value = nextChar;
         }
