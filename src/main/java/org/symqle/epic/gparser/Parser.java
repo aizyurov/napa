@@ -32,9 +32,12 @@ public class Parser {
         syntaxTreeCandidates.clear();
         final ChartNode startNode = new ChartNode(-1, Collections.singletonList(new NonTerminalItem(targetTag)), 0, null, Collections.emptyList());
         workSet.add(startNode);
+        int maxComplexity = 0;
         while (true) {
+            int iterations = 0;
             while (!workSet.isEmpty()) {
-                if (workSet.size() > complexityLimit) {
+                iterations += 1;
+                if (iterations > complexityLimit) {
                     throw new GrammarException("Too ambiguous or too complex to parse");
                 }
                 final ChartNode next = workSet.iterator().next();
@@ -59,11 +62,13 @@ public class Parser {
                         throw new IllegalStateException("Should never get here");
                 }
             }
+            maxComplexity = Math.max(iterations, maxComplexity);
             // now shift
             List<String> preface = new ArrayList<>();
             while (true) {
                 final Token<TokenProperties> nextToken = tokenizer.nextToken();
                 if (nextToken == null) {
+                    System.out.println("Max complexity: " + maxComplexity);
                     return syntaxTreeCandidates;
                 }
                 if (nextToken.getType().isIgnoreOnly()) {

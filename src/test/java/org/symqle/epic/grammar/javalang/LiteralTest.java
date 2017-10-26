@@ -2,13 +2,10 @@ package org.symqle.epic.grammar.javalang;
 
 import junit.framework.Assert;
 import junit.framework.TestCase;
-import org.symqle.epic.analyser.grammar.GaGrammar;
-import org.symqle.epic.gparser.CompiledGrammar;
 import org.symqle.epic.gparser.Parser;
 import org.symqle.epic.gparser.SyntaxTreeNode;
 
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.util.Set;
 
@@ -17,10 +14,10 @@ import java.util.Set;
  */
 public class LiteralTest extends TestCase {
     
-    private final CompiledGrammar g;
+    private final Parser g;
 
     public LiteralTest() throws IOException {
-        g = JavaGrammar.getGrammar();
+        g = JavaGrammar.getParser();
     }
 
     public void testInteger() throws Exception {
@@ -78,7 +75,7 @@ public class LiteralTest extends TestCase {
     }
 
     private void runTest(final String source) throws IOException {
-        Set<SyntaxTreeNode> forest = new Parser(g).parse("Literal", new StringReader(source), 100);
+        Set<SyntaxTreeNode> forest = g.parse("Literal", new StringReader(source), 100);
         Assert.assertEquals(1, forest.size());
         SyntaxTreeNode tree = forest.iterator().next();
         Assert.assertEquals(source, tree.value());

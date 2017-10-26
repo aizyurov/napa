@@ -2,13 +2,10 @@ package org.symqle.epic.grammar.javalang;
 
 import junit.framework.Assert;
 import junit.framework.TestCase;
-import org.symqle.epic.analyser.grammar.GaGrammar;
-import org.symqle.epic.gparser.CompiledGrammar;
 import org.symqle.epic.gparser.Parser;
 import org.symqle.epic.gparser.SyntaxTreeNode;
 
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.util.Arrays;
 import java.util.List;
@@ -20,15 +17,15 @@ import java.util.stream.Collectors;
  */
 public class ImportTest extends TestCase {
 
-    private final CompiledGrammar g;
+    private final Parser g;
 
     public ImportTest() throws IOException {
-        g = JavaGrammar.getGrammar();
+        g = JavaGrammar.getParser();
     }
 
     public void testSingleClass() throws Exception {
         final String source = "import java.util.stream.Collectors;";
-        Set<SyntaxTreeNode> forest = new Parser(g).parse("ImportDeclaration", new StringReader(source), 100);
+        Set<SyntaxTreeNode> forest = g.parse("ImportDeclaration", new StringReader(source), 100);
         Assert.assertEquals(1, forest.size());
         SyntaxTreeNode tree = forest.iterator().next();
         Assert.assertEquals(source, tree.text());
@@ -43,7 +40,9 @@ public class ImportTest extends TestCase {
 
     public void testOnDemandType() throws Exception {
         final String source = "import java.util.stream.*;";
-        Set<SyntaxTreeNode> forest = new Parser(g).parse("ImportDeclaration", new StringReader(source), 100);
+        System.out.println("Before parse");
+        Set<SyntaxTreeNode> forest = g.parse("ImportDeclaration", new StringReader(source), 100);
+        System.out.println("After parse");
         Assert.assertEquals(1, forest.size());
         SyntaxTreeNode tree = forest.iterator().next();
         Assert.assertEquals(source, tree.text());
@@ -58,7 +57,7 @@ public class ImportTest extends TestCase {
 
     public void testSingleStatic() throws Exception {
         final String source = "import static java.util.stream.Collectors.toMap;";
-        Set<SyntaxTreeNode> forest = new Parser(g).parse("ImportDeclaration", new StringReader(source), 100);
+        Set<SyntaxTreeNode> forest = g.parse("ImportDeclaration", new StringReader(source), 100);
         Assert.assertEquals(1, forest.size());
         SyntaxTreeNode tree = forest.iterator().next();
         Assert.assertEquals(source, tree.text());
@@ -76,7 +75,7 @@ public class ImportTest extends TestCase {
 
     public void testStaticOnDemand() throws Exception {
         final String source = "import static java.util.stream.Collectors.*;";
-        Set<SyntaxTreeNode> forest = new Parser(g).parse("ImportDeclaration", new StringReader(source), 100);
+        Set<SyntaxTreeNode> forest = g.parse("ImportDeclaration", new StringReader(source), 100);
         Assert.assertEquals(1, forest.size());
         SyntaxTreeNode tree = forest.iterator().next();
         Assert.assertEquals(source, tree.text());

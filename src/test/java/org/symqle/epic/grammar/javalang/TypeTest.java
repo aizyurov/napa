@@ -2,13 +2,10 @@ package org.symqle.epic.grammar.javalang;
 
 import junit.framework.Assert;
 import junit.framework.TestCase;
-import org.symqle.epic.analyser.grammar.GaGrammar;
-import org.symqle.epic.gparser.CompiledGrammar;
 import org.symqle.epic.gparser.Parser;
 import org.symqle.epic.gparser.SyntaxTreeNode;
 
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.util.Set;
 
@@ -17,10 +14,10 @@ import java.util.Set;
  */
 public class TypeTest extends TestCase {
 
-    private final CompiledGrammar g;
+    private final Parser g;
 
     public TypeTest() throws IOException {
-        g = JavaGrammar.getGrammar();
+        g = JavaGrammar.getParser();
     }
 
     public void testPrimitive() throws Exception {
@@ -35,7 +32,7 @@ public class TypeTest extends TestCase {
 
     public void testAnnotatedPrimitive() throws Exception {
         String source = "Annotation int";
-        Set<SyntaxTreeNode> forest = new Parser(g).parse("PrimitiveType", new StringReader(source), 100);
+        Set<SyntaxTreeNode> forest = g.parse("PrimitiveType", new StringReader(source), 100);
         Assert.assertEquals(1, forest.size());
         SyntaxTreeNode tree = forest.iterator().next();
         Assert.assertEquals("PrimitiveType", tree.name());
@@ -48,13 +45,22 @@ public class TypeTest extends TestCase {
     public void testClassOrInterfaceType() throws Exception {
         runTest("String", "ClassOrInterfaceType");
         runTest("java.lang.String", "ClassOrInterfaceType");
-        runTest("List<String>", "ClassOrInterfaceType");
 
         runTest("String", "Type");
         runTest("java.lang.String", "Type");
+    }
+
+    public void testParameterizedType() throws Exception {
+        runTest("List<String>", "ClassOrInterfaceType");
+        runTest("Map<String, Set<Integer>>", "ClassOrInterfaceType");
+
         runTest("List<String>", "Type");
         runTest("List<? extends Collection<String>>", "Type");
         runTest("List<? super Collection<String>>", "Type");
+    }
+
+    public void testTypeArguments() throws Exception {
+        runTest("<String>", "TypeArguments");
     }
 
     public void testArrayType() throws Exception {
@@ -66,9 +72,6 @@ public class TypeTest extends TestCase {
         runTest("float[]", "Type");
         runTest("boolean[]", "Type");
         runTest("boolean[][]", "Type");
-        runTest("String", "ClassOrInterfaceType");
-        runTest("java.lang.String", "ClassOrInterfaceType");
-        runTest("List<String>", "ClassOrInterfaceType");
         runTest("String[]", "Type");
         runTest("java.lang.String[]", "Type");
         runTest("List<String>[]", "Type");
@@ -77,7 +80,7 @@ public class TypeTest extends TestCase {
 
 
     private void runTest(final String source, final String expected) throws IOException {
-        Set<SyntaxTreeNode> forest = new Parser(g).parse(expected, new StringReader(source), 100);
+        Set<SyntaxTreeNode> forest = g.parse(expected, new StringReader(source), 1000);
         Assert.assertEquals(1, forest.size());
         SyntaxTreeNode tree = forest.iterator().next();
         Assert.assertEquals(source, tree.text());
