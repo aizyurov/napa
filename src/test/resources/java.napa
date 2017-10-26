@@ -136,17 +136,56 @@ WildcardBounds =
   'extends' ReferenceType
 | 'super' ReferenceType ;
 
+# 6.5. Determining the Meaning of a Name
+
+PackageName = {Identifier '.'} Identifier ;
+
+PackageOrTypeName = {Identifier '.'} Identifier ;
+
+TypeName = {Identifier '.'} Identifier ;
+
+ExpressionName = {Identifier '.'} Identifier ;
+
+MethodName = Identifier ;
+
+
 # 7.3 Compilation Units
 
 CompilationUnit = [PackageDeclaration] {ImportDeclaration} {TypeDeclaration} ;
 
 # 7.4.1 Named Packages
 
-PackageDeclaration = {PackageModifier} 'package' Identifier {'.' Identifier} ;
+PackageDeclaration = {PackageModifier} 'package' Identifier {'.' Identifier} ';' ;
 
 PackageModifier = Annotation ;
 
-ImportDeclaration = 'ImportDeclaration' ;
+# 7.5 Import  Declarations
+
+ImportDeclaration =
+    SingleTypeImportDeclaration
+|   TypeImportOnDemandDeclaration
+|   SingleStaticImportDeclaration
+|   StaticImportOnDemandDeclaration ;
+
+# 7.5.1. Single-Type-Import Declarations
+
+SingleTypeImportDeclaration = 'import' TypeName ';' ;
+
+# 7.5.2. Type-Import-on-Demand Declarations
+
+TypeImportOnDemandDeclaration = 'import' PackageOrTypeName '.' '*' ';' ;
+
+# 7.5.3. Single-Static-Import Declarations
+
+SingleStaticImportDeclaration = 'import' 'static' TypeName '.' Identifier ';' ;
+
+# 7.5.4. Static-Import-on-Demand Declarations
+
+StaticImportOnDemandDeclaration = 'import' 'static' TypeName '.' '*' ';' ;
+
+
+
+# 7.6. Top Level Type Declarations
 
 # TODO
 # Temporary placeholder
