@@ -136,6 +136,25 @@ WildcardBounds =
   'extends' ReferenceType
 | 'super' ReferenceType ;
 
+# 7.3 Compilation Units
+
+CompilationUnit = [PackageDeclaration] {ImportDeclaration} {TypeDeclaration} ;
+
+# 7.4.1 Named Packages
+
+PackageDeclaration = {PackageModifier} 'package' Identifier {'.' Identifier} ;
+
+PackageModifier = Annotation ;
+
+ImportDeclaration = 'ImportDeclaration' ;
+
+# TODO
+# Temporary placeholder
+
+TypeDeclaration = 'TypeDeclaration' ;
+
+
+
 # 9.7 Annotations
 # TODO
 # Temporary placeholder
