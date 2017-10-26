@@ -103,4 +103,6 @@ public class ChartNode {
         syntaxNodes.add(new TerminalNode(compiledGrammar.getTerminalName(currentItem.getValue()), preface, tokenProperties.getText(), null, tokenProperties.getLine(), tokenProperties.getPos()));
         return Collections.singletonList(this);
     }
+
+
 }

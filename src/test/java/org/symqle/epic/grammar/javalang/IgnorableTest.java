@@ -4,6 +4,7 @@ import junit.framework.Assert;
 import junit.framework.TestCase;
 import org.symqle.epic.analyser.grammar.GaGrammar;
 import org.symqle.epic.gparser.CompiledGrammar;
+import org.symqle.epic.gparser.GrammarException;
 import org.symqle.epic.gparser.Parser;
 import org.symqle.epic.gparser.SyntaxTreeNode;
 
@@ -26,6 +27,28 @@ public class IgnorableTest extends TestCase {
     public void testWhitespace() throws Exception {
         runTest("  ", "1996");
         runTest("\r\n\t\f", "1996");
+    }
+
+    public void testClassicComment() throws Exception {
+        runTest("/*abc*/", "1996");
+        runTest("/**/", "1996");
+        runTest("/*a//bc\n*/", "1996");
+        // should fail: no embedded comments
+        try {
+            runTest("/*a/*nested*/bc*/", "1996");
+            fail("Nested comments not supported");
+        } catch (GrammarException e) {
+            Assert.assertTrue(e.getMessage().contains("Unrecognized input bc"));
+        }
+
+    }
+
+    public void testLineComment() throws Exception {
+        runTest("//abc\n", "1996");
+        runTest("//abc\r", "1996");
+        runTest("//abc\r\n", "1996");
+        runTest("//\n", "1996");
+        runTest("//abc/*abc*/\n", "1996");
     }
 
 

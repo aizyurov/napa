@@ -1,7 +1,23 @@
+# Based on:
+# The Java ® Language Specification
+# Java SE 8 Edition
+# https://docs.oracle.com/javase/specs/jls/se8/jls8.pdf
+
 # 3.6 White space
 
 ! "[ \t\f\n\r]+" ;
 
+# 3.7 Comments
+
+! "/\*([^*]|\*[^/])*\*/" ;
+
+! "//[^\n\r]*([\r\n]|\r\n)" ;
+
+# 3.8 Identifiers
+
+# TODO Full unicode support
+
+Identifier = "[a-zA-Z_$][a-zA-Z_$0-9]*" ;
 
 
 # 3.10 Literals
@@ -62,3 +78,66 @@ StringLiteral = "\"([^\n\r\f\\\"]|\\([nrtbf\"'\\]|[0-7]|[0-7][0-7]|[0-3][0-7][0-
 # 3.10.7 The Null Literal
 
 NullLiteral = 'null' ;
+
+# 4.1 The Kinds of Types and Values
+
+Type =
+  PrimitiveType
+| ReferenceType ;
+
+# 4.2 Primitive Types and Values
+
+PrimitiveType =
+  { Annotation } NumericType
+| { Annotation } 'boolean' ;
+
+NumericType =
+  IntegralType
+| FloatingPointType ;
+
+IntegralType = 'byte' | 'short' | 'int' | 'long' | 'char' ;
+
+FloatingPointType = 'float' | 'double' ;
+
+# 4.3 Reference Types and Values
+
+# changes: TypeVariable excluded; cannot distinguish from ClassOrInterfaceType
+# ClassType and InterfaceType excluded
+
+ReferenceType =
+  ClassOrInterfaceType
+| ArrayType ;
+
+ClassOrInterfaceType =
+ { AnnotatedIdentifierWithTypeArguments '.' } AnnotatedIdentifierWithTypeArguments ;
+
+AnnotatedIdentifierWithTypeArguments = { Annotation } Identifier [TypeArguments] ;
+
+ArrayType =
+  PrimitiveType Dims
+| ClassOrInterfaceType Dims ;
+
+Dims =
+  {Annotation} '[' ']' {{Annotation} '[' ']' } ;
+
+# 4.5.1 Type Arguments of Parameterized Types
+
+TypeArguments = '<' TypeArgumentList '>' ;
+
+TypeArgumentList = TypeArgument { ',' TypeArgument } ;
+
+TypeArgument =
+  ReferenceType
+| Wildcard ;
+
+Wildcard = {Annotation} '?'  [WildcardBounds] ;
+
+WildcardBounds =
+  'extends' ReferenceType
+| 'super' ReferenceType ;
+
+# 9.7 Annotations
+# TODO
+# Temporary placeholder
+
+Annotation = 'Annotation' ;
