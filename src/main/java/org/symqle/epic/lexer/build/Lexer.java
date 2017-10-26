@@ -6,6 +6,7 @@ import org.symqle.epic.lexer.model.RegexpSyntaxTreeBuilder;
 import org.symqle.epic.tokenizer.PackedDfa;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -22,20 +23,18 @@ public class Lexer<T> {
     }
 
     public PackedDfa<Set<T>> compile() {
-        long start = System.currentTimeMillis();
-        try {
-            return createNfa()
-                    .removeEmptyEdges()
-                    .toDfa()
-                    .pack()
-                    .transform(this::transformTags);
-        } finally {
-            System.out.println("Compilation time: " + (System.currentTimeMillis() - start));
-        }
+        return createNfa()
+                .removeEmptyEdges()
+                .toDfa()
+                .pack()
+                .transform(this::transformTags);
     }
 
     private Set<T> transformTags(Set<Integer> tags) {
-        return  tags.stream().map(t -> tokenDefinitions.get(t).getTag()).collect(Collectors.toSet());
+        final Map<Boolean, Set<Integer>> partitions = tags.stream().collect(Collectors.partitioningBy(t -> tokenDefinitions.get(t).isLiteral(), Collectors.toSet()));
+        final Set<Integer> literalTags = partitions.get(true);
+        Set<Integer> selectedPartition = literalTags.isEmpty() ? partitions.get(false) : literalTags;
+        return selectedPartition.stream().map(t -> tokenDefinitions.get(t).getTag()).collect(Collectors.toSet());
     }
 
     private Nfa1 createNfa() {

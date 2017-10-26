@@ -39,9 +39,9 @@ public class PackedDfa<T> {
     }
 
     public void printStats() {
-        System.out.println("Nodes: " + tokenTypes.size());
-        System.out.println("Character classes: " + characterClassCount);
-        System.out.println("Edges: " + edges.length);
+        System.err.println("Nodes: " + tokenTypes.size());
+        System.err.println("Character classes: " + characterClassCount);
+        System.err.println("Edges: " + edges.length);
     }
 
 }

@@ -20,7 +20,7 @@ public class LiteralTest extends TestCase {
     private final CompiledGrammar g;
 
     public LiteralTest() throws IOException {
-        g = getGrammar();
+        g = JavaGrammar.getGrammar();
     }
 
     public void testInteger() throws Exception {
@@ -75,10 +75,6 @@ public class LiteralTest extends TestCase {
         runTest("\"\\\"\"");
         runTest("\"This is a string\"");
         runTest("\"This is a \\nstring\"");
-    }
-
-    private CompiledGrammar getGrammar() throws IOException {
-        return new GaGrammar().parse(new InputStreamReader(getClass().getClassLoader().getResourceAsStream("java.napa"), "UTF-8"));
     }
 
     private void runTest(final String source) throws IOException {

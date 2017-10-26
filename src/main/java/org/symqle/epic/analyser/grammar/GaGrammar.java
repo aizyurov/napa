@@ -44,6 +44,7 @@ public class GaGrammar {
     }
 
     public CompiledGrammar parse(Reader source) throws IOException {
+        long startTs = System.currentTimeMillis();
         PackedDfa<GaTokenType> dfa = new GaLexer().compile();
         tokenizer = new GaTokenizer(new DfaTokenizer<>(dfa, source));
         nextToken = tokenizer.nextToken();
@@ -59,7 +60,8 @@ public class GaGrammar {
                     throw unexpectedTokenException();
             }
         }
-
+        System.err.println("Parse time: " + (System.currentTimeMillis() - startTs));
+        startTs = System.currentTimeMillis();
         // everything collected
         final Dictionary dictionary = new Dictionary();
         List<CompiledRule> compiledRules = rules.stream()
@@ -68,6 +70,8 @@ public class GaGrammar {
         String[] nonTerminals = dictionary.nonTerminals();
         String[] terminals = dictionary.terminals();
         Set<String> terminalSet = Arrays.stream(terminals).collect(Collectors.toSet());
+        System.err.println("Pack time: " + (System.currentTimeMillis() - startTs));
+        startTs = System.currentTimeMillis();
 
         Set<Integer> ignorableTags = new HashSet<>();
         List<TokenDefinition<Integer>> tokenDefinitions = new ArrayList<>();
@@ -98,6 +102,11 @@ public class GaGrammar {
             boolean ignorable = !difference.isEmpty();
             return new TokenProperties(ignoreOnly, ignorable, s);
         });
+        System.err.println("Lexer time: " + (System.currentTimeMillis() - startTs));
+        napaDfa.printStats();
+
+        System.err.println("NonTerminals: " + nonTerminals.length);
+        System.err.println("Terminals: " + tokenDefinitions.size());
 
         return new CompiledGrammar(nonTerminals, terminals, compiledRules.stream().collect(Collectors.groupingBy(CompiledRule::getTarget)), napaDfa);
     }
@@ -127,7 +136,6 @@ public class GaGrammar {
     }
 
     private Rule rule() throws IOException {
-        System.out.println("rule");
         Token<GaTokenType> target = this.nextToken;
 
         nextToken = tokenizer.nextToken();
@@ -157,7 +165,6 @@ public class GaGrammar {
     }
 
     private IgnoreStatement ignoreStatement() throws IOException {
-        System.out.println("ignore");
         List<String> ignoredPatterns = new ArrayList<>();
         nextToken = tokenizer.nextToken();
         while (nextToken != null && nextToken.getType() == GaTokenType.STRING) {
@@ -173,7 +180,6 @@ public class GaGrammar {
     }
 
     private Choice choice() throws IOException {
-        System.out.println("choice");
         List<Chain> chains = new ArrayList<>();
         while (true) {
             chains.add(chain());
@@ -189,7 +195,6 @@ public class GaGrammar {
     }
 
     private Chain chain() throws IOException {
-        System.out.println("chain");
         List<RuleItemsSupplier> items = new ArrayList<>();
         while(true) {
             if (nextToken == null) {

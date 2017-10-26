@@ -21,11 +21,7 @@ public class IdentifierTest extends TestCase {
     private final CompiledGrammar g;
 
     public IdentifierTest() throws IOException {
-        g = getGrammar();
-    }
-
-    private CompiledGrammar getGrammar() throws IOException {
-        return new GaGrammar().parse(new InputStreamReader(getClass().getClassLoader().getResourceAsStream("java.napa"), "UTF-8"));
+        g = JavaGrammar.getGrammar();
     }
 
     public void testIdentifier() throws Exception {

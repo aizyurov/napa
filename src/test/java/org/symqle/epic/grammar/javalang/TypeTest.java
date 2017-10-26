@@ -20,11 +20,7 @@ public class TypeTest extends TestCase {
     private final CompiledGrammar g;
 
     public TypeTest() throws IOException {
-        g = getGrammar();
-    }
-
-    private CompiledGrammar getGrammar() throws IOException {
-        return new GaGrammar().parse(new InputStreamReader(getClass().getClassLoader().getResourceAsStream("java.napa"), "UTF-8"));
+        g = JavaGrammar.getGrammar();
     }
 
     public void testPrimitive() throws Exception {
@@ -53,6 +49,30 @@ public class TypeTest extends TestCase {
         runTest("String", "ClassOrInterfaceType");
         runTest("java.lang.String", "ClassOrInterfaceType");
         runTest("List<String>", "ClassOrInterfaceType");
+
+        runTest("String", "Type");
+        runTest("java.lang.String", "Type");
+        runTest("List<String>", "Type");
+        runTest("List<? extends Collection<String>>", "Type");
+        runTest("List<? super Collection<String>>", "Type");
+    }
+
+    public void testArrayType() throws Exception {
+        runTest("int[]", "Type");
+        runTest("long[]", "Type");
+        runTest("short[]", "Type");
+        runTest("char[]", "Type");
+        runTest("double[]", "Type");
+        runTest("float[]", "Type");
+        runTest("boolean[]", "Type");
+        runTest("boolean[][]", "Type");
+        runTest("String", "ClassOrInterfaceType");
+        runTest("java.lang.String", "ClassOrInterfaceType");
+        runTest("List<String>", "ClassOrInterfaceType");
+        runTest("String[]", "Type");
+        runTest("java.lang.String[]", "Type");
+        runTest("List<String>[]", "Type");
+
     }
 
 

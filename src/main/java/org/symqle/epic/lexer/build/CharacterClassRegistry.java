@@ -24,9 +24,9 @@ class CharacterClassRegistry {
         this.allCharacterSets = allCharacterSets;
         long start = System.currentTimeMillis();
         init();
-        System.out.println("Registry init " + (System.currentTimeMillis() - start));
+        System.err.println("Registry init " + (System.currentTimeMillis() - start));
         revertIndex();
-        System.out.println("Registry created in " + (System.currentTimeMillis() - start));
+        System.err.println("Registry created in " + (System.currentTimeMillis() - start));
     }
 
     private void revertIndex() {

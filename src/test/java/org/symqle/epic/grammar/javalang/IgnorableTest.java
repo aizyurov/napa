@@ -21,7 +21,7 @@ public class IgnorableTest extends TestCase {
     private final CompiledGrammar g;
 
     public IgnorableTest() throws IOException {
-        g = getGrammar();
+        g = JavaGrammar.getGrammar();
     }
 
     public void testWhitespace() throws Exception {
@@ -51,10 +51,6 @@ public class IgnorableTest extends TestCase {
         runTest("//abc/*abc*/\n", "1996");
     }
 
-
-    private CompiledGrammar getGrammar() throws IOException {
-        return new GaGrammar().parse(new InputStreamReader(getClass().getClassLoader().getResourceAsStream("java.napa"), "UTF-8"));
-    }
 
     private void runTest(final String preface, String source) throws IOException {
 
