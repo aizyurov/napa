@@ -6,11 +6,7 @@ import org.symqle.epic.tokenizer.Tokenizer;
 
 import java.io.IOException;
 import java.io.Reader;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author lvovich
@@ -25,12 +21,13 @@ public class Parser {
     }
 
     public Set<SyntaxTreeNode> parse(final String target, final Reader reader, final int complexityLimit) throws IOException {
+        final long startTime = System.currentTimeMillis();
         this.tokenizer = new DfaTokenizer<>(grammar.getTokenizerDfa(), reader);
         int targetTag = grammar.findNonTerminalByName(target).orElseThrow(() -> new GrammarException("NonTerminal not found: " + grammar));
         workSet.clear();
         shiftCandidates.clear();
         syntaxTreeCandidates.clear();
-        final ChartNode startNode = new ChartNode(-1, Collections.singletonList(new NonTerminalItem(targetTag)), 0, null, Collections.emptyList());
+        final ChartNode startNode = new ChartNode(-1, Collections.singletonList(new NonTerminalItem(targetTag)), 0, null, Collections.emptyList(), grammar);
         workSet.add(startNode);
         int maxComplexity = 0;
         while (true) {
@@ -47,13 +44,25 @@ public class Parser {
                         shiftCandidates.add(next);
                         break;
                     case REDUCE:
-                        workSet.addAll(next.reduce(grammar));
+                        final List<ChartNode> reduce = next.reduce();
+//                        for (ChartNode node: reduce) {
+//                            System.out.println(node);
+//                        }
+                        workSet.addAll(reduce);
                         break;
                     case PREDICT:
-                        workSet.addAll(next.predict(grammar));
+                        final List<ChartNode> predict = next.predict();
+//                        for (ChartNode node: predict) {
+//                            System.out.println(node);
+//                        }
+                        workSet.addAll(predict);
                         break;
                     case EXPAND:
-                        workSet.addAll(next.expand());
+                        final List<ChartNode> expand = next.expand();
+//                        for (ChartNode node: expand) {
+//                            System.out.println(node);
+//                        }
+                        workSet.addAll(expand);
                         break;
                     case ACCEPT:
                         syntaxTreeCandidates.add(next.accept());
@@ -65,18 +74,20 @@ public class Parser {
             maxComplexity = Math.max(iterations, maxComplexity);
             // now shift
             List<String> preface = new ArrayList<>();
+//            System.out.println("=========== Total nodes:" + countChartNodes(shiftCandidates));
             while (true) {
                 final Token<TokenProperties> nextToken = tokenizer.nextToken();
                 if (nextToken == null) {
                     System.out.println("Max complexity: " + maxComplexity);
+                    System.out.println("Parse time: " + (System.currentTimeMillis() - startTime));
                     return syntaxTreeCandidates;
                 }
                 if (nextToken.getType().isIgnoreOnly()) {
                     preface.add(nextToken.getText());
                     continue;
                 }
-                for (ChartNode candidate: shiftCandidates) {
-                    workSet.addAll(candidate.shift(nextToken, preface, grammar));
+                for (ChartNode candidate : shiftCandidates) {
+                    workSet.addAll(candidate.shift(nextToken, preface));
                 }
                 if (workSet.isEmpty()) {
                     if (nextToken.getType().isIgnorable()) {
@@ -92,8 +103,24 @@ public class Parser {
             syntaxTreeCandidates.clear();
             shiftCandidates.clear();
         }
-
     }
+
+    int countChartNodes(Collection<ChartNode> start) {
+        Set<ChartNode> toSearch = new HashSet<>(start);
+        Set<ChartNode> result = new HashSet<>();
+        while (!toSearch.isEmpty()) {
+            final ChartNode next = toSearch.iterator().next();
+            result.add(next);
+            toSearch.remove(next);
+            final ChartNode enclosing = next.getEnclosing();
+            if (enclosing != null && !result.contains(enclosing)) {
+                toSearch.add(enclosing);
+            }
+        }
+        return result.size();
+    }
+
+
 
     private final Set<ChartNode> workSet = new HashSet<>();
 

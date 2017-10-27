@@ -33,4 +33,20 @@ public class ChoiceItem implements RuleItem {
         }
         return expansion;
     }
+
+    @Override
+    public String toString(CompiledGrammar grammar) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("(");
+        for (int i = 0; i < options.size(); i++) {
+            if (i != 0) {
+                builder.append(" |");
+            }
+            for (RuleItem item: options.get(i)) {
+                builder.append(" ").append(item.toString(grammar));
+            }
+        }
+        builder.append(")");
+        return builder.toString();
+    }
 }

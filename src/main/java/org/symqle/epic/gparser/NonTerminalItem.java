@@ -27,4 +27,9 @@ public class NonTerminalItem implements RuleItem {
     public List<List<RuleItem>> expand() {
         throw new UnsupportedOperationException("Not applicable");
     }
+
+    public String toString(CompiledGrammar grammar) {
+        return grammar.getNonTerminalName(value);
+    }
+
 }

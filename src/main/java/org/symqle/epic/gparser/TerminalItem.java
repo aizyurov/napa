@@ -26,4 +26,8 @@ public class TerminalItem implements RuleItem {
     public List<List<RuleItem>> expand() {
         throw new UnsupportedOperationException("Not applicable");
     }
+
+    public String toString(CompiledGrammar grammar) {
+        return grammar.getTerminalName(value);
+    }
 }

@@ -25,13 +25,15 @@ public class ChartNode {
     private int offset;
     private final ChartNode enclosing;
     private final List<SyntaxTreeNode> syntaxNodes;
+    private final CompiledGrammar compiledGrammar;
 
-    public ChartNode(final int target, final List<RuleItem> items, final int offset, final ChartNode enclosing, final List<SyntaxTreeNode> syntaxNodes) {
+    public ChartNode(final int target, final List<RuleItem> items, final int offset, final ChartNode enclosing, final List<SyntaxTreeNode> syntaxNodes, CompiledGrammar compiledGrammar) {
         this.target = target;
         this.items = items;
         this.offset = offset;
         this.enclosing = enclosing;
         this.syntaxNodes = new ArrayList<>(syntaxNodes);
+        this.compiledGrammar = compiledGrammar;
     }
 
     public Action availableAction() {
@@ -56,15 +58,15 @@ public class ChartNode {
         return syntaxNodes.get(0);
     }
 
-    public List<ChartNode> predict(CompiledGrammar compiledGrammar) {
+    public List<ChartNode> predict() {
         assert offset < items.size();
         RuleItem currentItem = items.get(offset);
         assert currentItem.getType() == RuleItemType.NON_TERMINAL;
         return compiledGrammar.getRules(currentItem.getValue()).stream()
-                        .map(cr -> new ChartNode(cr.getTarget(), cr.getItems(), 0, this, Collections.emptyList())).collect(Collectors.toList());
+                        .map(cr -> new ChartNode(cr.getTarget(), cr.getItems(), 0, this, Collections.emptyList(), compiledGrammar)).collect(Collectors.toList());
     }
 
-    public List<ChartNode> reduce(CompiledGrammar compiledGrammar) {
+    public List<ChartNode> reduce() {
         assert offset == items.size();
         NonTerminalNode newNode = new NonTerminalNode(compiledGrammar.getNonTerminalName(target),
                 syntaxNodes);
@@ -74,7 +76,7 @@ public class ChartNode {
     private List<ChartNode> acceptNonTerminal(NonTerminalNode node) {
         List<SyntaxTreeNode> nodes = new ArrayList<>(syntaxNodes);
         nodes.add(node);
-        return Collections.singletonList(new ChartNode(target, items, offset + 1, enclosing, nodes));
+        return Collections.singletonList(new ChartNode(target, items, offset + 1, enclosing, nodes, compiledGrammar));
     }
 
     public List<ChartNode> expand() {
@@ -87,12 +89,12 @@ public class ChartNode {
             expanded.addAll(items.subList(0, offset));
             expanded.addAll(expansion);
             expanded.addAll(items.subList(offset +1, items.size()));
-            newNodes.add(new ChartNode(target, expanded, offset, enclosing, new ArrayList<>(syntaxNodes)));
+            newNodes.add(new ChartNode(target, expanded, offset, enclosing, new ArrayList<>(syntaxNodes), compiledGrammar));
         }
         return newNodes;
     }
 
-    public List<ChartNode> shift(Token<TokenProperties> tokenProperties, List<String> preface, CompiledGrammar compiledGrammar) {
+    public List<ChartNode> shift(Token<TokenProperties> tokenProperties, List<String> preface) {
         assert offset < items.size();
         RuleItem currentItem = items.get(offset);
         assert currentItem.getType() == RuleItemType.TERMINAL;
@@ -104,5 +106,26 @@ public class ChartNode {
         return Collections.singletonList(this);
     }
 
+    public ChartNode getEnclosing() {
+        return enclosing;
+    }
 
+    @Override
+    public String toString() {
+        StringBuilder stringBuilder = new StringBuilder();
+        if (target >= 0) {
+            stringBuilder.append(compiledGrammar.getNonTerminalName(target)).append(" =");
+        }
+        for (int i = 0; i<items.size(); i++) {
+            if (offset == i) {
+                stringBuilder.append(" ^");
+            }
+            final RuleItem item = items.get(i);
+            stringBuilder.append(" ").append(item.toString(compiledGrammar));
+        }
+        if (offset == items.size()) {
+            stringBuilder.append(" ^");
+        }
+        return stringBuilder.toString();
+    }
 }

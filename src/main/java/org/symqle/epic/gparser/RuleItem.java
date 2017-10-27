@@ -13,4 +13,5 @@ public interface RuleItem {
     List<List<RuleItem>> expand();
 
 
+    String toString(CompiledGrammar grammar);
 }
