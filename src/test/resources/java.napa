@@ -120,6 +120,16 @@ ArrayType =
 Dims =
   {Annotation} '[' ']' {{Annotation} '[' ']' } ;
 
+# 4.4 Type Variables
+
+TypeParameter = {TypeParameterModifier} Identifier [TypeBound] ;
+
+TypeParameterModifier = Annotation ;
+
+TypeBound = 'extends' ClassOrInterfaceType {AdditionalBound} ;
+
+AdditionalBound= '&' ClassOrInterfaceType ;
+
 # 4.5.1 Type Arguments of Parameterized Types
 
 TypeArguments = '<' TypeArgumentList '>' ;
@@ -187,15 +197,59 @@ StaticImportOnDemandDeclaration = 'import' 'static' TypeName '.' '*' ';' ;
 
 # 7.6. Top Level Type Declarations
 
+TypeDeclaration =
+  ClassDeclaration
+| InterfaceDeclaration
+| ';' ;
+
+# 8.1 Class Declarations
+
+ClassDeclaration =
+  NormalClassDeclaration
+| EnumDeclaration ;
+
+NormalClassDeclaration = {ClassModifier} 'class' Identifier [TypeParameters] [Superclass] [Superinterfaces] ClassBody ;
+
+# 8.1.1 Class Modifiers
+
+ClassModifier = Annotation | 'public' | 'protected' | 'private' | 'abstract' | 'static' | 'final' | 'strictfp' ;
+
+# 8.1.2 Generic Classes and Type Parameters
+
+TypeParameters = '<' TypeParameterList '>' ;
+
+TypeParameterList = TypeParameter {',' TypeParameter} ;
+
+# 8.1.4 Superclasses and Subclasses
+
+Superclass = 'extends' ClassOrInterfaceType ;
+
+# 8.1.5 Superinterfaces
+
+Superinterfaces = 'implements' InterfaceTypeList ;
+
+InterfaceTypeList = ClassOrInterfaceType {',' ClassOrInterfaceType} ;
+
+# 8.1.6 Class Body and Member Declarations
 # TODO
 # Temporary placeholder
 
-TypeDeclaration = 'TypeDeclaration' ;
+ClassBody = '#ClassBody#' ;
 
+# 8.9 Enum Types
+# TODO
+# Temporary placeholder
 
+EnumDeclaration = '#EnumDeclaration#' ;
+
+# 9.1 Interface Declarations
+# TODO
+# Temporary placeholder
+
+InterfaceDeclaration = '#InterfaceDeclaration#' ;
 
 # 9.7 Annotations
 # TODO
 # Temporary placeholder
 
-Annotation = 'Annotation' ;
+Annotation = '#Annotation#' ;

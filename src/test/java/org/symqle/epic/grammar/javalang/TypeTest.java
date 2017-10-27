@@ -31,13 +31,13 @@ public class TypeTest extends TestCase {
     }
 
     public void testAnnotatedPrimitive() throws Exception {
-        String source = "Annotation int";
+        String source = "#Annotation# int";
         Set<SyntaxTreeNode> forest = g.parse("PrimitiveType", new StringReader(source), 100);
         Assert.assertEquals(1, forest.size());
         SyntaxTreeNode tree = forest.iterator().next();
         Assert.assertEquals("PrimitiveType", tree.name());
         Assert.assertEquals(2, tree.children().size());
-        Assert.assertEquals("Annotation", tree.children().get(0).value());
+        Assert.assertEquals("#Annotation#", tree.children().get(0).value());
         Assert.assertEquals("int", tree.children().get(1).value());
         Assert.assertEquals("NumericType", tree.children().get(1).name());
     }
@@ -51,11 +51,11 @@ public class TypeTest extends TestCase {
     }
 
     public void testParameterizedType() throws Exception {
-//        runTest("List<String>", "ClassOrInterfaceType");
-//        runTest("Map<String, Set<Integer>>", "ClassOrInterfaceType");
-//
-//        runTest("List<String>", "Type");
-//        runTest("List<? extends Collection<String>>", "Type");
+        runTest("List<String>", "ClassOrInterfaceType");
+        runTest("Map<String, Set<Integer>>", "ClassOrInterfaceType");
+
+        runTest("List<String>", "Type");
+        runTest("List<? extends Collection<String>>", "Type");
         runTest("List<? super Collection<String>>", "Type");
     }
 
