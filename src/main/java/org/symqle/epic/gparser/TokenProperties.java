@@ -10,6 +10,7 @@ public class TokenProperties {
 
     private final BitSet bitSet;
     private final boolean ignoreOnly;
+    // merge
     private final boolean ignorable;
 
     public TokenProperties(final boolean ignoreOnly, final boolean ignorable, final Set<Integer> tags) {
@@ -20,6 +21,16 @@ public class TokenProperties {
             bitSet.set(i, true);
         }
     }
+
+    public boolean matches(Set<Integer> expectedTags) {
+        for (int i: expectedTags) {
+            if (bitSet.get(i)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 
     public boolean matches(int i) {
         return bitSet.get(i);

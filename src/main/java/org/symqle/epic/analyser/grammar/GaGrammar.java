@@ -44,71 +44,76 @@ public class GaGrammar {
     }
 
     public CompiledGrammar parse(Reader source) throws IOException {
-        long startTs = System.currentTimeMillis();
-        PackedDfa<GaTokenType> dfa = new GaLexer().compile();
-        tokenizer = new GaTokenizer(new DfaTokenizer<>(dfa, source));
-        nextToken = tokenizer.nextToken();
-        while(nextToken != null) {
-            switch(nextToken.getType()) {
-                case IDENTIFIER:
-                    addRule(rule());
-                    break;
-                case EXCLAMATION:
-                    addIgnore(ignoreStatement());
-                    break;
-                default:
-                    throw unexpectedTokenException();
+        final long beforeStart = System.currentTimeMillis();
+        try {
+            long startTs = System.currentTimeMillis();
+            PackedDfa<GaTokenType> dfa = new GaLexer().compile();
+            tokenizer = new GaTokenizer(new DfaTokenizer<>(dfa, source));
+            nextToken = tokenizer.nextToken();
+            while(nextToken != null) {
+                switch(nextToken.getType()) {
+                    case IDENTIFIER:
+                        addRule(rule());
+                        break;
+                    case EXCLAMATION:
+                        addIgnore(ignoreStatement());
+                        break;
+                    default:
+                        throw unexpectedTokenException();
+                }
             }
-        }
-        System.err.println("Parse time: " + (System.currentTimeMillis() - startTs));
-        startTs = System.currentTimeMillis();
-        // everything collected
-        final Dictionary dictionary = new Dictionary();
-        List<CompiledRule> compiledRules = rules.stream()
-                .flatMap(r -> r.toCompiledRules(dictionary).stream()).collect(Collectors.toList());
-        Set<String> ignoredPatterns = ignored.stream().flatMap(s -> s.getIgnoredList().stream()).collect(Collectors.toSet());
-        String[] nonTerminals = dictionary.nonTerminals();
-        String[] terminals = dictionary.terminals();
-        Set<String> terminalSet = Arrays.stream(terminals).collect(Collectors.toSet());
-        System.err.println("Pack time: " + (System.currentTimeMillis() - startTs));
-        startTs = System.currentTimeMillis();
+            System.err.println("Parse time: " + (System.currentTimeMillis() - startTs));
+            startTs = System.currentTimeMillis();
+            // everything collected
+            final Dictionary dictionary = new Dictionary();
+            List<CompiledRule> compiledRules = rules.stream()
+                    .flatMap(r -> r.toCompiledRules(dictionary).stream()).collect(Collectors.toList());
+            Set<String> ignoredPatterns = ignored.stream().flatMap(s -> s.getIgnoredList().stream()).collect(Collectors.toSet());
+            String[] nonTerminals = dictionary.nonTerminals();
+            String[] terminals = dictionary.terminals();
+            Set<String> terminalSet = Arrays.stream(terminals).collect(Collectors.toSet());
+            System.err.println("Pack time: " + (System.currentTimeMillis() - startTs));
+            startTs = System.currentTimeMillis();
 
-        Set<Integer> ignorableTags = new HashSet<>();
-        List<TokenDefinition<Integer>> tokenDefinitions = new ArrayList<>();
-        for (int i = 0;i < terminals.length; i++) {
-            String terminal = terminals[i];
-            String regexp = normalize(terminal);
-            tokenDefinitions.add(new TokenDefinition<>(regexp, i, terminal.charAt(0) == '\''));
-            if (ignoredPatterns.contains(terminal)) {
-                ignorableTags.add(i);
+            Set<Integer> ignorableTags = new HashSet<>();
+            List<TokenDefinition<Integer>> tokenDefinitions = new ArrayList<>();
+            for (int i = 0;i < terminals.length; i++) {
+                String terminal = terminals[i];
+                String regexp = normalize(terminal);
+                tokenDefinitions.add(new TokenDefinition<>(regexp, i, terminal.charAt(0) == '\''));
+                if (ignoredPatterns.contains(terminal)) {
+                    ignorableTags.add(i);
+                }
             }
-        }
-        int ignoredTag = terminals.length;
-        for (String ignored: ignoredPatterns) {
-            if (!terminalSet.contains(ignored)) {
-                String regexp = normalize(ignored);
-                tokenDefinitions.add(new TokenDefinition<>(regexp, ignoredTag));
+            int ignoredTag = terminals.length;
+            for (String ignored: ignoredPatterns) {
+                if (!terminalSet.contains(ignored)) {
+                    String regexp = normalize(ignored);
+                    tokenDefinitions.add(new TokenDefinition<>(regexp, ignoredTag));
+                }
             }
+
+            ignorableTags.add(ignoredTag);
+
+            Set<Integer> ignoredTagSet = Collections.singleton(ignoredTag);
+            PackedDfa<Set<Integer>> packedDfa= new Lexer<Integer>(tokenDefinitions).compile();
+            PackedDfa<TokenProperties> napaDfa = packedDfa.transform(s -> {
+                boolean ignoreOnly = s.equals(ignoredTagSet);
+                Set<Integer> difference = new HashSet<Integer>(s);
+                difference.retainAll(ignorableTags);
+                boolean ignorable = !difference.isEmpty();
+                return new TokenProperties(ignoreOnly, ignorable, s);
+            });
+            System.err.println("Lexer time: " + (System.currentTimeMillis() - startTs));
+            napaDfa.printStats();
+
+            System.err.println("NonTerminals: " + nonTerminals.length);
+            System.err.println("Terminals: " + tokenDefinitions.size());
+
+            return new CompiledGrammar(nonTerminals, terminals, compiledRules, napaDfa);
+        } finally {
+            System.err.println("Grammar compiled in " + (System.currentTimeMillis() - beforeStart));
         }
-
-        ignorableTags.add(ignoredTag);
-
-        Set<Integer> ignoredTagSet = Collections.singleton(ignoredTag);
-        PackedDfa<Set<Integer>> packedDfa= new Lexer<Integer>(tokenDefinitions).compile();
-        PackedDfa<TokenProperties> napaDfa = packedDfa.transform(s -> {
-            boolean ignoreOnly = s.equals(ignoredTagSet);
-            Set<Integer> difference = new HashSet<Integer>(s);
-            difference.retainAll(ignorableTags);
-            boolean ignorable = !difference.isEmpty();
-            return new TokenProperties(ignoreOnly, ignorable, s);
-        });
-        System.err.println("Lexer time: " + (System.currentTimeMillis() - startTs));
-        napaDfa.printStats();
-
-        System.err.println("NonTerminals: " + nonTerminals.length);
-        System.err.println("Terminals: " + tokenDefinitions.size());
-
-        return new CompiledGrammar(nonTerminals, terminals, compiledRules.stream().collect(Collectors.groupingBy(CompiledRule::getTarget)), napaDfa);
     }
 
     private String normalize(final String terminal) {

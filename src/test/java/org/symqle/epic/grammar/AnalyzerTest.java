@@ -11,7 +11,6 @@ import org.symqle.epic.gparser.SyntaxTreeNode;
 import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -121,20 +120,14 @@ public class AnalyzerTest extends TestCase {
 
     }
 
-    public void testIngorable() throws Exception {
-        CompiledGrammar g = new GaGrammar().parse(new InputStreamReader(getClass().getClassLoader().getResourceAsStream("ignorable.napa"), "UTF-8"));
-        String source = "/*comment*/class/*garbage*/abc";
-        Set<SyntaxTreeNode> forest = new Parser(g).parse("class_definition", new StringReader(source), 100);
+    public void testIgnoreConflict() throws Exception {
+        CompiledGrammar g = null;
+        g = new GaGrammar().parse(new InputStreamReader(getClass().getClassLoader().getResourceAsStream("ignorable.napa"), "UTF-8"));
+        String source = "/*abc*/ class class";
+        Set<SyntaxTreeNode> forest = new Parser(g).parse("class_definition", new StringReader(source), 1000);
         Assert.assertEquals(1, forest.size());
         SyntaxTreeNode tree = forest.iterator().next();
-        Assert.assertEquals(3, tree.children().size());
-        SyntaxTreeNode comment = tree.children().get(0);
-        Assert.assertEquals("comment", comment.name());
-        Assert.assertEquals("/*comment*/", comment.value());
-        SyntaxTreeNode name = tree.children().get(2);
-        Assert.assertEquals("name", name.name());
-        Assert.assertEquals("abc", name.value());
-        Assert.assertEquals(Collections.singletonList("/*garbage*/"), name.preface());
+        Assert.assertEquals(source,tree.text());
     }
 
 }

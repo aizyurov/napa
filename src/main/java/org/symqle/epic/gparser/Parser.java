@@ -30,7 +30,13 @@ public class Parser {
         final ChartNode startNode = new ChartNode(-1, Collections.singletonList(new NonTerminalItem(targetTag)), 0, null, Collections.emptyList(), grammar);
         workSet.add(startNode);
         int maxComplexity = 0;
+        List<String> preface = new ArrayList<>();
         while (true) {
+            Token<TokenProperties> nextToken = tokenizer.nextToken();
+            while (nextToken != null && nextToken.getType().isIgnoreOnly()) {
+                preface.add(nextToken.getText());
+                nextToken = tokenizer.nextToken();
+            }
             int iterations = 0;
             while (!workSet.isEmpty()) {
                 iterations += 1;
@@ -39,7 +45,7 @@ public class Parser {
                 }
                 final ChartNode next = workSet.iterator().next();
                 workSet.remove(next);
-                switch (next.availableAction()) {
+                switch (next.availableAction(nextToken)) {
                     case SHIFT:
                         shiftCandidates.add(next);
                         break;
@@ -68,40 +74,38 @@ public class Parser {
                         syntaxTreeCandidates.add(next.accept());
                         break;
                     default:
-                        throw new IllegalStateException("Should never get here");
+                        // NONE: do nothing
                 }
+            }
+            if (nextToken == null) {
+                System.out.println("Max complexity: " + maxComplexity);
+                System.out.println("Parse time: " + (System.currentTimeMillis() - startTime));
+                return syntaxTreeCandidates;
             }
             maxComplexity = Math.max(iterations, maxComplexity);
             // now shift
-            List<String> preface = new ArrayList<>();
 //            System.out.println("=========== Total nodes:" + countChartNodes(shiftCandidates));
-            while (true) {
-                final Token<TokenProperties> nextToken = tokenizer.nextToken();
-                if (nextToken == null) {
-                    System.out.println("Max complexity: " + maxComplexity);
-                    System.out.println("Parse time: " + (System.currentTimeMillis() - startTime));
-                    return syntaxTreeCandidates;
-                }
-                if (nextToken.getType().isIgnoreOnly()) {
-                    preface.add(nextToken.getText());
-                    continue;
-                }
-                for (ChartNode candidate : shiftCandidates) {
-                    workSet.addAll(candidate.shift(nextToken, preface));
-                }
-                if (workSet.isEmpty()) {
-                    if (nextToken.getType().isIgnorable()) {
-                        preface.add(nextToken.getText());
-                    } else {
-                        throw new GrammarException("Unrecognized input " + nextToken.getText() + " at " + nextToken.getLine() + ":" + nextToken.getPos());
-                    }
-                } else {
-                    break;
-                }
+            if (shiftCandidates.isEmpty()) {
+                // no node can shift
+                throw new GrammarException("Unrecognized input " + nextToken.getText() + " at " + nextToken.getLine() + ":" + nextToken.getPos());
             }
-            // token accepted
-            syntaxTreeCandidates.clear();
-            shiftCandidates.clear();
+            ArrayList<String> prefaceCopy = new ArrayList<>(preface);
+            for (ChartNode candidate : shiftCandidates) {
+                workSet.addAll(candidate.shift(nextToken, prefaceCopy));
+            }
+            if (workSet.isEmpty()) {
+                // no node accepted the token
+                if (nextToken.getType().isIgnorable()) {
+                    preface.add(nextToken.getText());
+                } else {
+                    throw new GrammarException("Unexpected input: " + nextToken.getText() + " at " + nextToken.getLine() + ":" + nextToken.getPos());
+                }
+            } else {
+                // token accepted
+                preface.clear();
+                syntaxTreeCandidates.clear();
+                shiftCandidates.clear();
+            }
         }
     }
 
@@ -136,3 +140,9 @@ public class Parser {
 
 
 }
+
+/*
+                    System.out.println("Max complexity: " + maxComplexity);
+                    System.out.println("Parse time: " + (System.currentTimeMillis() - startTime));
+
+ */

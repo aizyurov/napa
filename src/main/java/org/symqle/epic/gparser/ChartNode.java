@@ -5,7 +5,11 @@ import org.symqle.epic.tokenizer.Token;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
+
+import static org.symqle.epic.gparser.RuleItemType.COMPOUND;
+import static org.symqle.epic.gparser.RuleItemType.TERMINAL;
 
 /**
  * @author lvovich
@@ -17,7 +21,8 @@ public class ChartNode {
         REDUCE,
         EXPAND,
         SHIFT,
-        ACCEPT
+        ACCEPT,
+        DROP
     }
 
     private final int target;
@@ -36,26 +41,47 @@ public class ChartNode {
         this.compiledGrammar = compiledGrammar;
     }
 
-    public Action availableAction() {
+    public Action availableAction(Token<TokenProperties> token) {
         if (offset < items.size()) {
-            switch (items.get(offset).getType()) {
+            final RuleItem item = items.get(offset);
+            switch (item.getType()) {
                 case NON_TERMINAL:
-                    return Action.PREDICT;
+                    if (compiledGrammar.hasEmptyDerivation(item.getValue())) {
+                        return Action.PREDICT;
+                    }
+                    if (token == null) {
+                        // end of input and no empty derivation
+                        return Action.DROP;
+                    }
+                    if (token.getType().isIgnorable()) {
+                        return Action.PREDICT;
+                    }
+                    final Set<Integer> expectedTags = compiledGrammar.getFirstSet(item.getValue());
+                    return token.getType().matches(expectedTags) ? Action.PREDICT : Action.DROP;
                 case TERMINAL:
-                    return Action.SHIFT;
+                    if (token == null) {
+                        // end of input but terminal expected
+                        return Action.DROP;
+                    }
+                    TokenProperties type = token.getType();
+                    return type.matches(item.getValue()) ? Action.SHIFT : Action.DROP;
                 case COMPOUND:
                     return Action.EXPAND;
                 default:
                     throw new IllegalStateException("Should never get here");
             }
         } else {
+            // always, even at the end of input
             return enclosing != null ? Action.REDUCE : Action.ACCEPT;
         }
     }
 
     public SyntaxTreeNode accept() {
-        assert availableAction() == Action.ACCEPT;
-        return syntaxNodes.get(0);
+        if (offset == items.size() && enclosing == null) {
+            return syntaxNodes.get(0);
+        } else {
+            return null;
+        }
     }
 
     public List<ChartNode> predict() {
@@ -67,7 +93,7 @@ public class ChartNode {
     }
 
     public List<ChartNode> reduce() {
-        assert offset == items.size();
+        assert offset == items.size() && enclosing != null;
         NonTerminalNode newNode = new NonTerminalNode(compiledGrammar.getNonTerminalName(target),
                 syntaxNodes);
         return enclosing.acceptNonTerminal(newNode);
@@ -82,7 +108,7 @@ public class ChartNode {
     public List<ChartNode> expand() {
         assert offset < items.size();
         RuleItem currentItem = items.get(offset);
-        assert currentItem.getType() == RuleItemType.COMPOUND;
+        assert currentItem.getType() == COMPOUND;
         List<ChartNode> newNodes = new ArrayList<>();
         for (List<RuleItem> expansion: currentItem.expand()) {
             List<RuleItem> expanded = new ArrayList<>();
@@ -97,7 +123,7 @@ public class ChartNode {
     public List<ChartNode> shift(Token<TokenProperties> tokenProperties, List<String> preface) {
         assert offset < items.size();
         RuleItem currentItem = items.get(offset);
-        assert currentItem.getType() == RuleItemType.TERMINAL;
+        assert currentItem.getType() == TERMINAL;
         if (!tokenProperties.getType().matches(currentItem.getValue())) {
             return Collections.emptyList();
         }
