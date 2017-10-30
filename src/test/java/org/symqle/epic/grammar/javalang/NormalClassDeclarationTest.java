@@ -24,22 +24,22 @@ public class NormalClassDeclarationTest extends TestCase {
     }
 
     public void testItself() throws Exception {
-        parse("public class NormalClassDeclarationTest extends TestCase #ClassBody#");
+        parse("public class NormalClassDeclarationTest extends TestCase {}");
     }
 
     public void testModifiers() throws Exception {
-        final SyntaxTree tree = parse("public static strictfp abstract final class NormalClassDeclarationTest extends TestCase #ClassBody#");
+        final SyntaxTree tree = parse("public static strictfp abstract final class NormalClassDeclarationTest extends TestCase {}");
         Assert.assertEquals(Arrays.asList("public", "static",  "strictfp", "abstract", "final"), tree.find("ClassModifier").stream().map(SyntaxTree::getValue).collect(Collectors.toList()));
         Assert.assertEquals(Collections.singletonList("TestCase"),
                 tree.find("Superclass.ClassType.ClassOrInterfaceType.AnnotatedIdentifierWithTypeArguments.Identifier").stream().map(SyntaxTree::getValue).collect(Collectors.toList()));
     }
 
     public void testNoModifiers() throws Exception {
-        parse("class NormalClassDeclarationTest extends TestCase #ClassBody#");
+        parse("class NormalClassDeclarationTest extends TestCase {}");
     }
 
     public void testNoExtendsImplements() throws Exception {
-        parse("public class NormalClassDeclarationTest #ClassBody#");
+        parse("public class NormalClassDeclarationTest {}");
     }
 
     private SyntaxTree parse(final String source) throws IOException {

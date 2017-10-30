@@ -237,10 +237,48 @@ Superinterfaces = 'implements' InterfaceTypeList ;
 InterfaceTypeList = InterfaceType {',' InterfaceType} ;
 
 # 8.1.6 Class Body and Member Declarations
+
+ClassBody = '{' {ClassBodyDeclaration} '}' ;
+
+ClassBodyDeclaration =
+    ClassMemberDeclaration
+|   InstanceInitializer
+|   StaticInitializer
+|   ConstructorDeclaration ;
+
+ClassMemberDeclaration =
+    FieldDeclaration
+|   MethodDeclaration
+|   ClassDeclaration
+|   InterfaceDeclaration
+|   ';' ;
+
+# 8.3 Field Declarations
 # TODO
 # Temporary placeholder
 
-ClassBody = '#ClassBody#' ;
+FieldDeclaration = '#FieldDeclaration#' ;
+
+# 8.4 Method Declarations
+# TODO
+# Temporary placeholder
+
+MethodDeclaration = '#MethodDeclaration#' ;
+
+
+# 8.6 Instance Initializers
+
+InstanceInitializer = Block ;
+
+# 8.7 Static Initializers
+
+StaticInitializer = 'static' Block ;
+
+# 8.8 Constructor Declarations
+# TODO
+# Temporary placeholder
+
+ConstructorDeclaration = '#ConstructorDeclaration#' ;
 
 # 8.9 Enum Types
 # TODO
@@ -259,3 +297,11 @@ InterfaceDeclaration = '#InterfaceDeclaration#' ;
 # Temporary placeholder
 
 Annotation = '#Annotation#' ;
+
+# 14.2  Blocks
+# TODO
+# Temporary placeholder
+
+Block = '#Block#' ;
+
+
