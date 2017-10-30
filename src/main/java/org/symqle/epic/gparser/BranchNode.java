@@ -13,13 +13,11 @@ import java.util.stream.Collectors;
 public class BranchNode extends AbstractNode {
 
     private final String name;
-    private final SyntaxTree parent;
     private List<SyntaxTree> children;
 
     public BranchNode(String name, SyntaxTree parent, int line, int pos, List<RawSyntaxNode> rawSyntaxNodes, CompiledGrammar grammar) {
-        super(line, pos);
+        super(line, pos, parent);
         this.name = name;
-        this.parent = parent;
         this.children = rawSyntaxNodes.stream().map(rawSyntaxNode -> rawSyntaxNode.toSyntaxTreeNode(this, grammar)).collect(Collectors.toList());
     }
 
@@ -36,11 +34,6 @@ public class BranchNode extends AbstractNode {
     @Override
     public String getValue() {
         return children.isEmpty() ? null : children.get(0).getValue();
-    }
-
-    @Override
-    public SyntaxTree getParent() {
-        return parent;
     }
 
     @Override

@@ -12,14 +12,12 @@ public class LeafNode extends AbstractNode {
 
     private final String name;
     private final String value;
-    private final SyntaxTree parent;
     private final List<String> preface;
 
     public LeafNode(String name, String value, SyntaxTree parent, List<String> preface, int line, int pos) {
-        super(line, pos);
+        super(line, pos, parent);
         this.name = name;
         this.value = value;
-        this.parent = parent;
         this.preface = preface;
     }
 
@@ -36,11 +34,6 @@ public class LeafNode extends AbstractNode {
     @Override
     public String getValue() {
         return value;
-    }
-
-    @Override
-    public SyntaxTree getParent() {
-        return parent;
     }
 
     @Override

@@ -108,6 +108,12 @@ ReferenceType =
   ClassOrInterfaceType
 | ArrayType ;
 
+ClassType = ClassOrInterfaceType ;
+
+InterfaceType = ClassOrInterfaceType;
+
+TypeVariable = ClassOrInterfaceType ;
+
 ClassOrInterfaceType =
  { AnnotatedIdentifierWithTypeArguments '.' } AnnotatedIdentifierWithTypeArguments ;
 
@@ -128,7 +134,7 @@ TypeParameterModifier = Annotation ;
 
 TypeBound = 'extends' ClassOrInterfaceType {AdditionalBound} ;
 
-AdditionalBound= '&' ClassOrInterfaceType ;
+AdditionalBound= '&' InterfaceType ;
 
 # 4.5.1 Type Arguments of Parameterized Types
 
@@ -222,13 +228,13 @@ TypeParameterList = TypeParameter {',' TypeParameter} ;
 
 # 8.1.4 Superclasses and Subclasses
 
-Superclass = 'extends' ClassOrInterfaceType ;
+Superclass = 'extends' ClassType ;
 
 # 8.1.5 Superinterfaces
 
 Superinterfaces = 'implements' InterfaceTypeList ;
 
-InterfaceTypeList = ClassOrInterfaceType {',' ClassOrInterfaceType} ;
+InterfaceTypeList = InterfaceType {',' InterfaceType} ;
 
 # 8.1.6 Class Body and Member Declarations
 # TODO
