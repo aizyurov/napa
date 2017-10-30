@@ -3,7 +3,7 @@ package org.symqle.epic.grammar.javalang;
 import junit.framework.Assert;
 import junit.framework.TestCase;
 import org.symqle.epic.gparser.Parser;
-import org.symqle.epic.gparser.SyntaxTreeNode;
+import org.symqle.epic.gparser.SyntaxTree;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -25,69 +25,69 @@ public class ImportTest extends TestCase {
 
     public void testSingleClass() throws Exception {
         final String source = "import java.util.stream.Collectors;";
-        Set<SyntaxTreeNode> forest = g.parse("ImportDeclaration", new StringReader(source), 100);
+        List<SyntaxTree> forest = g.parse("ImportDeclaration", new StringReader(source), 100);
         Assert.assertEquals(1, forest.size());
-        SyntaxTreeNode tree = forest.iterator().next();
-        Assert.assertEquals(source, tree.text());
-        Assert.assertEquals(1, tree.children().size());
-        final SyntaxTreeNode singleStatic = tree.children().get(0);
-        Assert.assertEquals("SingleTypeImportDeclaration", singleStatic.name());
-        final SyntaxTreeNode typeName = singleStatic.children().get(1);
-        Assert.assertEquals("TypeName", typeName.name());
-        final List<String> typeParts = typeName.children().stream().filter(n -> n.name().equals("Identifier")).map(SyntaxTreeNode::value).collect(Collectors.toList());
+        SyntaxTree tree = forest.iterator().next();
+        Assert.assertEquals(source, tree.getSource());
+        Assert.assertEquals(1, tree.getChildren().size());
+        final SyntaxTree singleStatic = tree.getChildren().get(0);
+        Assert.assertEquals("SingleTypeImportDeclaration", singleStatic.getName());
+        final SyntaxTree typeName = singleStatic.getChildren().get(1);
+        Assert.assertEquals("TypeName", typeName.getName());
+        final List<String> typeParts = typeName.getChildren().stream().filter(n -> n.getName().equals("Identifier")).map(SyntaxTree::getValue).collect(Collectors.toList());
         Assert.assertEquals(Arrays.asList("java", "util", "stream", "Collectors"), typeParts);
     }
 
     public void testOnDemandType() throws Exception {
         final String source = "import java.util.stream.*;";
         System.out.println("Before parse");
-        Set<SyntaxTreeNode> forest = g.parse("ImportDeclaration", new StringReader(source), 100);
+        List<SyntaxTree> forest = g.parse("ImportDeclaration", new StringReader(source), 100);
         System.out.println("After parse");
         Assert.assertEquals(1, forest.size());
-        SyntaxTreeNode tree = forest.iterator().next();
-        Assert.assertEquals(source, tree.text());
-        Assert.assertEquals(1, tree.children().size());
-        final SyntaxTreeNode onDemand = tree.children().get(0);
-        Assert.assertEquals("TypeImportOnDemandDeclaration", onDemand.name());
-        final SyntaxTreeNode typeName = onDemand.children().get(1);
-        Assert.assertEquals("PackageOrTypeName", typeName.name());
-        final List<String> typeParts = typeName.children().stream().filter(n -> n.name().equals("Identifier")).map(SyntaxTreeNode::value).collect(Collectors.toList());
+        SyntaxTree tree = forest.iterator().next();
+        Assert.assertEquals(source, tree.getSource());
+        Assert.assertEquals(1, tree.getChildren().size());
+        final SyntaxTree onDemand = tree.getChildren().get(0);
+        Assert.assertEquals("TypeImportOnDemandDeclaration", onDemand.getName());
+        final SyntaxTree typeName = onDemand.getChildren().get(1);
+        Assert.assertEquals("PackageOrTypeName", typeName.getName());
+        final List<String> typeParts = typeName.getChildren().stream().filter(n -> n.getName().equals("Identifier")).map(SyntaxTree::getValue).collect(Collectors.toList());
         Assert.assertEquals(Arrays.asList("java", "util", "stream"), typeParts);
     }
 
     public void testSingleStatic() throws Exception {
         final String source = "import static java.util.stream.Collectors.toMap;";
-        Set<SyntaxTreeNode> forest = g.parse("ImportDeclaration", new StringReader(source), 100);
+        List<SyntaxTree> forest = g.parse("ImportDeclaration", new StringReader(source), 100);
         Assert.assertEquals(1, forest.size());
-        SyntaxTreeNode tree = forest.iterator().next();
-        Assert.assertEquals(source, tree.text());
-        Assert.assertEquals(1, tree.children().size());
-        final SyntaxTreeNode singleStatic = tree.children().get(0);
-        Assert.assertEquals("SingleStaticImportDeclaration", singleStatic.name());
-        final SyntaxTreeNode typeName = singleStatic.children().get(2);
-        Assert.assertEquals("TypeName", typeName.name());
-        final List<String> typeParts = typeName.children().stream().filter(n -> n.name().equals("Identifier")).map(SyntaxTreeNode::value).collect(Collectors.toList());
+        SyntaxTree tree = forest.iterator().next();
+        Assert.assertEquals(source, tree.getSource());
+        Assert.assertEquals(1, tree.getChildren().size());
+        final SyntaxTree singleStatic = tree.getChildren().get(0);
+        Assert.assertEquals("SingleStaticImportDeclaration", singleStatic.getName());
+        final SyntaxTree typeName = singleStatic.getChildren().get(2);
+        Assert.assertEquals("TypeName", typeName.getName());
+        final List<String> typeParts = typeName.getChildren().stream().filter(n -> n.getName().equals("Identifier")).map(SyntaxTree::getValue).collect(Collectors.toList());
         Assert.assertEquals(Arrays.asList("java", "util", "stream", "Collectors"), typeParts);
-        final SyntaxTreeNode identifier = singleStatic.children().get(4);
-        Assert.assertEquals("toMap", identifier.value());
+        final SyntaxTree identifier = singleStatic.getChildren().get(4);
+        Assert.assertEquals("toMap", identifier.getValue());
     }
 
 
     public void testStaticOnDemand() throws Exception {
         final String source = "import static java.util.stream.Collectors.*;";
-        Set<SyntaxTreeNode> forest = g.parse("ImportDeclaration", new StringReader(source), 100);
+        List<SyntaxTree> forest = g.parse("ImportDeclaration", new StringReader(source), 100);
         Assert.assertEquals(1, forest.size());
-        SyntaxTreeNode tree = forest.iterator().next();
-        Assert.assertEquals(source, tree.text());
-        Assert.assertEquals(1, tree.children().size());
-        final SyntaxTreeNode staticImport = tree.children().get(0);
-        Assert.assertEquals("StaticImportOnDemandDeclaration", staticImport.name());
-        final SyntaxTreeNode typeName = staticImport.children().get(2);
-        Assert.assertEquals("TypeName", typeName.name());
-        final List<String> typeParts = typeName.children().stream().filter(n -> n.name().equals("Identifier")).map(SyntaxTreeNode::value).collect(Collectors.toList());
+        SyntaxTree tree = forest.iterator().next();
+        Assert.assertEquals(source, tree.getSource());
+        Assert.assertEquals(1, tree.getChildren().size());
+        final SyntaxTree staticImport = tree.getChildren().get(0);
+        Assert.assertEquals("StaticImportOnDemandDeclaration", staticImport.getName());
+        final SyntaxTree typeName = staticImport.getChildren().get(2);
+        Assert.assertEquals("TypeName", typeName.getName());
+        final List<String> typeParts = typeName.getChildren().stream().filter(n -> n.getName().equals("Identifier")).map(SyntaxTree::getValue).collect(Collectors.toList());
         Assert.assertEquals(Arrays.asList("java", "util", "stream", "Collectors"), typeParts);
-        final SyntaxTreeNode asterisk = staticImport.children().get(4);
-        Assert.assertEquals("*", asterisk.value());
+        final SyntaxTree asterisk = staticImport.getChildren().get(4);
+        Assert.assertEquals("*", asterisk.getValue());
     }
 
 }

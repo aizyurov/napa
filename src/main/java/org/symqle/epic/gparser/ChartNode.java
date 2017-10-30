@@ -29,10 +29,10 @@ public class ChartNode {
     private final List<RuleItem> items;
     private int offset;
     private final ChartNode enclosing;
-    private final List<SyntaxTreeNode> syntaxNodes;
+    private final List<RawSyntaxNode> syntaxNodes;
     private final CompiledGrammar compiledGrammar;
 
-    public ChartNode(final int target, final List<RuleItem> items, final int offset, final ChartNode enclosing, final List<SyntaxTreeNode> syntaxNodes, CompiledGrammar compiledGrammar) {
+    public ChartNode(final int target, final List<RuleItem> items, final int offset, final ChartNode enclosing, final List<RawSyntaxNode> syntaxNodes, CompiledGrammar compiledGrammar) {
         this.target = target;
         this.items = items;
         this.offset = offset;
@@ -76,7 +76,7 @@ public class ChartNode {
         }
     }
 
-    public SyntaxTreeNode accept() {
+    public RawSyntaxNode accept() {
         if (offset == items.size() && enclosing == null) {
             return syntaxNodes.get(0);
         } else {
@@ -92,15 +92,19 @@ public class ChartNode {
                         .map(cr -> new ChartNode(cr.getTarget(), cr.getItems(), 0, this, Collections.emptyList(), compiledGrammar)).collect(Collectors.toList());
     }
 
-    public List<ChartNode> reduce() {
+    public List<ChartNode> reduce(Token<?> nextToken) {
         assert offset == items.size() && enclosing != null;
-        NonTerminalNode newNode = new NonTerminalNode(compiledGrammar.getNonTerminalName(target),
-                syntaxNodes);
+        RawSyntaxNode newNode;
+        if (syntaxNodes.isEmpty()) {
+            newNode = new EmptyNode(target, nextToken.getLine(), nextToken.getPos());
+        } else {
+            newNode = new NonTerminalNode(target, syntaxNodes);
+        }
         return enclosing.acceptNonTerminal(newNode);
     }
 
-    private List<ChartNode> acceptNonTerminal(NonTerminalNode node) {
-        List<SyntaxTreeNode> nodes = new ArrayList<>(syntaxNodes);
+    private List<ChartNode> acceptNonTerminal(RawSyntaxNode node) {
+        List<RawSyntaxNode> nodes = new ArrayList<>(syntaxNodes);
         nodes.add(node);
         return Collections.singletonList(new ChartNode(target, items, offset + 1, enclosing, nodes, compiledGrammar));
     }
@@ -120,15 +124,15 @@ public class ChartNode {
         return newNodes;
     }
 
-    public List<ChartNode> shift(Token<TokenProperties> tokenProperties, List<String> preface) {
+    public List<ChartNode> shift(Token<TokenProperties> token, List<Token<TokenProperties>> preface) {
         assert offset < items.size();
         RuleItem currentItem = items.get(offset);
         assert currentItem.getType() == TERMINAL;
-        if (!tokenProperties.getType().matches(currentItem.getValue())) {
+        if (!token.getType().matches(currentItem.getValue())) {
             return Collections.emptyList();
         }
         offset += 1;
-        syntaxNodes.add(new TerminalNode(compiledGrammar.getTerminalName(currentItem.getValue()), preface, tokenProperties.getText(), null, tokenProperties.getLine(), tokenProperties.getPos()));
+        syntaxNodes.add(new TerminalNode(currentItem.getValue(), preface, token));
         return Collections.singletonList(this);
     }
 

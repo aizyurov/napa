@@ -1,77 +1,41 @@
 package org.symqle.epic.gparser;
 
+import com.sun.org.apache.xalan.internal.xsltc.compiler.SyntaxTreeNode;
+import org.symqle.LeafNode;
+import org.symqle.epic.tokenizer.Token;
+
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
  * @author lvovich
  */
-public class TerminalNode implements SyntaxTreeNode {
+public class TerminalNode implements RawSyntaxNode {
 
-    private final String name;
-    private final List<String> preface;
-    private final String value;
-    private final String file;
-    private final int line;
-    private final int pos;
+    private final int tag;
+    private final List<Token<TokenProperties>> preface;
+    private final Token<TokenProperties> token;
 
-    public TerminalNode(final String name,
-                        final List<String> preface,
-                        final String value,
-                        final String file,
-                        final int line,
-                        final int pos) {
-        this.name = name;
+    public TerminalNode(int tag, List<Token<TokenProperties>> preface, Token<TokenProperties> token) {
+        this.tag = tag;
         this.preface = preface;
-        this.value = value;
-        this.file = file;
-        this.line = line;
-        this.pos = pos;
+        this.token = token;
     }
 
     @Override
-    public String name() {
-        return name;
+    public SyntaxTree toSyntaxTreeNode(SyntaxTree parent, CompiledGrammar grammar) {
+        return new LeafNode(grammar.getTerminalName(tag), token.getText(), parent, preface.stream().map(Token::getText).collect(Collectors.toList()), token.getLine(), token.getPos());
     }
 
     @Override
-    public String value() {
-        return value;
+    public int getLine() {
+        return token.getLine();
     }
 
     @Override
-    public List<String> preface() {
-        return preface;
-    }
-
-    @Override
-    public String text() {
-        return Stream.concat(preface.stream(), Stream.of(value)).reduce("", (a,b) -> a+b);
-    }
-
-    @Override
-    public String file() {
-        return file;
-    }
-
-    @Override
-    public int line() {
-        return line;
-    }
-
-    @Override
-    public int pos() {
-        return pos;
-    }
-
-    @Override
-    public boolean isTermimal() {
-        return true;
-    }
-
-    @Override
-    public List<SyntaxTreeNode> children() {
-        return Collections.emptyList();
+    public int getPos() {
+        return token.getPos();
     }
 }

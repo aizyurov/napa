@@ -3,10 +3,12 @@ package org.symqle.epic.grammar.javalang;
 import junit.framework.Assert;
 import junit.framework.TestCase;
 import org.symqle.epic.gparser.Parser;
-import org.symqle.epic.gparser.SyntaxTreeNode;
+import org.symqle.epic.gparser.SyntaxTree;
+import org.symqle.epic.gparser.SyntaxTree;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -32,14 +34,14 @@ public class TypeTest extends TestCase {
 
     public void testAnnotatedPrimitive() throws Exception {
         String source = "#Annotation# int";
-        Set<SyntaxTreeNode> forest = g.parse("PrimitiveType", new StringReader(source), 100);
+        List<SyntaxTree> forest = g.parse("PrimitiveType", new StringReader(source), 100);
         Assert.assertEquals(1, forest.size());
-        SyntaxTreeNode tree = forest.iterator().next();
-        Assert.assertEquals("PrimitiveType", tree.name());
-        Assert.assertEquals(2, tree.children().size());
-        Assert.assertEquals("#Annotation#", tree.children().get(0).value());
-        Assert.assertEquals("int", tree.children().get(1).value());
-        Assert.assertEquals("NumericType", tree.children().get(1).name());
+        SyntaxTree tree = forest.iterator().next();
+        Assert.assertEquals("PrimitiveType", tree.getName());
+        Assert.assertEquals(2, tree.getChildren().size());
+        Assert.assertEquals("#Annotation#", tree.getChildren().get(0).getValue());
+        Assert.assertEquals("int", tree.getChildren().get(1).getValue());
+        Assert.assertEquals("NumericType", tree.getChildren().get(1).getName());
     }
 
     public void testClassOrInterfaceType() throws Exception {
@@ -80,9 +82,9 @@ public class TypeTest extends TestCase {
 
 
     private void runTest(final String source, final String expected) throws IOException {
-        Set<SyntaxTreeNode> forest = g.parse(expected, new StringReader(source), 1000);
+        List<SyntaxTree> forest = g.parse(expected, new StringReader(source), 1000);
         Assert.assertEquals(1, forest.size());
-        SyntaxTreeNode tree = forest.iterator().next();
-        Assert.assertEquals(source, tree.text());
+        SyntaxTree tree = forest.iterator().next();
+        Assert.assertEquals(source, tree.getSource());
     }
 }

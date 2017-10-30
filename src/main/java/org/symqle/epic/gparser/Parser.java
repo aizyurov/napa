@@ -7,6 +7,7 @@ import org.symqle.epic.tokenizer.Tokenizer;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author lvovich
@@ -20,7 +21,7 @@ public class Parser {
         this.grammar = grammar;
     }
 
-    public Set<SyntaxTreeNode> parse(final String target, final Reader reader, final int complexityLimit) throws IOException {
+    public List<SyntaxTree> parse(final String target, final Reader reader, final int complexityLimit) throws IOException {
         final long startTime = System.currentTimeMillis();
         this.tokenizer = new DfaTokenizer<>(grammar.getTokenizerDfa(), reader);
         int targetTag = grammar.findNonTerminalByName(target).orElseThrow(() -> new GrammarException("NonTerminal not found: " + grammar));
@@ -30,11 +31,11 @@ public class Parser {
         final ChartNode startNode = new ChartNode(-1, Collections.singletonList(new NonTerminalItem(targetTag)), 0, null, Collections.emptyList(), grammar);
         workSet.add(startNode);
         int maxComplexity = 0;
-        List<String> preface = new ArrayList<>();
+        List<Token<TokenProperties>> preface = new ArrayList<>();
         while (true) {
             Token<TokenProperties> nextToken = tokenizer.nextToken();
             while (nextToken != null && nextToken.getType().isIgnoreOnly()) {
-                preface.add(nextToken.getText());
+                preface.add(nextToken);
                 nextToken = tokenizer.nextToken();
             }
             int iterations = 0;
@@ -50,7 +51,7 @@ public class Parser {
                         shiftCandidates.add(next);
                         break;
                     case REDUCE:
-                        final List<ChartNode> reduce = next.reduce();
+                        final List<ChartNode> reduce = next.reduce(nextToken);
 //                        for (ChartNode node: reduce) {
 //                            System.out.println(node);
 //                        }
@@ -80,7 +81,7 @@ public class Parser {
             if (nextToken == null) {
                 System.out.println("Max complexity: " + maxComplexity);
                 System.out.println("Parse time: " + (System.currentTimeMillis() - startTime));
-                return syntaxTreeCandidates;
+                return syntaxTreeCandidates.stream().map(s -> s.toSyntaxTreeNode(null, grammar)).collect(Collectors.toList());
             }
             maxComplexity = Math.max(iterations, maxComplexity);
             // now shift
@@ -89,14 +90,14 @@ public class Parser {
                 // no node can shift
                 throw new GrammarException("Unrecognized input " + nextToken.getText() + " at " + nextToken.getLine() + ":" + nextToken.getPos());
             }
-            ArrayList<String> prefaceCopy = new ArrayList<>(preface);
+            ArrayList<Token<TokenProperties>> prefaceCopy = new ArrayList<>(preface);
             for (ChartNode candidate : shiftCandidates) {
                 workSet.addAll(candidate.shift(nextToken, prefaceCopy));
             }
             if (workSet.isEmpty()) {
                 // no node accepted the token
                 if (nextToken.getType().isIgnorable()) {
-                    preface.add(nextToken.getText());
+                    preface.add(nextToken);
                 } else {
                     throw new GrammarException("Unexpected input: " + nextToken.getText() + " at " + nextToken.getLine() + ":" + nextToken.getPos());
                 }
@@ -130,7 +131,7 @@ public class Parser {
 
     private final Set<ChartNode> shiftCandidates = new HashSet<>();
 
-    private final Set<SyntaxTreeNode> syntaxTreeCandidates = new HashSet<>();
+    private final Set<RawSyntaxNode> syntaxTreeCandidates = new HashSet<>();
 
 
 

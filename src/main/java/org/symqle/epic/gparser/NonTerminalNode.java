@@ -7,58 +7,30 @@ import java.util.List;
 /**
  * @author lvovich
  */
-public class NonTerminalNode implements SyntaxTreeNode {
+public class NonTerminalNode implements RawSyntaxNode {
 
-    private final String name;
-    private final List<SyntaxTreeNode> children;
+    private final int tag;
+    private final List<RawSyntaxNode> children;
 
-    public NonTerminalNode(String name, final List<SyntaxTreeNode> children) {
-        this.name = name;
-        this.children = new ArrayList<>(children);
+
+
+    public NonTerminalNode(int tag, List<RawSyntaxNode> children) {
+        this.tag = tag;
+        this.children = children;
     }
 
     @Override
-    public String name() {
-        return name;
+    public SyntaxTree toSyntaxTreeNode(SyntaxTree parent, CompiledGrammar grammar) {
+        return new BranchNode(grammar.getNonTerminalName(tag), parent, getLine(), getPos(), children, grammar);
     }
 
     @Override
-    public String value() {
-        return children.isEmpty() ? null : children.get(0).value();
+    public int getLine() {
+        return children.get(0).getLine();
     }
 
     @Override
-    public List<String> preface() {
-        return children.isEmpty() ? Collections.emptyList() : children.get(0).preface();
-    }
-
-    @Override
-    public String text() {
-        return children.stream().map(SyntaxTreeNode::text).reduce("", (a, b) -> a + b);
-    }
-
-    @Override
-    public String file() {
-        return children.get(0).file();
-    }
-
-    @Override
-    public int line() {
-        return children.get(0).line();
-    }
-
-    @Override
-    public int pos() {
-        return children.get(0).pos();
-    }
-
-    @Override
-    public boolean isTermimal() {
-        return false;
-    }
-
-    @Override
-    public List<SyntaxTreeNode> children() {
-        return Collections.unmodifiableList(children);
+    public int getPos() {
+        return children.get(0).getPos();
     }
 }

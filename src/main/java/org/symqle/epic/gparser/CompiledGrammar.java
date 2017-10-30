@@ -104,7 +104,8 @@ public class CompiledGrammar {
         for (RuleItem item: items) {
             switch(item.getType()) {
                 case TERMINAL:
-                    return Collections.singleton(item.getValue());
+                    first.add(item.getValue());
+                    return first;
                 case NON_TERMINAL:
                     first.addAll(knownFirstSets.get(item.getValue()));
                     if (!haveEmptyDerivation.contains(item.getValue())) {
