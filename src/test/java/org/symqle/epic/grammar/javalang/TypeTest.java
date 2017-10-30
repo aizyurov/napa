@@ -77,6 +77,7 @@ public class TypeTest extends TestCase {
         runTest("String[]", "Type");
         runTest("java.lang.String[]", "Type");
         runTest("List<String>[]", "Type");
+        runTest("List<int[]>", "Type");
 
     }
 
