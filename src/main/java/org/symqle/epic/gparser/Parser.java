@@ -1,13 +1,17 @@
 package org.symqle.epic.gparser;
 
-import org.symqle.epic.tokenizer.AsyncTokenizer;
 import org.symqle.epic.tokenizer.DfaTokenizer;
 import org.symqle.epic.tokenizer.Token;
 import org.symqle.epic.tokenizer.Tokenizer;
 
 import java.io.IOException;
 import java.io.Reader;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -23,8 +27,9 @@ public class Parser {
     }
 
     public List<SyntaxTree> parse(final String target, final Reader reader, final int complexityLimit) throws IOException {
+//        this.tokenizer = new AsyncTokenizer<>(new DfaTokenizer<>(grammar.getTokenizerDfa(), reader));
+        this.tokenizer = new DfaTokenizer<>(grammar.getTokenizerDfa(), reader);
         final long startTime = System.currentTimeMillis();
-        this.tokenizer = new AsyncTokenizer<>(new DfaTokenizer<>(grammar.getTokenizerDfa(), reader));
         int targetTag = grammar.findNonTerminalByName(target).orElseThrow(() -> new GrammarException("NonTerminal not found: " + grammar));
         workSet.clear();
         shiftCandidates.clear();

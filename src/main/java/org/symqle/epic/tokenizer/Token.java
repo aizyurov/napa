@@ -38,6 +38,9 @@ public class Token<T> {
     }
 
     private String quote(String source) {
+        if (source == null) {
+            return null;
+        }
         StringBuilder builder = new StringBuilder();
         for (int i=0; i < source.length(); i++) {
             char c = source.charAt(i);

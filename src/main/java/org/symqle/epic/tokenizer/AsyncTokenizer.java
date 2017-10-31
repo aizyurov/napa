@@ -19,7 +19,7 @@ public class AsyncTokenizer<T> implements Tokenizer<T> {
 
     public AsyncTokenizer(final Tokenizer<T> delegate) {
         this.delegate = delegate;
-        new Thread(this::pollTokens).run();
+        new Thread(this::pollTokens).start();
     }
 
     @Override
@@ -30,7 +30,13 @@ public class AsyncTokenizer<T> implements Tokenizer<T> {
         if (eofReached) {
             return null;
         }
-        Token<T> token = queue.poll();
+        Token<T> token = null;
+        try {
+            token = queue.take();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return null;
+        }
         if (token.getType() == null) {
             eofReached = true;
             return null;

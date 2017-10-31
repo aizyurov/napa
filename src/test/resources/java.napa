@@ -255,8 +255,6 @@ ClassMemberDeclaration =
 |   ';' ;
 
 # 8.3 Field Declarations
-# TODO
-# Temporary placeholder
 
 FieldDeclaration = {FieldModifier} UnannType VariableDeclaratorList ';' ;
 
@@ -379,10 +377,23 @@ ExplicitConstructorInvocation =
 | Primary '.' [TypeArguments] 'super' '(' [ArgumentList] ')' ';' ;
 
 # 8.9 Enum Types
-# TODO
-# Temporary placeholder
 
-EnumDeclaration = '#EnumDeclaration#' ;
+EnumDeclaration = {ClassModifier} 'enum' Identifier [Superinterfaces] EnumBody ;
+
+# 8.9.1. Enum Constants
+
+EnumBody = '{' [EnumConstantList] [','] [EnumBodyDeclarations] '}' ;
+
+EnumConstantList = EnumConstant {',' EnumConstant} ;
+
+EnumConstant = {EnumConstantModifier} Identifier ['(' [ArgumentList] ')'] [ClassBody] ;
+
+EnumConstantModifier = Annotation ;
+
+# 8.9.2. Enum Body Declarations
+
+EnumBodyDeclarations = ';' {ClassBodyDeclaration} ;
+
 
 # 9.1 Interface Declarations
 
