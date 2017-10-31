@@ -10,7 +10,6 @@ import java.io.StringReader;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -40,6 +39,17 @@ public class NormalClassDeclarationTest extends TestCase {
 
     public void testNoExtendsImplements() throws Exception {
         parse("public class NormalClassDeclarationTest {}");
+    }
+
+    public void testAll() throws Exception {
+        SyntaxTree tree = parse("public class NormalClassDeclarationTest {{#BlockStatement#} static {#BlockStatement#} private final int i; public void a() {} public MyClass(int i) {}}");
+        Assert.assertEquals(1, tree.find("ClassBody.ClassBodyDeclaration.InstanceInitializer").size());
+        Assert.assertEquals(1, tree.find("ClassBody.ClassBodyDeclaration.StaticInitializer").size());
+        Assert.assertEquals(1, tree.find("ClassBody.ClassBodyDeclaration.ClassMemberDeclaration.FieldDeclaration").size());
+        Assert.assertEquals(1, tree.find("ClassBody.ClassBodyDeclaration.ClassMemberDeclaration.MethodDeclaration").size());
+        Assert.assertEquals(1, tree.find("ClassBody.ClassBodyDeclaration.ConstructorDeclaration").size());
+
+
     }
 
     private SyntaxTree parse(final String source) throws IOException {

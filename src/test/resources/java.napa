@@ -115,7 +115,7 @@ InterfaceType = ClassOrInterfaceType;
 TypeVariable = ClassOrInterfaceType ;
 
 ClassOrInterfaceType =
- { AnnotatedIdentifierWithTypeArguments '.' } AnnotatedIdentifierWithTypeArguments ;
+    AnnotatedIdentifierWithTypeArguments { '.'  AnnotatedIdentifierWithTypeArguments } ;
 
 AnnotatedIdentifierWithTypeArguments = { Annotation } Identifier [TypeArguments] ;
 
@@ -124,7 +124,9 @@ ArrayType =
 | ClassOrInterfaceType Dims ;
 
 Dims =
-  {Annotation} '[' ']' {{Annotation} '[' ']' } ;
+  Dim {Dim} ;
+
+Dim =  {Annotation} '[' ']';
 
 # 4.4 Type Variables
 
@@ -154,16 +156,15 @@ WildcardBounds =
 
 # 6.5. Determining the Meaning of a Name
 
-PackageName = {Identifier '.'} Identifier ;
+PackageName = Identifier {'.' Identifier} ;
 
-PackageOrTypeName = {Identifier '.'} Identifier ;
+PackageOrTypeName = Identifier {'.' Identifier} ;
 
-TypeName = {Identifier '.'} Identifier ;
+TypeName = Identifier {'.' Identifier} ;
 
-ExpressionName = {Identifier '.'} Identifier ;
+ExpressionName = Identifier {'.' Identifier} ;
 
 MethodName = Identifier ;
-
 
 # 7.3 Compilation Units
 
@@ -257,14 +258,93 @@ ClassMemberDeclaration =
 # TODO
 # Temporary placeholder
 
-FieldDeclaration = '#FieldDeclaration#' ;
+FieldDeclaration = {FieldModifier} UnannType VariableDeclaratorList ';' ;
+
+VariableDeclaratorList = VariableDeclarator {',' VariableDeclarator} ;
+
+VariableDeclarator = VariableDeclaratorId ['=' VariableInitializer] ;
+
+VariableDeclaratorId = Identifier [Dims] ;
+
+VariableInitializer =
+  Expression
+| ArrayInitializer ;
+
+UnannType =
+  UnannPrimitiveType
+| UnannReferenceType ;
+
+UnannPrimitiveType =
+  NumericType
+| 'boolean' ;
+
+UnannReferenceType =
+  UnannClassOrInterfaceType
+| UnannArrayType ;
+
+UnannClassOrInterfaceType = Identifier [TypeArguments] { '.' AnnotatedIdentifierWithTypeArguments} ;
+
+UnannArrayType =
+  UnannPrimitiveType Dims
+| UnannClassOrInterfaceType Dims ;
+
+
+# 8.3.1. Field Modifiers
+
+FieldModifier =
+  Annotation | 'public' | 'protected' | 'private'
+| 'static' | 'final' | 'transient' | 'volatile' ;
 
 # 8.4 Method Declarations
-# TODO
-# Temporary placeholder
 
-MethodDeclaration = '#MethodDeclaration#' ;
+MethodDeclaration =  {MethodModifier} MethodHeader MethodBody ;
 
+MethodHeader =
+  Result MethodDeclarator [Throws]
+| TypeParameters {Annotation} Result MethodDeclarator [Throws] ;
+
+MethodDeclarator = Identifier '(' [FormalParameterList] ')' [Dims] ;
+
+# 8.4.1. Formal Parameters
+
+FormalParameterList =
+  ReceiverParameter {',' FormalParameter} ['.' LastFormalParameter]
+| FormalParameter {',' FormalParameter} ['.' LastFormalParameter]
+| LastFormalParameter ;
+
+FormalParameter = {VariableModifier} UnannType VariableDeclaratorId ;
+
+VariableModifier = Annotation | 'final' ;
+
+ReceiverParameter = {Annotation} UnannType [Identifier '.'] 'this' ;
+
+LastFormalParameter = {VariableModifier} UnannType {Annotation} '...' VariableDeclaratorId ;
+
+# 8.4.3. Method Modifiers
+
+MethodModifier =
+  Annotation | 'public' | 'protected' | 'private'
+| 'abstract' | 'static' | 'final' | 'synchronized' | 'native' | 'strictfp' ;
+
+# 8.4.5. Method Result
+
+Result =
+  UnannType
+| 'void' ;
+
+# 8.4.6. Method Throws
+
+Throws = 'throws' ExceptionTypeList ;
+
+ExceptionTypeList = ExceptionType {',' ExceptionType} ;
+
+ExceptionType = ClassOrInterfaceType ;
+
+# 8.4.7. Method Body
+
+MethodBody =
+  Block
+| ';' ;
 
 # 8.6 Instance Initializers
 
@@ -275,10 +355,28 @@ InstanceInitializer = Block ;
 StaticInitializer = 'static' Block ;
 
 # 8.8 Constructor Declarations
-# TODO
-# Temporary placeholder
 
-ConstructorDeclaration = '#ConstructorDeclaration#' ;
+ConstructorDeclaration = {ConstructorModifier} ConstructorDeclarator [Throws] ConstructorBody ;
+
+ConstructorDeclarator = [TypeParameters] SimpleTypeName '(' [FormalParameterList] ')' ;
+
+SimpleTypeName = Identifier ;
+
+# 8.8.3. Constructor Modifier
+
+ConstructorModifier = Annotation | 'public' | 'protected' | 'private' ;
+
+# 8.8.7. Constructor Body
+
+ConstructorBody = '{' [ExplicitConstructorInvocation] [BlockStatements] '}' ;
+
+# 8.8.7.1. Explicit Constructor Invocations
+
+ExplicitConstructorInvocation =
+  [TypeArguments] 'this' '(' [ArgumentList] ')' ';'
+| [TypeArguments] 'super' '(' [ArgumentList] ')' ';'
+| ExpressionName '.' [TypeArguments] 'super' '(' [ArgumentList] ')' ';'
+| Primary '.' [TypeArguments] 'super' '(' [ArgumentList] ')' ';' ;
 
 # 8.9 Enum Types
 # TODO
@@ -287,8 +385,6 @@ ConstructorDeclaration = '#ConstructorDeclaration#' ;
 EnumDeclaration = '#EnumDeclaration#' ;
 
 # 9.1 Interface Declarations
-# TODO
-# Temporary placeholder
 
 InterfaceDeclaration = '#InterfaceDeclaration#' ;
 
@@ -298,10 +394,42 @@ InterfaceDeclaration = '#InterfaceDeclaration#' ;
 
 Annotation = '#Annotation#' ;
 
-# 14.2  Blocks
+# 10.6. Array Initializers
 # TODO
 # Temporary placeholder
 
-Block = '#Block#' ;
+ArrayInitializer = '#ArrayInitializer#' ;
+
+# 14.2  Blocks
+
+Block = '{' [BlockStatements] '}' ;
+
+BlockStatements = BlockStatement {BlockStatement} ;
+
+# TODO
+# Temporary placeholder
+
+BlockStatement = '#BlockStatement#' ;
+
+# 15.2. Forms of Expressions
+# TODO
+# Temporary placeholder
+
+Expression = '#Expression#' ;
+
+# 15.8. Primary Expressions
+# TODO
+# Temporary placeholder
+
+Primary = '#Primary#' ;
+
+
+# 15.12. Method Invocation Expressions
+# TODO MethodInvocation
+
+ArgumentList = Expression {',' Expression} ;
+
+
+
 
 

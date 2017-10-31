@@ -40,6 +40,11 @@ public class Parser {
             }
             int iterations = 0;
             while (!workSet.isEmpty()) {
+                System.out.println("========= Ready");
+                for (ChartNode node: workSet) {
+                    System.out.println(node);
+                }
+                System.out.println("========= Start");
                 iterations += 1;
                 if (iterations > complexityLimit) {
                     throw new GrammarException("Too ambiguous or too complex to parse");
@@ -52,23 +57,23 @@ public class Parser {
                         break;
                     case REDUCE:
                         final List<ChartNode> reduce = next.reduce(nextToken);
-//                        for (ChartNode node: reduce) {
-//                            System.out.println(node);
-//                        }
+                        for (ChartNode node: reduce) {
+                            System.out.println("Reduced: " + node);
+                        }
                         workSet.addAll(reduce);
                         break;
                     case PREDICT:
                         final List<ChartNode> predict = next.predict();
-//                        for (ChartNode node: predict) {
-//                            System.out.println(node);
-//                        }
+                        for (ChartNode node: predict) {
+                            System.out.println("Predicted:" + node);
+                        }
                         workSet.addAll(predict);
                         break;
                     case EXPAND:
                         final List<ChartNode> expand = next.expand();
-//                        for (ChartNode node: expand) {
-//                            System.out.println(node);
-//                        }
+                        for (ChartNode node: expand) {
+                            System.out.println("Expanded:" + node);
+                        }
                         workSet.addAll(expand);
                         break;
                     case ACCEPT:
@@ -84,8 +89,7 @@ public class Parser {
                 return syntaxTreeCandidates.stream().map(s -> s.toSyntaxTreeNode(null, grammar)).collect(Collectors.toList());
             }
             maxComplexity = Math.max(iterations, maxComplexity);
-            // now shift
-//            System.out.println("=========== Total nodes:" + countChartNodes(shiftCandidates));
+            System.out.println("=========== Shifting");
             if (shiftCandidates.isEmpty()) {
                 // no node can shift
                 throw new GrammarException("Unrecognized input " + nextToken.getText() + " at " + nextToken.getLine() + ":" + nextToken.getPos());
