@@ -8,7 +8,7 @@ import java.io.IOException;
 public interface Tokenizer<T> {
     Token<T> nextToken() throws IOException;
 
-    public enum Position {
+    enum Position {
         REGULAR,
         AFTER_CR,
         END_OF_LINE,

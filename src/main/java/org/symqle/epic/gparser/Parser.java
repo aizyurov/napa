@@ -1,5 +1,6 @@
 package org.symqle.epic.gparser;
 
+import org.symqle.epic.tokenizer.AsyncTokenizer;
 import org.symqle.epic.tokenizer.DfaTokenizer;
 import org.symqle.epic.tokenizer.Token;
 import org.symqle.epic.tokenizer.Tokenizer;
@@ -23,7 +24,7 @@ public class Parser {
 
     public List<SyntaxTree> parse(final String target, final Reader reader, final int complexityLimit) throws IOException {
         final long startTime = System.currentTimeMillis();
-        this.tokenizer = new DfaTokenizer<>(grammar.getTokenizerDfa(), reader);
+        this.tokenizer = new AsyncTokenizer<>(new DfaTokenizer<>(grammar.getTokenizerDfa(), reader));
         int targetTag = grammar.findNonTerminalByName(target).orElseThrow(() -> new GrammarException("NonTerminal not found: " + grammar));
         workSet.clear();
         shiftCandidates.clear();
@@ -40,48 +41,46 @@ public class Parser {
             }
             int iterations = 0;
             while (!workSet.isEmpty()) {
-                System.out.println("========= Ready");
-                for (ChartNode node: workSet) {
-                    System.out.println(node);
-                }
-                System.out.println("========= Start");
                 iterations += 1;
                 if (iterations > complexityLimit) {
                     throw new GrammarException("Too ambiguous or too complex to parse");
                 }
-                final ChartNode next = workSet.iterator().next();
-                workSet.remove(next);
-                switch (next.availableAction(nextToken)) {
-                    case SHIFT:
-                        shiftCandidates.add(next);
-                        break;
-                    case REDUCE:
-                        final List<ChartNode> reduce = next.reduce(nextToken);
-                        for (ChartNode node: reduce) {
-                            System.out.println("Reduced: " + node);
-                        }
-                        workSet.addAll(reduce);
-                        break;
-                    case PREDICT:
-                        final List<ChartNode> predict = next.predict();
-                        for (ChartNode node: predict) {
-                            System.out.println("Predicted:" + node);
-                        }
-                        workSet.addAll(predict);
-                        break;
-                    case EXPAND:
-                        final List<ChartNode> expand = next.expand();
-                        for (ChartNode node: expand) {
-                            System.out.println("Expanded:" + node);
-                        }
-                        workSet.addAll(expand);
-                        break;
-                    case ACCEPT:
-                        syntaxTreeCandidates.add(next.accept());
-                        break;
-                    default:
-                        // NONE: do nothing
+                Set<ChartNode> workCopy = new HashSet<>(workSet);
+                workSet.clear();
+                for (ChartNode next: workCopy) {
+                    switch (next.availableAction(nextToken)) {
+                        case SHIFT:
+                            shiftCandidates.add(next);
+                            break;
+                        case REDUCE:
+                            final List<ChartNode> reduce = next.reduce(nextToken);
+    //                        for (ChartNode node: reduce) {
+    //                            System.out.println("Reduced: " + node);
+    //                        }
+                            workSet.addAll(reduce);
+                            break;
+                        case PREDICT:
+                            final List<ChartNode> predict = next.predict();
+    //                        for (ChartNode node: predict) {
+    //                            System.out.println("Predicted:" + node);
+    //                        }
+                            workSet.addAll(predict);
+                            break;
+                        case EXPAND:
+                            final List<ChartNode> expand = next.expand();
+    //                        for (ChartNode node: expand) {
+    //                            System.out.println("Expanded:" + node);
+    //                        }
+                            workSet.addAll(expand);
+                            break;
+                        case ACCEPT:
+                            syntaxTreeCandidates.add(next.accept());
+                            break;
+                        default:
+                            // NONE: do nothing
+                    }
                 }
+                System.out.println("Work set size: " + workSet.size());
             }
             if (nextToken == null) {
                 System.out.println("Max complexity: " + maxComplexity);
@@ -89,7 +88,7 @@ public class Parser {
                 return syntaxTreeCandidates.stream().map(s -> s.toSyntaxTreeNode(null, grammar)).collect(Collectors.toList());
             }
             maxComplexity = Math.max(iterations, maxComplexity);
-            System.out.println("=========== Shifting");
+//            System.out.println("=========== Shifting");
             if (shiftCandidates.isEmpty()) {
                 // no node can shift
                 throw new GrammarException("Unrecognized input " + nextToken.getText() + " at " + nextToken.getLine() + ":" + nextToken.getPos());
