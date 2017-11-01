@@ -30,7 +30,7 @@ public class Parser {
 //        this.tokenizer = new AsyncTokenizer<>(new DfaTokenizer<>(grammar.getTokenizerDfa(), reader));
         this.tokenizer = new DfaTokenizer<>(grammar.getTokenizerDfa(), reader);
         final long startTime = System.currentTimeMillis();
-        int targetTag = grammar.findNonTerminalByName(target).orElseThrow(() -> new GrammarException("NonTerminal not found: " + grammar));
+        int targetTag = grammar.findNonTerminalByName(target).orElseThrow(() -> new GrammarException("NonTerminal not found: " + target));
         workSet.clear();
         shiftCandidates.clear();
         syntaxTreeCandidates.clear();
@@ -86,6 +86,9 @@ public class Parser {
                     }
                 }
                 System.out.println("Work set size: " + workSet.size());
+                for (ChartNode node: workSet) {
+                    System.out.println(node);
+                }
             }
             if (nextToken == null) {
                 System.out.println("Max complexity: " + maxComplexity);
@@ -93,7 +96,11 @@ public class Parser {
                 return syntaxTreeCandidates.stream().map(s -> s.toSyntaxTreeNode(null, grammar)).collect(Collectors.toList());
             }
             maxComplexity = Math.max(iterations, maxComplexity);
-//            System.out.println("=========== Shifting");
+            System.out.println("=========== Shifting: " + nextToken.getText());
+            for (ChartNode node: shiftCandidates) {
+                System.out.println(node);
+            }
+
             if (shiftCandidates.isEmpty()) {
                 // no node can shift
                 throw new GrammarException("Unrecognized input " + nextToken.getText() + " at " + nextToken.getLine() + ":" + nextToken.getPos());

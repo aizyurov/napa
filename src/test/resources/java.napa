@@ -481,7 +481,7 @@ ElementValue =
 
 # Originally ElementValueArrayInitializer = '{' [ElementValueList] [','] '}' - ambiguous
 
-ElementValueArrayInitializer = '{' [ElementValueList] '}' ;
+ElementValueArrayInitializer = '{' [ElementValueList] [','] '}' ;
 
 ElementValueList = ElementValue {',' ElementValue} ;
 
