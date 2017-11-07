@@ -144,8 +144,7 @@ public class GaGrammar {
         Token<GaTokenType> target = this.nextToken;
 
         nextToken = tokenizer.nextToken();
-        if (this.nextToken == null) {
-        }
+
         if (nextToken == null || nextToken.getType() != GaTokenType.EQUALS) {
             throw unexpectedTokenException();
         }

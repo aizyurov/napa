@@ -4,6 +4,7 @@ import org.symqle.epic.tokenizer.PackedDfa;
 import org.symqle.util.TSort;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -15,8 +16,8 @@ public class CompiledGrammar {
     private final String[] terminals;
     private final Map<Integer, List<CompiledRule>> rules;
     private final PackedDfa<TokenProperties> tokenizerDfa;
-    private final Map<Integer, Set<Integer>> firstSets;
-    private final Set<Integer> haveEmptyDerivation;
+    private final Map<Integer, Set<Integer>> firstSets = new HashMap<>();
+    private final Set<Integer> haveEmptyDerivation = new HashSet<>();
 
     public CompiledGrammar(final String[] nonTerminals, final String[] terminals, List<CompiledRule> rules, final PackedDfa<TokenProperties> tokenizerDfa) {
         this.nonTerminals = nonTerminals;
@@ -24,25 +25,73 @@ public class CompiledGrammar {
         this.rules = rules.stream().collect(Collectors.groupingBy(CompiledRule::getTarget));
         this.tokenizerDfa = tokenizerDfa;
         verify();
-        haveEmptyDerivation = findEmpty(rules);
-        firstSets = calculateFirstSets(rules);
+        haveEmptyDerivation.addAll(findEmpty(rules));
+        firstSets.putAll(calculateFirstSets(rules));
     }
 
     private Set<Integer> findEmpty(List<CompiledRule> rules) {
         Set<Integer> known = new HashSet<>();
-        Set<Integer> backup = new HashSet<>();
-        do {
-            backup.addAll(known);
-            for (CompiledRule rule: rules) {
-                int target = rule.getTarget();
-                if (!known.contains(target)) {
-                    if (mayBeEmpty(rule.getItems(), known)) {
-                        known.add(target);
-                    }
+        for (CompiledRule rule: rules) {
+            if (canHaveEmptyDerivation(rule)) {
+                known.add(rule.getTarget());
+            }
+
+        }
+        System.err.println("May be empty: " + known.stream().map(i -> nonTerminals[i]).collect(Collectors.toList()));
+        return Collections.unmodifiableSet(known);
+    }
+
+    private boolean canHaveEmptyDerivation(CompiledRule rule) {
+        ChartNode start = new ChartNode(rule.getTarget(), rule.getItems(), 0, null, Collections.emptyList(), this);
+        Set<ChartNode> workSet = new HashSet<>();
+        workSet.add(start);
+        int iterations = 0;
+        while (!workSet.isEmpty()) {
+            iterations += 1;
+            if (iterations > 100) {
+                System.err.println("Cannot accept rule: " + start.toString());
+                System.err.println("Working set =====");
+                for (ChartNode node: workSet) {
+                    System.err.println(node);
+                }
+                System.err.println("====");
+                throw new GrammarException("Too ambiguous or too complex to parse");
+            }
+            Set<ChartNode> workCopy = new HashSet<>(workSet);
+            workSet.clear();
+            for (ChartNode next: workCopy) {
+                switch (next.availableAction(null)) {
+                    case SHIFT:
+                        break;
+                    case REDUCE:
+                        final List<ChartNode> reduce = next.reduce(null);
+                        //                        for (ChartNode node: reduce) {
+                        //                            System.out.println("Reduced: " + node);
+                        //                        }
+                        workSet.addAll(reduce);
+                        break;
+                    case PREDICT:
+                        final List<ChartNode> predict = next.predict();
+                        //                        for (ChartNode node: predict) {
+                        //                            System.out.println("Predicted:" + node);
+                        //                        }
+                        workSet.addAll(predict);
+                        break;
+                    case EXPAND:
+                        final List<ChartNode> expand = next.expand();
+                        //                        for (ChartNode node: expand) {
+                        //                            System.out.println("Expanded:" + node);
+                        //                        }
+                        workSet.addAll(expand);
+                        break;
+                    case ACCEPT:
+                        return true;
+                    default:
+                        // NONE: do nothing
                 }
             }
-        } while (!known.equals(backup));
-        return Collections.unmodifiableSet(known);
+        }
+        return false;
     }
 
     private boolean mayBeEmpty(List<RuleItem> items, Set<Integer> knownEmpty) {
@@ -84,7 +133,7 @@ public class CompiledGrammar {
         try {
             sortedNonTerminals = tSort.sort();
         } catch (TSort.CyclicDependencyException e) {
-            final List<String> cycle = e.getCycle().stream().map(i -> nonTerminals[i]).collect(Collectors.toList());
+            final List<String> cycle = e.getCycle().stream().map(this::formatSortedItem).collect(Collectors.toList());
             throw new GrammarException("Cyclic dependency: " + cycle);
         }
         Map<Integer, Set<Integer>> firstSets = new HashMap<>();
@@ -97,6 +146,16 @@ public class CompiledGrammar {
             firstSets.put(key, firstSet);
         }
         return firstSets;
+    }
+
+    private String formatSortedItem(TSort.SortedItem s) {
+        StringBuilder builder = new StringBuilder();
+        builder.append(nonTerminals[s.getItem()]).append("(");
+        for (TSort.SortedItem dep: s.getRightNeighbors()) {
+            builder.append(nonTerminals[dep.getItem()]).append(" ");
+        }
+        builder.append(")");
+        return builder.toString();
     }
 
     private Set<Integer> findFirstTerminals(List<RuleItem> items, Map<Integer, Set<Integer>> knownFirstSets) {

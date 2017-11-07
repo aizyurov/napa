@@ -59,6 +59,23 @@ public class RegexpParsingTest extends TestCase {
         System.out.println(tokenizer.nextToken());
     }
 
+    public void testLongestMatch() throws Exception {
+        final String gt = ">";
+        final String shiftAssign = ">>=";
+        final String identifier = "[a-z]";
+        List<TokenDefinition<String>> tokenDefinitions = new ArrayList<>();
+        tokenDefinitions.add(new TokenDefinition<>(gt, gt, true));
+        tokenDefinitions.add(new TokenDefinition<>(shiftAssign, shiftAssign, true));
+        tokenDefinitions.add(new TokenDefinition<>(identifier, identifier, false));
+        PackedDfa<Set<String>> packedDfa = new Lexer<>(tokenDefinitions).compile();
+        Reader reader = new StringReader(">>a");
+        Tokenizer<Set<String>> tokenizer = new DfaTokenizer<>(packedDfa, reader);
+        System.out.println(tokenizer.nextToken());
+        System.out.println(tokenizer.nextToken());
+        System.out.println(tokenizer.nextToken());
+
+    }
+
     public void testFullLexis() throws Exception {
         final String comment = "/[*]([^*]|[*][^/])*[*]/";
         final String whitespace = "[ \\n\\r\\t]+";

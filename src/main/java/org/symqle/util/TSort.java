@@ -81,11 +81,7 @@ public class TSort {
                     }
                 }
             } else {
-                List<Integer> cycle = new ArrayList<>();
-                for (SortedItem sortedItem: unsorted) {
-                    cycle.add(sortedItem.getItem());
-                }
-                throw new CyclicDependencyException(cycle);
+                throw new CyclicDependencyException(unsorted);
             }
         }
         // done: unsorted.size()=0 && invariant(2) && invariant (0) => sorted is the desired result
@@ -96,7 +92,7 @@ public class TSort {
         return result;
     }
 
-    private class SortedItem {
+    public static class SortedItem {
         private Set<SortedItem> leftNeighbors = new HashSet<SortedItem>();
         private Set<SortedItem> rightNeighbors = new HashSet<SortedItem>();
         private final Integer item;
@@ -130,13 +126,13 @@ public class TSort {
     }
 
     public class CyclicDependencyException extends RuntimeException {
-        private final List<Integer> cycle;
+        private final List<SortedItem> cycle;
 
-        public CyclicDependencyException(List<Integer> cycle) {
+        public CyclicDependencyException(List<SortedItem> cycle) {
             this.cycle = cycle;
         }
 
-        public List<Integer> getCycle() {
+        public List<SortedItem> getCycle() {
             return cycle;
         }
     }

@@ -23,7 +23,7 @@ Identifier = "[a-zA-Z_$][a-zA-Z_$0-9]*" ;
 # 3.10 Literals
 
 Literal =
-|  IntegerLiteral
+  IntegerLiteral
 |  FloatingPointLiteral
 |  BooleanLiteral
 |  CharacterLiteral
@@ -156,15 +156,17 @@ WildcardBounds =
 
 # 6.5. Determining the Meaning of a Name
 
-PackageName = Identifier {'.' Identifier} ;
+PackageName = AmbiguousName ;
 
-PackageOrTypeName = Identifier {'.' Identifier} ;
+PackageOrTypeName = AmbiguousName ;
 
-TypeName = Identifier {'.' Identifier} ;
+TypeName = AmbiguousName ;
 
-ExpressionName = Identifier {'.' Identifier} ;
+ExpressionName = AmbiguousName ;
 
 MethodName = Identifier ;
+
+AmbiguousName = Identifier {'.' Identifier} ;
 
 # 7.3 Compilation Units
 
@@ -282,6 +284,8 @@ UnannReferenceType =
 
 UnannClassOrInterfaceType = Identifier [TypeArguments] { '.' AnnotatedIdentifierWithTypeArguments} ;
 
+UnannClassType = UnannClassOrInterfaceType ;
+
 UnannArrayType =
   UnannPrimitiveType Dims
 | UnannClassOrInterfaceType Dims ;
@@ -374,7 +378,7 @@ ExplicitConstructorInvocation =
   [TypeArguments] 'this' '(' [ArgumentList] ')' ';'
 | [TypeArguments] 'super' '(' [ArgumentList] ')' ';'
 | ExpressionName '.' [TypeArguments] 'super' '(' [ArgumentList] ')' ';'
-| Primary '.' [TypeArguments] 'super' '(' [ArgumentList] ')' ';' ;
+| BasicPrimary {PrimaryContinuation} '.' [TypeArguments] 'super' '(' [ArgumentList] ')' ';' ;
 
 # 8.9 Enum Types
 
@@ -461,10 +465,11 @@ AnnotationTypeElementModifier = Annotation | 'public' | 'abstract' ;
 DefaultValue = 'default' ElementValue ;
 
 # 9.7 Annotations
-# TODO
-# Temporary placeholder
 
-Annotation = '#Annotation#' ;
+Annotation =
+    NormalAnnotation
+|   MarkerAnnotation
+|   SingleElementAnnotation ;
 
 # 9.7.1. Normal Annotations
 
@@ -485,12 +490,20 @@ ElementValueArrayInitializer = '{' [ElementValueList] [','] '}' ;
 
 ElementValueList = ElementValue {',' ElementValue} ;
 
+# 9.7.2 Marker Annotations
+
+MarkerAnnotation = '@' TypeName ;
+
+# 9.7.3 Single-Element Annotations
+
+SingleElementAnnotation = '@' TypeName ( ElementValue ) ;
 
 # 10.6. Array Initializers
-# TODO
-# Temporary placeholder
 
-ArrayInitializer = '#ArrayInitializer#' ;
+ArrayInitializer = '{' [VariableInitializerList] [','] '}' ;
+
+VariableInitializerList = VariableInitializer {',' VariableInitializer} ;
+
 
 # 14.2  Blocks
 
@@ -498,34 +511,410 @@ Block = '{' [BlockStatements] '}' ;
 
 BlockStatements = BlockStatement {BlockStatement} ;
 
-# TODO
-# Temporary placeholder
+BlockStatement =
+    LocalVariableDeclarationStatement
+|   ClassDeclaration
+|   Statement ;
 
-BlockStatement = '#BlockStatement#' ;
+# 14.4. Local Variable Declaration Statements
+
+LocalVariableDeclarationStatement = LocalVariableDeclaration ';' ;
+
+LocalVariableDeclaration = {VariableModifier} UnannType VariableDeclaratorList ;
+
+# 14.5 Statements
+
+Statement =
+    StatementWithoutTrailingSubstatement
+|   LabeledStatement
+|   IfThenStatement
+|   IfThenElseStatement
+|   WhileStatement
+    ForStatement ;
+
+StatementNoShortIf =
+    StatementWithoutTrailingSubstatement
+|   LabeledStatementNoShortIf
+|   IfThenElseStatementNoShortIf
+|   WhileStatementNoShortIf
+|   ForStatementNoShortIf ;
+
+StatementWithoutTrailingSubstatement =
+    Block
+|   EmptyStatement
+|   ExpressionStatement
+|   AssertStatement
+|   SwitchStatement
+|   DoStatement
+|   BreakStatement
+|   ContinueStatement
+|   ReturnStatement
+|   SynchronizedStatement
+|   ThrowStatement
+|   TryStatement ;
+
+# 14.6. The Empty Statement
+
+EmptyStatement = ';' ;
+
+# 14.7. Labeled Statements
+
+LabeledStatement = Identifier ':' Statement ;
+
+LabeledStatementNoShortIf = Identifier ':' StatementNoShortIf ;
+
+# 14.8. Expression Statements
+
+ExpressionStatement = StatementExpression ';' ;
+
+StatementExpression =
+    Assignment
+|   PreIncrementExpression
+|   PreDecrementExpression
+|   PostfixExpression
+|   MethodInvocation
+|   ClassInstanceCreationExpression ;
+
+# 14.9. The if Statement
+
+IfThenStatement = 'if' '(' Expression ')' Statement ;
+
+IfThenElseStatement = 'if' '(' Expression ')' StatementNoShortIf 'else' Statement ;
+
+IfThenElseStatementNoShortIf = 'if' '(' Expression ')' StatementNoShortIf 'else' StatementNoShortIf ;
+
+# 14.10. The assert Statement
+
+AssertStatement =
+    'assert' Expression ';'
+|   'assert' Expression ':' Expression ';' ;
+
+# 14.11. The switch Statement
+
+SwitchStatement = 'switch' '(' Expression ')' SwitchBlock ;
+
+SwitchBlock = '{' {SwitchBlockStatementGroup} {SwitchLabel} '}' ;
+
+SwitchBlockStatementGroup = SwitchLabels BlockStatements ;
+
+SwitchLabels = SwitchLabel {SwitchLabel} ;
+
+SwitchLabel =
+  'case' ConstantExpression ':'
+|  'default' ':' ;
+
+EnumConstantName = Identifier ;
+
+# 14.12. The while Statement
+
+WhileStatement = 'while' '(' Expression ')' Statement ;
+
+WhileStatementNoShortIf = 'while' '(' Expression ')' StatementNoShortIf ;
+
+# 14.13. The do Statement
+
+DoStatement = 'do' Statement 'while' ( Expression ) ';' ;
+
+# 14.14. The for Statement
+
+ForStatement =
+  BasicForStatement
+|  EnhancedForStatement ;
+
+ForStatementNoShortIf =
+  BasicForStatementNoShortIf
+|  EnhancedForStatementNoShortIf ;
+
+# 14.14.1. The basic for Statement
+
+BasicForStatement = 'for' '(' [ForInit] ';' [Expression] ';' [ForUpdate] ')' Statement ;
+
+BasicForStatementNoShortIf = 'for' '(' [ForInit] ';' [Expression] ';' [ForUpdate] ')' StatementNoShortIf ;
+
+ForInit =
+  StatementExpressionList
+|  LocalVariableDeclaration ;
+
+ForUpdate = StatementExpressionList ;
+
+StatementExpressionList = StatementExpression {',' StatementExpression} ;
+
+# 14.14.2. The enhanced for statement
+
+EnhancedForStatement = 'for' '(' {VariableModifier} UnannType VariableDeclaratorId ':' Expression ')' Statement ;
+
+EnhancedForStatementNoShortIf = 'for' '(' {VariableModifier} UnannType VariableDeclaratorId ':' Expression ')' StatementNoShortIf ;
+
+# 14.15. The break Statement
+
+BreakStatement = 'break' [Identifier] ';' ;
+
+# 14.16. The continue Statement
+
+ContinueStatement = 'continue' [Identifier] ';' ;
+
+# 14.17. The return Statement
+
+ReturnStatement = 'return' [Expression] ';' ;
+
+# 14.18. The throw Statement
+
+ThrowStatement = 'throw' Expression ';' ;
+
 
 # 15.2. Forms of Expressions
-# TODO
-# Temporary placeholder
 
-Expression = '#Expression#' ;
-
-# 15.25. Conditional Operator ? :
-# TODO
-# Temporary placeholder
-
-ConditionalExpression = '#ConditionalExpression#' ;
+Expression =
+    LambdaExpression
+|   AssignmentExpression ;
 
 # 15.8. Primary Expressions
-# TODO
-# Temporary placeholder
 
-Primary = '#Primary#' ;
+Primary =
+    BasicPrimary
+|   ExtendedPrimaryNoNewArray ;
 
+
+BasicPrimary =
+  PrimaryNoNewArray
+|  ArrayCreationExpression ;
+
+ExtendedPrimaryNoNewArray =
+   FieldAccess
+|   ArrayAccess
+|  MethodInvocation
+|  MethodReference
+|  ClassInstanceCreationExpression ;
+
+PrimaryContinuation =
+    '.' Identifier # field access
+|   '[' Expression ']' # array access
+|   '.' [TypeArguments] Identifier '(' [ArgumentList] ')' ; # method invocation
+
+
+PrimaryNoNewArray =
+  Literal
+|  ClassLiteral
+|  'this'
+|  TypeName '.' 'this'
+|  '(' Expression ')' ;
+
+# 15.8.2. Class Literals
+
+ClassLiteral =
+  TypeName {'[' ']'} '.' 'class'
+|  NumericType {'[' ']'} '.' 'class'
+|  'boolean' {'[' ']'} '.' 'class'
+|  'void' '.' 'class' ;
+
+# 15.9. Class Instance Creation Expressions
+
+ClassInstanceCreationExpression =
+    UnqualifiedClassInstanceCreationExpression
+|   ExpressionName '.' UnqualifiedClassInstanceCreationExpression
+|   BasicPrimary {PrimaryContinuation} '.' UnqualifiedClassInstanceCreationExpression ;
+
+UnqualifiedClassInstanceCreationExpression =
+    'new' [TypeArguments] ClassOrInterfaceTypeToInstantiate '(' [ArgumentList] ')' [ClassBody] ;
+
+ClassOrInterfaceTypeToInstantiate =
+    {Annotation} Identifier {'.' {Annotation} Identifier} [TypeArgumentsOrDiamond] ;
+
+TypeArgumentsOrDiamond =
+    TypeArguments
+|    '<>' ;
+
+
+# 15.10.1. Array Creation Expressions
+
+ArrayCreationExpression =
+    'new' PrimitiveType DimExprs [Dims]
+|   'new' ClassOrInterfaceType DimExprs [Dims]
+|   'new' PrimitiveType Dims ArrayInitializer
+|   'new' ClassOrInterfaceType Dims ArrayInitializer ;
+
+DimExprs = DimExpr {DimExpr} ;
+
+DimExpr = {Annotation} '[' Expression ']' ;
+
+# 15.10.3. Array Access Expressions
+
+ArrayAccess =
+  ExpressionName '[' Expression ']'
+|  PrimaryNoNewArray {PrimaryContinuation} '[' Expression ']' ;
+
+
+# 15.11. Field Access Expressions
+
+FieldAccess =
+  BasicPrimary {PrimaryContinuation} '.' Identifier
+|  'super' '.' Identifier
+|  TypeName '.' 'super' '.' Identifier ;
 
 # 15.12. Method Invocation Expressions
-# TODO MethodInvocation
+
+MethodInvocation =
+    MethodName '(' [ArgumentList] ')'
+|   AmbiguousName '.' [TypeArguments] Identifier '(' [ArgumentList] ')'
+|   BasicPrimary {PrimaryContinuation} '.' [TypeArguments] Identifier '(' [ArgumentList] ')'
+|   'super' '.' [TypeArguments] Identifier '(' [ArgumentList] ')'
+|   TypeName '.' 'super' '.' [TypeArguments] Identifier '(' [ArgumentList] ')' ;
 
 ArgumentList = Expression {',' Expression} ;
+
+# 15.13. Method Reference Expressions
+
+MethodReference =
+    ArrayType '::' [TypeArguments] Identifier
+|    ExpressionNameOrClassOrInterfaceType '::' [TypeArguments] Identifier
+|   BasicPrimary {PrimaryContinuation} '::' [TypeArguments] Identifier
+|   'super' '::' [TypeArguments] Identifier
+|   TypeName '.' 'super' '::' [TypeArguments] Identifier
+|   ClassType '::' [TypeArguments] 'new'
+|   ArrayType '::' 'new' ;
+
+
+ExpressionNameOrClassOrInterfaceType = AnnotatedIdentifierWithTypeArguments { '.'  AnnotatedIdentifierWithTypeArguments } ;
+
+#  15.14. Postfix Expressions
+
+PostfixExpression = (BasicPrimary {PrimaryContinuation} | ExpressionName) {'++'|'--'} ;
+
+
+# 15.15. Unary Operators
+
+UnaryExpression =
+    PreIncrementExpression
+|   PreDecrementExpression
+|   '+' UnaryExpression
+|   '-' UnaryExpression
+|   UnaryExpressionNotPlusMinus ;
+
+PreIncrementExpression = '++' UnaryExpression ;
+PreDecrementExpression = '--' UnaryExpression ;
+
+UnaryExpressionNotPlusMinus =
+    PostfixExpression
+|   '~' UnaryExpression
+|   '!' UnaryExpression
+|   CastExpression ;
+
+# 15.16. Cast Expressions
+
+CastExpression =
+'(' PrimitiveType ')' UnaryExpression
+'(' ReferenceType {AdditionalBound} ')' UnaryExpressionNotPlusMinus
+'(' ReferenceType {AdditionalBound} ')' LambdaExpression ;
+
+
+# 15.17. Multiplicative Operators
+
+MultiplicativeExpression = UnaryExpression {MultDivide} ;
+
+MultDivide = ('*'|'/'|'%') UnaryExpression ;
+
+# 15.18. Additive Operators
+
+AdditiveExpression = MultiplicativeExpression {AddSubtract} ;
+
+AddSubtract = ('+'|'-') MultiplicativeExpression ;
+
+# 15.19. Shift Operators
+
+ShiftExpression = AdditiveExpression {Shift} ;
+
+Shift = ('<<' | '>' '>'|'>' '>' '>') AdditiveExpression ;
+
+# 15.20. Relational Operators
+
+RelationalExpression = ShiftExpression {Compare} ;
+
+Compare = ('<'|'>'|'<='|'>=') ShiftExpression | 'instanceof' ReferenceType ;
+
+#15.21. Equality Operators
+
+EqualityExpression = RelationalExpression {('=='|'!=') RelationalExpression} ;
+
+# 15.22. Bitwise and Logical Operators
+
+AndExpression = EqualityExpression {'&' EqualityExpression} ;
+
+ExclusiveOrExpression = AndExpression {'^' AndExpression} ;
+
+InclusiveOrExpression = ExclusiveOrExpression {'|' ExclusiveOrExpression} ;
+
+# 15.23. Conditional-And Operator &&
+
+ConditionalAndExpression = InclusiveOrExpression {'&&' InclusiveOrExpression} ;
+
+
+# 15.24. Conditional-Or Operator ||
+
+ConditionalOrExpression =  ConditionalAndExpression {'||' ConditionalAndExpression} ;
+
+# 15.25. Conditional Operator ? :
+
+ConditionalExpression =
+  ConditionalOrExpression
+|  ConditionalOrExpression '?' Expression ':' ConditionalExpression
+|  ConditionalOrExpression '?' Expression ':' LambdaExpression ;
+
+# 15.26. Assignment Operators
+
+AssignmentExpression =
+  ConditionalExpression
+|  Assignment ;
+
+Assignment = LeftHandSide AssignmentOperator Expression ;
+
+LeftHandSide =
+  ExpressionName
+|  FieldAccess
+|  ArrayAccess ;
+
+AssignmentOperator = '=' | '*=' | '/=' | '%=' | '+=' | '-=' | '<<=' | '>>=' | '>>>=' | '&=' | '^=' | '|=' ;
+
+# 15.27. Lambda Expressions
+# TODO
+
+LambdaExpression = '#LambdaExpression#';
+
+
+
+# 15.28. Constant Expressions
+
+ConstantExpression = Expression ;
+
+# 14.19. The synchronized Statement
+
+SynchronizedStatement = 'synchronized' '(' Expression ')' Block ;
+
+# 14.20. The try statement
+
+TryStatement =
+  'try' Block Catches
+|  'try' Block [Catches] Finally
+|  TryWithResourcesStatement ;
+
+Catches = CatchClause {CatchClause} ;
+
+CatchClause = 'catch' '(' CatchFormalParameter ')' Block ;
+
+CatchFormalParameter = {VariableModifier} CatchType VariableDeclaratorId ;
+
+CatchType = UnannClassType {'|' ClassType} ;
+
+Finally = 'finally' Block ;
+
+# 14.20.3. try-with-resources
+
+TryWithResourcesStatement = 'try' ResourceSpecification Block [Catches] [Finally] ;
+
+ResourceSpecification = '(' ResourceList [';'] ')' ;
+
+ResourceList = Resource {';' Resource} ;
+
+Resource = {VariableModifier} UnannType VariableDeclaratorId '=' Expression ;
 
 
 

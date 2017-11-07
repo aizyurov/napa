@@ -72,7 +72,8 @@ public class ChartNode {
             }
         } else {
             // always, even at the end of input
-            return enclosing != null ? Action.REDUCE : Action.ACCEPT;
+            if (enclosing != null) return Action.REDUCE;
+            else return Action.ACCEPT;
         }
     }
 
