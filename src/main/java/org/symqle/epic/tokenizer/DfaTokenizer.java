@@ -2,6 +2,9 @@ package org.symqle.epic.tokenizer;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author lvovich
@@ -13,18 +16,21 @@ public class DfaTokenizer<T> implements Tokenizer<T> {
     private int line = 1;
     private int pos = 0;
     private int state = 0;
-    private StringBuilder valueBuilder = new StringBuilder();
     private Position position = Position.REGULAR;
-    private int nextChar;
+    private List<AttributedCharacter> buffer = new ArrayList<>();
+    private List<QueuedCharacter> queue = new ArrayList<>();
 
     public DfaTokenizer(final PackedDfa<T> dfa, final Reader reader) throws IOException {
         this.dfa = dfa;
         this.reader = reader;
-        advance();
     }
 
-    private void advance() throws IOException {
-        nextChar = reader.read();
+    private AttributedCharacter readChar() throws IOException {
+        if (!buffer.isEmpty()) {
+            return buffer.remove(0);
+        }
+        int nextChar = reader.read();
+        AttributedCharacter character = new AttributedCharacter(nextChar, line, pos);
         switch (nextChar)  {
             case '\r':
                 switch(position) {
@@ -67,42 +73,105 @@ public class DfaTokenizer<T> implements Tokenizer<T> {
                 }
             }
         }
+        return character;
     }
 
     @Override
     public Token<T> nextToken() throws IOException {
-        int tokenLine = line;
-        int tokenPos = pos;
+        AttributedCharacter attributedCharacter = readChar();
         while(true) {
+            final int nextChar = attributedCharacter.getCharacter();
             if (nextChar == -1) {
                 if (state == 0) {
                     return null;
                 } else {
-                    return constructToken(tokenLine, tokenPos);
+                    return constructToken(nextChar);
                 }
             }
             char currentChar = (char) nextChar;
             int nextState = dfa.nextState(state, currentChar);
             if (nextState >= 0) {
-                valueBuilder.append(currentChar);
-                advance();
+                queue.add(new QueuedCharacter(attributedCharacter, dfa.tag(nextState)));
+                attributedCharacter = readChar();
                 state = nextState;
             } else {
-                return constructToken(tokenLine, tokenPos);
+                final Token<T> token = constructToken(nextChar);
+                buffer.add(attributedCharacter);
+                return token;
             }
         }
     }
 
-    private Token<T> constructToken(int tokenLine, int tokenPos) {
-        String value = valueBuilder.toString();
-        T tag = dfa.tag(state);
-        if (tag == null) {
+    private Token<T> constructToken(int nextChar) {
+        int acceptedIndex = -1;
+        for (int i = queue.size() - 1; i >= 0; i--) {
+            if (queue.get(i).getTag() != null) {
+                acceptedIndex = i;
+                break;
+            }
+        }
+        if (acceptedIndex < 0) {
+            if (nextChar == -1) {
+                throw new IllegalStateException("Unexpected EOF at " + line + ":" + pos);
+            }
             String wrong = Character.isISOControl(nextChar) ? "(" + nextChar + ")" : "'" + (char)nextChar + "'" + "(" + nextChar + ")";
             throw new IllegalStateException("Unexpected character " + wrong + " at " + line + ":" + pos);
         }
-        valueBuilder.setLength(0);
+        StringBuilder stringBuilder = new StringBuilder(acceptedIndex + 1);
+        final T tag = queue.get(acceptedIndex).getTag();
+        final int tokenLine = queue.get(0).getCharacter().getLine();
+        final int tokenPos = queue.get(0).getCharacter().getPos();
+        for (int i =0; i<= acceptedIndex; i++) {
+            stringBuilder.append((char) queue.get(0).getCharacter().getCharacter());
+            queue.remove(0);
+        }
         state = 0;
-        return new Token<>(tag, tokenLine, tokenPos, value);
+        // put back to buffer remaining characters if any
+        buffer.addAll(queue.stream().map(QueuedCharacter::getCharacter).collect(Collectors.toList()));
+        queue.clear();
+        return new Token<>(tag, tokenLine, tokenPos, stringBuilder.toString());
+    }
+
+    private class AttributedCharacter {
+        final int character;
+        final int line;
+        final int pos;
+
+        private AttributedCharacter(int character, int line, int pos) {
+            this.character = character;
+            this.line = line;
+            this.pos = pos;
+        }
+
+        public int getCharacter() {
+            return character;
+        }
+
+        public int getLine() {
+            return line;
+        }
+
+        public int getPos() {
+            return pos;
+        }
+    }
+
+    private class QueuedCharacter {
+        private final AttributedCharacter character;
+        private final T tag;
+
+        private QueuedCharacter(AttributedCharacter character, T tag) {
+            this.character = character;
+            this.tag = tag;
+        }
+
+        public AttributedCharacter getCharacter() {
+            return character;
+        }
+
+        public T getTag() {
+            return tag;
+        }
     }
 
 }

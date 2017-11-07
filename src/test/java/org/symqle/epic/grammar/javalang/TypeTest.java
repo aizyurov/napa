@@ -33,13 +33,15 @@ public class TypeTest extends TestCase {
     }
 
     public void testAnnotatedPrimitive() throws Exception {
-        String source = "#Annotation# int";
+        String source = "@Transient int";
         List<SyntaxTree> forest = g.parse("PrimitiveType", new StringReader(source), 100);
         Assert.assertEquals(1, forest.size());
         SyntaxTree tree = forest.iterator().next();
         Assert.assertEquals("PrimitiveType", tree.getName());
         Assert.assertEquals(2, tree.getChildren().size());
-        Assert.assertEquals("#Annotation#", tree.getChildren().get(0).getValue());
+        Assert.assertEquals("@", tree.getChildren().get(0).getValue());
+        Assert.assertEquals("@", tree.getChildren().get(0).getChildren().get(0).getChildren().get(0).getValue());
+        Assert.assertEquals("Transient", tree.getChildren().get(0).getChildren().get(0).getChildren().get(1).getValue());
         Assert.assertEquals("int", tree.getChildren().get(1).getValue());
         Assert.assertEquals("NumericType", tree.getChildren().get(1).getName());
     }
@@ -53,12 +55,12 @@ public class TypeTest extends TestCase {
     }
 
     public void testParameterizedType() throws Exception {
-//        runTest("List<String>", "ClassOrInterfaceType");
+        runTest("List<String>", "ClassOrInterfaceType");
        runTest("Map<String, Set<Integer>>", "ClassOrInterfaceType");
-//
-//        runTest("List<String>", "Type");
-//        runTest("List<? extends Collection<String>>", "Type");
-//        runTest("List<? super Collection<String>>", "Type");
+
+        runTest("List<String>", "Type");
+        runTest("List<? extends Collection<String>>", "Type");
+        runTest("List<? super Collection<String>>", "Type");
     }
 
     public void testTypeArguments() throws Exception {

@@ -46,7 +46,7 @@ public class ConstructorDeclarationTest extends TestCase {
     }
 
     public void testExplicitConstructorInvocation() throws Exception {
-        SyntaxTree tree = parse("private String(int i, Set<String> s) {this(#Expression#);}");
+        SyntaxTree tree = parse("private String(int i, Set<String> s) {this(i);}");
         Assert.assertEquals(Collections.singletonList("private"),
                 tree.find("ConstructorModifier").stream().map(SyntaxTree::getValue).collect(Collectors.toList()));
         Assert.assertEquals(Collections.singletonList("String"),

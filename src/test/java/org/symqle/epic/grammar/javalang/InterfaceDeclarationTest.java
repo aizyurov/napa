@@ -23,7 +23,7 @@ public class InterfaceDeclarationTest extends TestCase {
     }
 
     public void testAll() throws Exception {
-        SyntaxTree tree = parse("public interface Sample extends Foo,Bar { String ABC=#Expression#; public void a(); default public void def(int i) {}}");
+        SyntaxTree tree = parse("public interface Sample extends Foo,Bar { String ABC=\"abc\"; public void a(); default public void def(int i) {}}");
         Assert.assertEquals(Collections.singletonList("public"), tree.find("InterfaceModifier").stream().map(SyntaxTree::getValue).collect(Collectors.toList()));
         Assert.assertEquals(Collections.singletonList("Sample"), tree.find("Identifier").stream().map(SyntaxTree::getValue).collect(Collectors.toList()));
         Assert.assertEquals(Arrays.asList(" Foo","Bar"), tree.find("ExtendsInterfaces.InterfaceTypeList.InterfaceType").stream().map(SyntaxTree::getSource).collect(Collectors.toList()));

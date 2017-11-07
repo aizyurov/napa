@@ -34,14 +34,14 @@ public class FieldDeclarationTest extends TestCase {
     }
 
     public void testInitialized() throws Exception {
-        SyntaxTree tree = parse("private static final String s = #Expression#;");
+        SyntaxTree tree = parse("private static final String s = \"some text\";");
         Assert.assertEquals(Arrays.asList("private", "static", "final"),
                 tree.find("FieldModifier").stream().map(SyntaxTree::getValue).collect(Collectors.toList()));
         Assert.assertEquals(Collections.singletonList("String"),
                 tree.find("UnannType.UnannReferenceType.UnannClassOrInterfaceType.Identifier").stream().map(SyntaxTree::getValue).collect(Collectors.toList()));
         Assert.assertEquals(Collections.singletonList("s"),
                 tree.find("VariableDeclaratorList.VariableDeclarator.VariableDeclaratorId.Identifier").stream().map(SyntaxTree::getValue).collect(Collectors.toList()));
-        Assert.assertEquals(Collections.singletonList("#Expression#"),
+        Assert.assertEquals(Collections.singletonList("\"some text\""),
                 tree.find("VariableDeclaratorList.VariableDeclarator.VariableInitializer.Expression").stream().map(SyntaxTree::getValue).collect(Collectors.toList()));
     }
 

@@ -85,10 +85,10 @@ public class Parser {
                             // NONE: do nothing
                     }
                 }
-                System.out.println("Work set size: " + workSet.size());
-                for (ChartNode node: workSet) {
-                    System.out.println(node);
-                }
+//                System.out.println("Work set size: " + workSet.size());
+//                for (ChartNode node: workSet) {
+//                    System.out.println(node);
+//                }
             }
             if (nextToken == null) {
                 System.out.println("Max complexity: " + maxComplexity);
@@ -96,10 +96,10 @@ public class Parser {
                 return syntaxTreeCandidates.stream().map(s -> s.toSyntaxTreeNode(null, grammar)).collect(Collectors.toList());
             }
             maxComplexity = Math.max(iterations, maxComplexity);
-            System.out.println("=========== Shifting: " + nextToken.getText());
-            for (ChartNode node: shiftCandidates) {
-                System.out.println(node);
-            }
+//            System.out.println("=========== Shifting: " + nextToken.getText());
+//            for (ChartNode node: shiftCandidates) {
+//                System.out.println(node);
+//            }
 
             if (shiftCandidates.isEmpty()) {
                 // no node can shift

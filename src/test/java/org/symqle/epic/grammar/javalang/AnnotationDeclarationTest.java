@@ -22,7 +22,7 @@ public class AnnotationDeclarationTest extends TestCase {
     }
 
     public void testAll() throws Exception {
-        SyntaxTree tree = parse("public @interface Sample { String ABC=#Expression#; public String value();}");
+        SyntaxTree tree = parse("public @interface Sample { String ABC=\"abc\"; public String value();}");
         Assert.assertEquals(Collections.singletonList("public"), tree.find("InterfaceModifier").stream().map(SyntaxTree::getValue).collect(Collectors.toList()));
         Assert.assertEquals(Collections.singletonList("Sample"), tree.find("Identifier").stream().map(SyntaxTree::getValue).collect(Collectors.toList()));
         Assert.assertEquals(Collections.singletonList("ABC"), tree.find("AnnotationTypeBody.AnnotationTypeMemberDeclaration.ConstantDeclaration.VariableDeclaratorList.VariableDeclarator.VariableDeclaratorId").stream().map(SyntaxTree::getValue).collect(Collectors.toList()));

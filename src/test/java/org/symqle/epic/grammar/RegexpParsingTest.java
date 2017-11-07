@@ -68,8 +68,9 @@ public class RegexpParsingTest extends TestCase {
         tokenDefinitions.add(new TokenDefinition<>(shiftAssign, shiftAssign, true));
         tokenDefinitions.add(new TokenDefinition<>(identifier, identifier, false));
         PackedDfa<Set<String>> packedDfa = new Lexer<>(tokenDefinitions).compile();
-        Reader reader = new StringReader(">>a");
+        Reader reader = new StringReader(">>>=a");
         Tokenizer<Set<String>> tokenizer = new DfaTokenizer<>(packedDfa, reader);
+        System.out.println(tokenizer.nextToken());
         System.out.println(tokenizer.nextToken());
         System.out.println(tokenizer.nextToken());
         System.out.println(tokenizer.nextToken());

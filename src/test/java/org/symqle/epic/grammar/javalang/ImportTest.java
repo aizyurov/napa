@@ -33,7 +33,8 @@ public class ImportTest extends TestCase {
         Assert.assertEquals("SingleTypeImportDeclaration", singleStatic.getName());
         final SyntaxTree typeName = singleStatic.getChildren().get(1);
         Assert.assertEquals("TypeName", typeName.getName());
-        final List<String> typeParts = typeName.getChildren().stream().filter(n -> n.getName().equals("Identifier")).map(SyntaxTree::getValue).collect(Collectors.toList());
+        final SyntaxTree ambiguousName = typeName.getChildren().get(0);
+        final List<String> typeParts = ambiguousName.getChildren().stream().filter(n -> n.getName().equals("Identifier")).map(SyntaxTree::getValue).collect(Collectors.toList());
         Assert.assertEquals(Arrays.asList("java", "util", "stream", "Collectors"), typeParts);
     }
 
@@ -50,7 +51,8 @@ public class ImportTest extends TestCase {
         Assert.assertEquals("TypeImportOnDemandDeclaration", onDemand.getName());
         final SyntaxTree typeName = onDemand.getChildren().get(1);
         Assert.assertEquals("PackageOrTypeName", typeName.getName());
-        final List<String> typeParts = typeName.getChildren().stream().filter(n -> n.getName().equals("Identifier")).map(SyntaxTree::getValue).collect(Collectors.toList());
+        final SyntaxTree ambiguousName = typeName.getChildren().get(0);
+        final List<String> typeParts = ambiguousName.getChildren().stream().filter(n -> n.getName().equals("Identifier")).map(SyntaxTree::getValue).collect(Collectors.toList());
         Assert.assertEquals(Arrays.asList("java", "util", "stream"), typeParts);
     }
 
@@ -65,7 +67,8 @@ public class ImportTest extends TestCase {
         Assert.assertEquals("SingleStaticImportDeclaration", singleStatic.getName());
         final SyntaxTree typeName = singleStatic.getChildren().get(2);
         Assert.assertEquals("TypeName", typeName.getName());
-        final List<String> typeParts = typeName.getChildren().stream().filter(n -> n.getName().equals("Identifier")).map(SyntaxTree::getValue).collect(Collectors.toList());
+        final SyntaxTree ambiguousName = typeName.getChildren().get(0);
+        final List<String> typeParts = ambiguousName.getChildren().stream().filter(n -> n.getName().equals("Identifier")).map(SyntaxTree::getValue).collect(Collectors.toList());
         Assert.assertEquals(Arrays.asList("java", "util", "stream", "Collectors"), typeParts);
         final SyntaxTree identifier = singleStatic.getChildren().get(4);
         Assert.assertEquals("toMap", identifier.getValue());
@@ -83,7 +86,8 @@ public class ImportTest extends TestCase {
         Assert.assertEquals("StaticImportOnDemandDeclaration", staticImport.getName());
         final SyntaxTree typeName = staticImport.getChildren().get(2);
         Assert.assertEquals("TypeName", typeName.getName());
-        final List<String> typeParts = typeName.getChildren().stream().filter(n -> n.getName().equals("Identifier")).map(SyntaxTree::getValue).collect(Collectors.toList());
+        final SyntaxTree ambiguousName = typeName.getChildren().get(0);
+        final List<String> typeParts = ambiguousName.getChildren().stream().filter(n -> n.getName().equals("Identifier")).map(SyntaxTree::getValue).collect(Collectors.toList());
         Assert.assertEquals(Arrays.asList("java", "util", "stream", "Collectors"), typeParts);
         final SyntaxTree asterisk = staticImport.getChildren().get(4);
         Assert.assertEquals("*", asterisk.getValue());

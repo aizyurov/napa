@@ -42,7 +42,7 @@ public class NormalClassDeclarationTest extends TestCase {
     }
 
     public void testAll() throws Exception {
-        SyntaxTree tree = parse("public class NormalClassDeclarationTest {{#BlockStatement#} static {#BlockStatement#} private final int i; public void a() {} public MyClass(int i) {}}");
+        SyntaxTree tree = parse("public class NormalClassDeclarationTest {{a();} static {assert true;} private final int i; public void a() {} public MyClass(int i) {}}");
         Assert.assertEquals(1, tree.find("ClassBody.ClassBodyDeclaration.InstanceInitializer").size());
         Assert.assertEquals(1, tree.find("ClassBody.ClassBodyDeclaration.StaticInitializer").size());
         Assert.assertEquals(1, tree.find("ClassBody.ClassBodyDeclaration.ClassMemberDeclaration.FieldDeclaration").size());
