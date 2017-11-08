@@ -1,5 +1,6 @@
 package org.symqle.epic.gparser;
 
+import org.symqle.epic.tokenizer.AsyncTokenizer;
 import org.symqle.epic.tokenizer.DfaTokenizer;
 import org.symqle.epic.tokenizer.Token;
 import org.symqle.epic.tokenizer.Tokenizer;
@@ -22,8 +23,8 @@ public class Parser {
     }
 
     public List<SyntaxTree> parse(final String target, final Reader reader, final int complexityLimit) throws IOException {
-//        this.tokenizer = new AsyncTokenizer<>(new DfaTokenizer<>(grammar.getTokenizerDfa(), reader));
-        this.tokenizer = new DfaTokenizer<>(grammar.getTokenizerDfa(), reader);
+        this.tokenizer = new AsyncTokenizer<>(new DfaTokenizer<>(grammar.getTokenizerDfa(), reader));
+//        this.tokenizer = new DfaTokenizer<>(grammar.getTokenizerDfa(), reader);
         final long startTime = System.currentTimeMillis();
         int targetTag = grammar.findNonTerminalByName(target).orElseThrow(() -> new GrammarException("NonTerminal not found: " + target));
         workSet.clear();
@@ -41,7 +42,7 @@ public class Parser {
                 nextToken = tokenizer.nextToken();
             }
             int iterations = 0;
-            System.out.println("Workset size: " + workSet.size());
+//            System.out.println("Workset size: " + workSet.size());
             while (!workSet.isEmpty()) {
                 iterations += 1;
                 if (iterations == complexityLimit) {
@@ -66,14 +67,14 @@ public class Parser {
 //                    System.out.println(node);
 //                }
             }
-            System.out.println("Iterations: " + iterations);
+//            System.out.println("Iterations: " + iterations);
             if (nextToken == null) {
                 System.out.println("Max complexity: " + maxComplexity);
                 System.out.println("Parse time: " + (System.currentTimeMillis() - startTime));
                 return syntaxTreeCandidates.stream().map(s -> s.toSyntaxTreeNode(null, grammar)).collect(Collectors.toList());
             }
             maxComplexity = Math.max(iterations, maxComplexity);
-            System.out.println("=========== Shifting: " + nextToken.getText() + " at " + nextToken.getLine() + ":" + nextToken.getPos());
+//            System.out.println("=========== Shifting: " + nextToken.getText() + " at " + nextToken.getLine() + ":" + nextToken.getPos());
 //            for (ChartNode node: shiftCandidates) {
 //                System.out.println(node);
 //            }

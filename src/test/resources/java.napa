@@ -696,7 +696,12 @@ PrimaryNoNewArray =
 |  ClassLiteral
 |  'this'
 |  TypeName '.' 'this'
+|   SimpleMethodInvocation
 |  '(' Expression ')' ;
+
+SimpleMethodInvocation =
+    MethodName '(' [ArgumentList] ')' ;
+
 
 # 15.8.2. Class Literals
 
@@ -753,8 +758,7 @@ FieldAccess =
 # 15.12. Method Invocation Expressions
 
 MethodInvocation =
-    MethodName '(' [ArgumentList] ')'
-|   AmbiguousName '.' [TypeArguments] Identifier '(' [ArgumentList] ')'
+   AmbiguousName '.' [TypeArguments] Identifier '(' [ArgumentList] ')'
 |   BasicPrimary {PrimaryContinuation} '.' [TypeArguments] Identifier '(' [ArgumentList] ')'
 |   'super' '.' [TypeArguments] Identifier '(' [ArgumentList] ')'
 |   TypeName '.' 'super' '.' [TypeArguments] Identifier '(' [ArgumentList] ')' ;
