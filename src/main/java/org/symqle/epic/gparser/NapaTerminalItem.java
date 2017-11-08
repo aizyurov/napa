@@ -54,5 +54,20 @@ public class NapaTerminalItem implements NapaRuleItem {
         return Collections.emptyList();
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
 
+        NapaTerminalItem that = (NapaTerminalItem) o;
+
+        if (value != that.value) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return value;
+    }
 }

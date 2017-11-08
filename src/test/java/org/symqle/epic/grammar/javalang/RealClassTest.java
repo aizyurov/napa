@@ -19,7 +19,7 @@ public class RealClassTest extends TestCase {
     }
 
     public void testAll() throws Exception {
-        List<SyntaxTree> forest = g.parse("CompilationUnit", new InputStreamReader(getClass().getClassLoader().getResourceAsStream("sample.txt")), 100);
+        List<SyntaxTree> forest = g.parse("CompilationUnit", new InputStreamReader(getClass().getClassLoader().getResourceAsStream("sample.txt")), 1000000);
         Assert.assertEquals(1, forest.size());
     }
 

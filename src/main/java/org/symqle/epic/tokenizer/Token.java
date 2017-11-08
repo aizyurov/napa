@@ -60,4 +60,26 @@ public class Token<T> {
         }
         return builder.toString();
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Token token = (Token) o;
+
+        if (line != token.line) return false;
+        if (pos != token.pos) return false;
+        if (!text.equals(token.text)) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = line;
+        result = 31 * result + pos;
+        result = 31 * result + text.hashCode();
+        return result;
+    }
 }

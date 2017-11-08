@@ -50,4 +50,5 @@ public class NapaChoiceItem extends AbstractNapaCompoundItem {
     public String toString() {
         return "(" + optionsToString() + ")";
     }
+
 }

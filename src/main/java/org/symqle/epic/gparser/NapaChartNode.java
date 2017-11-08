@@ -22,16 +22,15 @@ public class NapaChartNode {
         this.enclosing = new HashSet<>(enclosing);
     }
 
-    public Set<NapaChartNode> merge(NapaChartNode other) {
-        if (ruleInProgress.equals(other.ruleInProgress)) {
+    public NapaChartNode merge(NapaChartNode other) {
+        if (this == other || other == null) {
+            return this;
+        } else if (ruleInProgress.equals(other.ruleInProgress)) {
             Set<NapaChartNode> mergedEnclosing = new HashSet<>(enclosing);
             mergedEnclosing.addAll(other.enclosing);
-            return Collections.singleton(new NapaChartNode(ruleInProgress, mergedEnclosing));
+            return new NapaChartNode(ruleInProgress, mergedEnclosing);
         } else {
-            HashSet<NapaChartNode> result = new HashSet<>();
-            result.add(this);
-            result.add(other);
-            return result;
+            throw new IllegalArgumentException("Key mismatch");
         }
     }
 

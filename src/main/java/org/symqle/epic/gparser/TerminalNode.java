@@ -38,4 +38,24 @@ public class TerminalNode implements RawSyntaxNode {
     public int getPos() {
         return token.getPos();
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        TerminalNode that = (TerminalNode) o;
+
+        if (tag != that.tag) return false;
+        if (!token.equals(that.token)) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = tag;
+        result = 31 * result + token.hashCode();
+        return result;
+    }
 }

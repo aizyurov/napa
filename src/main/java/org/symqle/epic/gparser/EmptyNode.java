@@ -31,4 +31,26 @@ public class EmptyNode implements RawSyntaxNode {
     public int getPos() {
         return pos;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        EmptyNode emptyNode = (EmptyNode) o;
+
+        if (line != emptyNode.line) return false;
+        if (pos != emptyNode.pos) return false;
+        if (tag != emptyNode.tag) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = tag;
+        result = 31 * result + line;
+        result = 31 * result + pos;
+        return result;
+    }
 }

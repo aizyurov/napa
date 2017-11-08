@@ -82,4 +82,21 @@ public abstract class AbstractNapaCompoundItem implements NapaRuleItem {
         }
         return builder.toString();
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        AbstractNapaCompoundItem that = (AbstractNapaCompoundItem) o;
+
+        if (!options.equals(that.options)) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return options.hashCode();
+    }
 }

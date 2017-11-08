@@ -30,6 +30,6 @@ public class NapaZeroOrOneItem extends AbstractNapaCompoundItem {
 
     @Override
     public String toString() {
-        return "(" + optionsToString() + ")";
+        return "[" + optionsToString() + "]";
     }
 }

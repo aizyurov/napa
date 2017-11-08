@@ -31,7 +31,7 @@ public class Parser {
         syntaxTreeCandidates.clear();
         RuleInProgress ruleInProgress = new RuleInProgress(-1, Collections.singletonList(new NapaNonTerminalItem(targetTag, grammar)), 0, Collections.emptyList(), grammar);
         final NapaChartNode startNode = new NapaChartNode(ruleInProgress, Collections.emptySet());
-        workSet.add(startNode);
+        workSet.put(startNode.getRuleInProgress(), startNode);
         int maxComplexity = 0;
         List<Token<TokenProperties>> preface = new ArrayList<>();
         while (true) {
@@ -44,49 +44,29 @@ public class Parser {
             System.out.println("Workset size: " + workSet.size());
             while (!workSet.isEmpty()) {
                 iterations += 1;
-                if (iterations > complexityLimit) {
-                    throw new GrammarException("Too ambiguous or too complex to parse");
+                if (iterations == complexityLimit) {
+                    System.out.println("Complexity limit reached");
+//                    throw new GrammarException("Too ambiguous or too complex to parse");
                 }
                 RuleInProgress nextRule = workSet.keySet().iterator().next();
                 NapaChartNode nextNode = workSet.get(nextRule);
                 ProcessingResult result = nextNode.process(nextToken);
-                List<NapaChartNode> same = new ArrayList<>();
                 workSet.remove(nextRule);
                 for (NapaChartNode node: result.getNoShift()) {
-                    if (node.getRuleInProgress().equals(nextRule)) {
-                        same.add(node);
-                    } else {
-                        NapaChartNode previous = workSet.get(node.getRuleInProgress());
-                        if (previous == null) {
-                            workSet.put(node.getRuleInProgress(), node);
-                        } else {
-                            for (NapaChartNode merged: node.merge(previous)) {
-                                workSet.put(merged.getRuleInProgress(), merged);
-                            }
-                        }
-                    }
-                }
-                if (!same.isEmpty()) {
-                    throw new UnsupportedOperationException("Not implemented");
+                    workSet.put(node.getRuleInProgress(),
+                            node.merge(workSet.get(node.getRuleInProgress())));
                 }
 
                 for (NapaChartNode node: result.getShiftCandidates()) {
-                    NapaChartNode previous = shiftCandidates.get(node.getRuleInProgress());
-                    if (previous != null) {
-                        for (NapaChartNode merged: node.merge(previous)) {
-                            shiftCandidates.put(merged.getRuleInProgress(), merged);
-                        }
-                    } else {
-                        shiftCandidates.put(node.getRuleInProgress(), node);
-                    }
+                    shiftCandidates.put(node.getRuleInProgress(), node.merge(shiftCandidates.get(node.getRuleInProgress())));
                 }
 
                 syntaxTreeCandidates.addAll(result.getAccepted());
-//                System.out.println("Work set size: " + workSet.size());
 //                for (ChartNode node: workSet) {
 //                    System.out.println(node);
 //                }
             }
+            System.out.println("Iterations: " + iterations);
             if (nextToken == null) {
                 System.out.println("Max complexity: " + maxComplexity);
                 System.out.println("Parse time: " + (System.currentTimeMillis() - startTime));
@@ -105,7 +85,9 @@ public class Parser {
             ArrayList<Token<TokenProperties>> prefaceCopy = new ArrayList<>(preface);
             for (NapaChartNode candidate : shiftCandidates.values()) {
                 List<NapaChartNode> shifted = candidate.shift(nextToken, prefaceCopy);
-                throw new UnsupportedOperationException("Not implemented");
+                for (NapaChartNode node: shifted) {
+                    workSet.put(node.getRuleInProgress(), node.merge(workSet.get(node.getRuleInProgress())));
+                }
             }
             if (workSet.isEmpty()) {
                 // no node accepted the token
@@ -142,7 +124,7 @@ public class Parser {
 
     private final Map<RuleInProgress, NapaChartNode> workSet = new HashMap<>();
 
-    private final Map<RuleInProgress, NapaChartNode> shiftCandidates = new HashMap<>()
+    private final Map<RuleInProgress, NapaChartNode> shiftCandidates = new HashMap<>();
 
     private final Set<RawSyntaxNode> syntaxTreeCandidates = new HashSet<>();
 

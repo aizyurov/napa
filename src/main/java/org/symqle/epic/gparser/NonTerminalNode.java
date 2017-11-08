@@ -33,4 +33,24 @@ public class NonTerminalNode implements RawSyntaxNode {
     public int getPos() {
         return children.get(0).getPos();
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        NonTerminalNode that = (NonTerminalNode) o;
+
+        if (tag != that.tag) return false;
+        if (!children.equals(that.children)) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = tag;
+        result = 31 * result + children.hashCode();
+        return result;
+    }
 }
