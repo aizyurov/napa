@@ -530,7 +530,7 @@ Statement =
 |   IfThenStatement
 |   IfThenElseStatement
 |   WhileStatement
-    ForStatement ;
+|    ForStatement ;
 
 StatementNoShortIf =
     StatementWithoutTrailingSubstatement
@@ -778,7 +778,7 @@ ExpressionNameOrClassOrInterfaceType = AnnotatedIdentifierWithTypeArguments { '.
 
 #  15.14. Postfix Expressions
 
-PostfixExpression = (BasicPrimary {PrimaryContinuation} | ExpressionName) {'++'|'--'} ;
+PostfixExpression = (Primary | ExpressionName) {'++'|'--'} ;
 
 
 # 15.15. Unary Operators

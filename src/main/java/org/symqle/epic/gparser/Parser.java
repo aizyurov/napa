@@ -45,6 +45,7 @@ public class Parser {
                 nextToken = tokenizer.nextToken();
             }
             int iterations = 0;
+            System.out.println("Workset size: " + workSet.size());
             while (!workSet.isEmpty()) {
                 iterations += 1;
                 if (iterations > complexityLimit) {
@@ -69,7 +70,7 @@ public class Parser {
                 return syntaxTreeCandidates.stream().map(s -> s.toSyntaxTreeNode(null, grammar)).collect(Collectors.toList());
             }
             maxComplexity = Math.max(iterations, maxComplexity);
-//            System.out.println("=========== Shifting: " + nextToken.getText());
+            System.out.println("=========== Shifting: " + nextToken.getText() + " at " + nextToken.getLine() + ":" + nextToken.getPos());
 //            for (ChartNode node: shiftCandidates) {
 //                System.out.println(node);
 //            }
