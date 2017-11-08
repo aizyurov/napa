@@ -1,6 +1,7 @@
 package org.symqle.epic.gparser;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author lvovich
@@ -21,5 +22,9 @@ public class CompiledRule {
 
     public List<RuleItem> getItems() {
         return items;
+    }
+
+    public NapaRule toNapaRule(CompiledGrammar grammar) {
+        return new NapaRule(target, items.stream().map(x -> x.toNapaRuleItem(grammar)).collect(Collectors.toList()));
     }
 }

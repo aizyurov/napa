@@ -14,4 +14,6 @@ public interface RuleItem {
 
 
     String toString(CompiledGrammar grammar);
+
+    NapaRuleItem toNapaRuleItem(CompiledGrammar grammar);
 }

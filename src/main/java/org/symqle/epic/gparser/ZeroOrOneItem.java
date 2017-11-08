@@ -3,6 +3,7 @@ package org.symqle.epic.gparser;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author lvovich
@@ -50,5 +51,15 @@ public class ZeroOrOneItem implements RuleItem {
         builder.append("]");
         return builder.toString();
     }
+
+    @Override
+    public NapaRuleItem toNapaRuleItem(final CompiledGrammar grammar) {
+        List<List<NapaRuleItem>> napaOptions = new ArrayList<>();
+        for (List<RuleItem> items: options) {
+            napaOptions.add(items.stream().map(x -> x.toNapaRuleItem(grammar)).collect(Collectors.toList()));
+        }
+        return new NapaZeroOrOneItem(napaOptions);
+    }
+
 
 }

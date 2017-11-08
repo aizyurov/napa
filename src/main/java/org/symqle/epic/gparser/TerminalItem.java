@@ -30,4 +30,9 @@ public class TerminalItem implements RuleItem {
     public String toString(CompiledGrammar grammar) {
         return grammar.getTerminalName(value);
     }
+
+    @Override
+    public NapaRuleItem toNapaRuleItem(final CompiledGrammar grammar) {
+        return new NapaTerminalItem(value, grammar);
+    }
 }

@@ -3,8 +3,13 @@ package org.symqle.epic.gparser;
 import org.symqle.epic.tokenizer.PackedDfa;
 import org.symqle.util.TSort;
 
-import java.util.*;
-import java.util.function.Function;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -14,6 +19,7 @@ public class CompiledGrammar {
 
     private final String[] nonTerminals;
     private final String[] terminals;
+    private final Map<Integer, List<NapaRule>> napaRules;
     private final Map<Integer, List<CompiledRule>> rules;
     private final PackedDfa<TokenProperties> tokenizerDfa;
     private final Map<Integer, Set<Integer>> firstSets = new HashMap<>();
@@ -22,11 +28,12 @@ public class CompiledGrammar {
     public CompiledGrammar(final String[] nonTerminals, final String[] terminals, List<CompiledRule> rules, final PackedDfa<TokenProperties> tokenizerDfa) {
         this.nonTerminals = nonTerminals;
         this.terminals = terminals;
-        this.rules = rules.stream().collect(Collectors.groupingBy(CompiledRule::getTarget));
         this.tokenizerDfa = tokenizerDfa;
-        verify();
         haveEmptyDerivation.addAll(findEmpty(rules));
         firstSets.putAll(calculateFirstSets(rules));
+        this.napaRules = rules.stream().map(x -> x.toNapaRule(this)).collect(Collectors.groupingBy(NapaRule::getTarget));
+        this.rules = rules.stream().collect(Collectors.groupingBy(CompiledRule::getTarget));
+        verify();
     }
 
     private Set<Integer> findEmpty(List<CompiledRule> rules) {
@@ -259,5 +266,9 @@ public class CompiledGrammar {
 
     public boolean hasEmptyDerivation(int tag) {
         return haveEmptyDerivation.contains(tag);
+    }
+
+    public List<NapaRule> getNapaRules(int target) {
+        return napaRules.get(target);
     }
 }

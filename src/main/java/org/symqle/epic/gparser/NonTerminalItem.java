@@ -32,4 +32,8 @@ public class NonTerminalItem implements RuleItem {
         return grammar.getNonTerminalName(value);
     }
 
+    @Override
+    public NapaRuleItem toNapaRuleItem(final CompiledGrammar grammar) {
+        return new NapaNonTerminalItem(value, grammar);
+    }
 }

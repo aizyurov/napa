@@ -34,7 +34,7 @@ public class Parser {
         workSet.clear();
         shiftCandidates.clear();
         syntaxTreeCandidates.clear();
-        final ChartNode startNode = new ChartNode(-1, Collections.singletonList(new NonTerminalItem(targetTag)), 0, null, Collections.emptyList(), grammar);
+        final NapaChartNode startNode = new NapaChartNode(-1, Collections.singletonList(new NapaNonTerminalItem(targetTag, grammar)), 0, null, Collections.emptyList(), grammar);
         workSet.add(startNode);
         int maxComplexity = 0;
         List<Token<TokenProperties>> preface = new ArrayList<>();
@@ -50,40 +50,13 @@ public class Parser {
                 if (iterations > complexityLimit) {
                     throw new GrammarException("Too ambiguous or too complex to parse");
                 }
-                Set<ChartNode> workCopy = new HashSet<>(workSet);
+                Set<NapaChartNode> workCopy = new HashSet<>(workSet);
                 workSet.clear();
-                for (ChartNode next: workCopy) {
-                    switch (next.availableAction(nextToken)) {
-                        case SHIFT:
-                            shiftCandidates.add(next);
-                            break;
-                        case REDUCE:
-                            final List<ChartNode> reduce = next.reduce(nextToken);
-    //                        for (ChartNode node: reduce) {
-    //                            System.out.println("Reduced: " + node);
-    //                        }
-                            workSet.addAll(reduce);
-                            break;
-                        case PREDICT:
-                            final List<ChartNode> predict = next.predict();
-    //                        for (ChartNode node: predict) {
-    //                            System.out.println("Predicted:" + node);
-    //                        }
-                            workSet.addAll(predict);
-                            break;
-                        case EXPAND:
-                            final List<ChartNode> expand = next.expand();
-    //                        for (ChartNode node: expand) {
-    //                            System.out.println("Expanded:" + node);
-    //                        }
-                            workSet.addAll(expand);
-                            break;
-                        case ACCEPT:
-                            syntaxTreeCandidates.add(next.accept());
-                            break;
-                        default:
-                            // NONE: do nothing
-                    }
+                for (NapaChartNode next: workCopy) {
+                    ProcessingResult result = next.process(nextToken);
+                    workSet.addAll(result.getNoShift());
+                    shiftCandidates.addAll(result.getShiftCandidates());
+                    syntaxTreeCandidates.addAll(result.getAccepted());
                 }
 //                System.out.println("Work set size: " + workSet.size());
 //                for (ChartNode node: workSet) {
@@ -106,7 +79,7 @@ public class Parser {
                 throw new GrammarException("Unrecognized input " + nextToken.getText() + " at " + nextToken.getLine() + ":" + nextToken.getPos());
             }
             ArrayList<Token<TokenProperties>> prefaceCopy = new ArrayList<>(preface);
-            for (ChartNode candidate : shiftCandidates) {
+            for (NapaChartNode candidate : shiftCandidates) {
                 workSet.addAll(candidate.shift(nextToken, prefaceCopy));
             }
             if (workSet.isEmpty()) {
@@ -142,9 +115,9 @@ public class Parser {
 
 
 
-    private final Set<ChartNode> workSet = new HashSet<>();
+    private final Set<NapaChartNode> workSet = new HashSet<>();
 
-    private final Set<ChartNode> shiftCandidates = new HashSet<>();
+    private final Set<NapaChartNode> shiftCandidates = new HashSet<>();
 
     private final Set<RawSyntaxNode> syntaxTreeCandidates = new HashSet<>();
 
