@@ -6,12 +6,7 @@ import org.symqle.epic.tokenizer.Tokenizer;
 
 import java.io.IOException;
 import java.io.Reader;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -34,7 +29,8 @@ public class Parser {
         workSet.clear();
         shiftCandidates.clear();
         syntaxTreeCandidates.clear();
-        final NapaChartNode startNode = new NapaChartNode(-1, Collections.singletonList(new NapaNonTerminalItem(targetTag, grammar)), 0, null, Collections.emptyList(), grammar);
+        RuleInProgress ruleInProgress = new RuleInProgress(-1, Collections.singletonList(new NapaNonTerminalItem(targetTag, grammar)), 0, Collections.emptyList(), grammar);
+        final NapaChartNode startNode = new NapaChartNode(ruleInProgress, Collections.emptySet());
         workSet.add(startNode);
         int maxComplexity = 0;
         List<Token<TokenProperties>> preface = new ArrayList<>();
@@ -51,14 +47,41 @@ public class Parser {
                 if (iterations > complexityLimit) {
                     throw new GrammarException("Too ambiguous or too complex to parse");
                 }
-                Set<NapaChartNode> workCopy = new HashSet<>(workSet);
-                workSet.clear();
-                for (NapaChartNode next: workCopy) {
-                    ProcessingResult result = next.process(nextToken);
-                    workSet.addAll(result.getNoShift());
-                    shiftCandidates.addAll(result.getShiftCandidates());
-                    syntaxTreeCandidates.addAll(result.getAccepted());
+                RuleInProgress nextRule = workSet.keySet().iterator().next();
+                NapaChartNode nextNode = workSet.get(nextRule);
+                ProcessingResult result = nextNode.process(nextToken);
+                List<NapaChartNode> same = new ArrayList<>();
+                workSet.remove(nextRule);
+                for (NapaChartNode node: result.getNoShift()) {
+                    if (node.getRuleInProgress().equals(nextRule)) {
+                        same.add(node);
+                    } else {
+                        NapaChartNode previous = workSet.get(node.getRuleInProgress());
+                        if (previous == null) {
+                            workSet.put(node.getRuleInProgress(), node);
+                        } else {
+                            for (NapaChartNode merged: node.merge(previous)) {
+                                workSet.put(merged.getRuleInProgress(), merged);
+                            }
+                        }
+                    }
                 }
+                if (!same.isEmpty()) {
+                    throw new UnsupportedOperationException("Not implemented");
+                }
+
+                for (NapaChartNode node: result.getShiftCandidates()) {
+                    NapaChartNode previous = shiftCandidates.get(node.getRuleInProgress());
+                    if (previous != null) {
+                        for (NapaChartNode merged: node.merge(previous)) {
+                            shiftCandidates.put(merged.getRuleInProgress(), merged);
+                        }
+                    } else {
+                        shiftCandidates.put(node.getRuleInProgress(), node);
+                    }
+                }
+
+                syntaxTreeCandidates.addAll(result.getAccepted());
 //                System.out.println("Work set size: " + workSet.size());
 //                for (ChartNode node: workSet) {
 //                    System.out.println(node);
@@ -80,8 +103,9 @@ public class Parser {
                 throw new GrammarException("Unrecognized input " + nextToken.getText() + " at " + nextToken.getLine() + ":" + nextToken.getPos());
             }
             ArrayList<Token<TokenProperties>> prefaceCopy = new ArrayList<>(preface);
-            for (NapaChartNode candidate : shiftCandidates) {
-                workSet.addAll(candidate.shift(nextToken, prefaceCopy));
+            for (NapaChartNode candidate : shiftCandidates.values()) {
+                List<NapaChartNode> shifted = candidate.shift(nextToken, prefaceCopy);
+                throw new UnsupportedOperationException("Not implemented");
             }
             if (workSet.isEmpty()) {
                 // no node accepted the token
@@ -116,9 +140,9 @@ public class Parser {
 
 
 
-    private final Set<NapaChartNode> workSet = new HashSet<>();
+    private final Map<RuleInProgress, NapaChartNode> workSet = new HashMap<>();
 
-    private final Set<NapaChartNode> shiftCandidates = new HashSet<>();
+    private final Map<RuleInProgress, NapaChartNode> shiftCandidates = new HashMap<>()
 
     private final Set<RawSyntaxNode> syntaxTreeCandidates = new HashSet<>();
 

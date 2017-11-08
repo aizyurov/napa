@@ -4,30 +4,35 @@ import org.symqle.epic.tokenizer.Token;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
-
-import static org.symqle.epic.gparser.RuleItemType.TERMINAL;
 
 /**
  * @author lvovich
  */
 public class NapaChartNode {
 
-    private final int target;
-    private final List<NapaRuleItem> items;
-    private int offset;
-    private final NapaChartNode enclosing;
-    private final List<RawSyntaxNode> syntaxNodes;
-    private final CompiledGrammar grammar;
+    private final RuleInProgress ruleInProgress;
+    private final Set<NapaChartNode> enclosing;
 
-    public NapaChartNode(final int target, final List<NapaRuleItem> items, final int offset, final NapaChartNode enclosing, final List<RawSyntaxNode> syntaxNodes, CompiledGrammar grammar) {
-        this.target = target;
-        this.items = items;
-        this.offset = offset;
-        this.enclosing = enclosing;
-        this.syntaxNodes = new ArrayList<>(syntaxNodes);
-        this.grammar = grammar;
+    public NapaChartNode(final RuleInProgress ruleInProgress, final Set<NapaChartNode> enclosing) {
+        this.ruleInProgress = ruleInProgress;
+        this.enclosing = new HashSet<>(enclosing);
+    }
+
+    public Set<NapaChartNode> merge(NapaChartNode other) {
+        if (ruleInProgress.equals(other.ruleInProgress)) {
+            Set<NapaChartNode> mergedEnclosing = new HashSet<>(enclosing);
+            mergedEnclosing.addAll(other.enclosing);
+            return Collections.singleton(new NapaChartNode(ruleInProgress, mergedEnclosing));
+        } else {
+            HashSet<NapaChartNode> result = new HashSet<>();
+            result.add(this);
+            result.add(other);
+            return result;
+        }
     }
 
     public ProcessingResult process(Token<TokenProperties> lookAhead) {
@@ -43,98 +48,54 @@ public class NapaChartNode {
     }
 
     public List<RawSyntaxNode> accept() {
-        if (offset == items.size() && enclosing == null) {
-            return Collections.singletonList(syntaxNodes.get(0));
+        if (enclosing.isEmpty()) {
+            return ruleInProgress.accept();
         } else {
             return Collections.emptyList();
         }
     }
 
     public List<NapaChartNode> predict(Token<TokenProperties> lookAhead) {
-        if (offset < items.size()) {
-            NapaRuleItem currentItem = items.get(offset);
-            return currentItem.predict(lookAhead).stream().map(items -> new NapaChartNode(currentItem.getValue(), items, 0, this, Collections.emptyList(), grammar)).collect(Collectors.toList());
-        } else {
-            return Collections.emptyList();
-        }
+        return ruleInProgress.predict(lookAhead).stream().map(r -> new NapaChartNode(r, Collections.singleton(this))).collect(Collectors.toList());
     }
 
     public List<NapaChartNode> reduce(Token<TokenProperties> lookAhead) {
-        if (offset == items.size() && enclosing != null) {
-            RawSyntaxNode newNode;
-            if (syntaxNodes.isEmpty()) {
-                newNode = new EmptyNode(target, lookAhead.getLine(), lookAhead.getPos());
-            } else {
-                newNode = new NonTerminalNode(target, syntaxNodes);
-            }
-            return enclosing.acceptNonTerminal(newNode);
-        } else {
+        if (enclosing.isEmpty()) {
             return Collections.emptyList();
+        } else {
+            List<NapaChartNode> result = new ArrayList<>();
+            ruleInProgress.reduce(lookAhead).ifPresent(s -> {
+                for (NapaChartNode parent: enclosing) {
+                    result.addAll(parent.acceptNonTerminal(s));
+                }
+            });
+            return result;
         }
     }
 
     private List<NapaChartNode> acceptNonTerminal(RawSyntaxNode node) {
-        List<RawSyntaxNode> nodes = new ArrayList<>(syntaxNodes);
-        nodes.add(node);
-        return Collections.singletonList(new NapaChartNode(target, items, offset + 1, enclosing, nodes, grammar));
+        List<RuleInProgress> newRules = ruleInProgress.acceptNonTerminal(node);
+        return newRules.stream().map(r -> new NapaChartNode(r, enclosing)).collect(Collectors.toList());
     }
 
     public List<NapaChartNode> expand(Token<TokenProperties> lookAhead) {
-        if (offset >= items.size()) {
-            return Collections.emptyList();
-        }
-        NapaRuleItem currentItem = items.get(offset);
-        List<NapaChartNode> newNodes = new ArrayList<>();
-        for (List<NapaRuleItem> expansion: currentItem.expand(lookAhead)) {
-            List<NapaRuleItem> expanded = new ArrayList<>();
-            expanded.addAll(items.subList(0, offset));
-            expanded.addAll(expansion);
-            expanded.addAll(items.subList(offset +1, items.size()));
-            newNodes.add(new NapaChartNode(target, expanded, offset, enclosing, new ArrayList<>(syntaxNodes), grammar));
-        }
-        return newNodes;
+        return ruleInProgress.expand(lookAhead).stream().map(r -> new NapaChartNode(r, enclosing)).collect(Collectors.toList());
     }
 
     public List<NapaChartNode> canShift(Token<TokenProperties> lookAhead) {
-        if (offset >= items.size() || lookAhead == null) {
-            return Collections.emptyList();
-        }
-        NapaRuleItem currentItem = items.get(offset);
-        return currentItem.getType() == TERMINAL && lookAhead.getType().matches(currentItem.first())
-                ? Collections.singletonList(this)
-                : Collections.emptyList();
+        return ruleInProgress.canShift(lookAhead) ? Collections.singletonList(this) : Collections.emptyList();
     }
 
     public List<NapaChartNode> shift(Token<TokenProperties> token, List<Token<TokenProperties>> preface) {
-        if (offset >= items.size()) {
-            return Collections.emptyList();
-        }
-        NapaRuleItem currentItem = items.get(offset);
-        assert currentItem.getType() == TERMINAL;
-        if (!token.getType().matches(currentItem.getValue())) {
-            return Collections.emptyList();
-        }
-        offset += 1;
-        syntaxNodes.add(new TerminalNode(currentItem.getValue(), preface, token));
-        return Collections.singletonList(this);
+        return ruleInProgress.shift(token, preface).stream().map(r -> new NapaChartNode(r, enclosing)).collect(Collectors.toList());
     }
 
     @Override
     public String toString() {
-        StringBuilder stringBuilder = new StringBuilder();
-        if (target >= 0) {
-            stringBuilder.append(grammar.getNonTerminalName(target)).append(" =");
-        }
-        for (int i = 0; i<items.size(); i++) {
-            if (offset == i) {
-                stringBuilder.append(" ^");
-            }
-            final NapaRuleItem item = items.get(i);
-            stringBuilder.append(" ").append(item.toString());
-        }
-        if (offset == items.size()) {
-            stringBuilder.append(" ^");
-        }
-        return stringBuilder.toString();
+        return ruleInProgress.toString();
+    }
+
+    public RuleInProgress getRuleInProgress() {
+        return ruleInProgress;
     }
 }
