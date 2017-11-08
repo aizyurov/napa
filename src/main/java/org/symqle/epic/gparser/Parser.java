@@ -35,6 +35,8 @@ public class Parser {
         workSet.put(startNode.getRuleInProgress(), startNode);
         int maxComplexity = 0;
         List<Token<TokenProperties>> preface = new ArrayList<>();
+        int maxNodes = 0;
+        int maxWorkset = 0;
         while (true) {
             Token<TokenProperties> nextToken = tokenizer.nextToken();
             while (nextToken != null && nextToken.getType().isIgnoreOnly()) {
@@ -44,6 +46,8 @@ public class Parser {
             int iterations = 0;
 //            System.out.println("Workset size: " + workSet.size());
             while (!workSet.isEmpty()) {
+                maxWorkset = Math.max(maxWorkset, workSet.size());
+                maxNodes = Math.max(maxNodes, countChartNodes(workSet.values()));
                 iterations += 1;
                 if (iterations == complexityLimit) {
                     System.out.println("Complexity limit reached");
@@ -70,6 +74,8 @@ public class Parser {
 //            System.out.println("Iterations: " + iterations);
             if (nextToken == null) {
                 System.out.println("Max complexity: " + maxComplexity);
+                System.out.println("Max workset: " + maxWorkset);
+                System.out.println("Max nodes: " + maxNodes);
                 System.out.println("Parse time: " + (System.currentTimeMillis() - startTime));
                 return syntaxTreeCandidates.stream().map(s -> s.toSyntaxTreeNode(null, grammar)).collect(Collectors.toList());
             }
@@ -106,17 +112,16 @@ public class Parser {
         }
     }
 
-    int countChartNodes(Collection<ChartNode> start) {
-        Set<ChartNode> toSearch = new HashSet<>(start);
-        Set<ChartNode> result = new HashSet<>();
+    int countChartNodes(Collection<NapaChartNode> start) {
+        Set<NapaChartNode> toSearch = new HashSet<>(start);
+        Set<NapaChartNode> result = new HashSet<>();
         while (!toSearch.isEmpty()) {
-            final ChartNode next = toSearch.iterator().next();
+            final NapaChartNode next = toSearch.iterator().next();
             result.add(next);
             toSearch.remove(next);
-            final ChartNode enclosing = next.getEnclosing();
-            if (enclosing != null && !result.contains(enclosing)) {
-                toSearch.add(enclosing);
-            }
+            final Set<NapaChartNode> enclosing = new HashSet<>(next.getEnclosing());
+            enclosing.removeAll(result);
+            toSearch.addAll(enclosing);
         }
         return result.size();
     }

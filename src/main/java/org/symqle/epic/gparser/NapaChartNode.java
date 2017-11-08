@@ -97,4 +97,8 @@ public class NapaChartNode {
     public RuleInProgress getRuleInProgress() {
         return ruleInProgress;
     }
+
+    public Set<NapaChartNode> getEnclosing() {
+        return enclosing;
+    }
 }
