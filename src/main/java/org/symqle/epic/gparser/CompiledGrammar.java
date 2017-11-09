@@ -25,13 +25,13 @@ public class CompiledGrammar {
     private final Set<Integer> haveEmptyDerivation = new HashSet<>();
 
     public CompiledGrammar(final String[] nonTerminals, final String[] terminals, List<CompiledRule> rules, final PackedDfa<TokenProperties> tokenizerDfa) {
+        verify(nonTerminals, rules.stream().map(CompiledRule::getTarget).collect(Collectors.toSet()));
         this.nonTerminals = nonTerminals;
         this.terminals = terminals;
         this.tokenizerDfa = tokenizerDfa;
         haveEmptyDerivation.addAll(findEmpty(rules));
         firstSets.putAll(calculateFirstSets(rules));
         this.napaRules = rules.stream().map(x -> x.toNapaRule(this)).collect(Collectors.groupingBy(NapaRule::getTarget));
-        verify();
     }
 
     private Set<Integer> findEmpty(List<CompiledRule> rules) {
@@ -222,9 +222,9 @@ public class CompiledGrammar {
 
 
 
-    private void verify() {
+    private void verify(String[] nonTerminals, Set<Integer> targets) {
         for (int i = 0; i < nonTerminals.length; i++) {
-            if (!napaRules.containsKey(i)) {
+            if (!targets.contains(i)) {
                 throw new GrammarException("No rule for " + nonTerminals[i]);
             }
         }

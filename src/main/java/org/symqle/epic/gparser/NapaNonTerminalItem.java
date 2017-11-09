@@ -53,14 +53,11 @@ public class NapaNonTerminalItem implements NapaRuleItem {
 
     @Override
     public List<List<NapaRuleItem>> predict(final Token<TokenProperties> lookAhead) {
-        if (lookAhead != null && !lookAhead.getType().matches(first())) {
-            return Collections.emptyList();
-        } else if (lookAhead == null && !hasEmptyDerivation()) {
-            return Collections.emptyList();
-        } else {
+        if (hasEmptyDerivation() || lookAhead != null && lookAhead.getType().matches(first())) {
             return grammar.getNapaRules(value).stream().map(NapaRule::getItems).collect(Collectors.toList());
+        } else {
+            return Collections.emptyList();
         }
-
     }
 
     @Override
