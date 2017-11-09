@@ -37,6 +37,7 @@ public class Parser {
         List<Token<TokenProperties>> preface = new ArrayList<>();
         int maxNodes = 0;
         int maxWorkset = 0;
+        int totalIterations= 0;
         while (true) {
             Token<TokenProperties> nextToken = tokenizer.nextToken();
             while (nextToken != null && nextToken.getType().isIgnoreOnly()) {
@@ -49,6 +50,7 @@ public class Parser {
                 maxWorkset = Math.max(maxWorkset, workSet.size());
 //                maxNodes = Math.max(maxNodes, countChartNodes(workSet.values()));
                 iterations += 1;
+                totalIterations += 1;
                 if (iterations == complexityLimit) {
                     System.out.println("Complexity limit reached");
 //                    throw new GrammarException("Too ambiguous or too complex to parse");
@@ -76,6 +78,7 @@ public class Parser {
                 System.out.println("Max complexity: " + maxComplexity);
                 System.out.println("Max workset: " + maxWorkset);
                 System.out.println("Max nodes: " + maxNodes);
+                System.out.println("Total iterations: " + totalIterations);
                 System.out.println("Parse time: " + (System.currentTimeMillis() - startTime));
                 return syntaxTreeCandidates.stream().map(s -> s.toSyntaxTreeNode(null, grammar)).collect(Collectors.toList());
             }
@@ -128,7 +131,7 @@ public class Parser {
 
 
 
-    private final Map<RuleInProgress, NapaChartNode> workSet = new HashMap<>();
+    private final Map<RuleInProgress, NapaChartNode> workSet = new LinkedHashMap<>();
 
     private final Map<RuleInProgress, NapaChartNode> shiftCandidates = new HashMap<>();
 
@@ -143,8 +146,3 @@ public class Parser {
 
 }
 
-/*
-                    System.out.println("Max complexity: " + maxComplexity);
-                    System.out.println("Parse time: " + (System.currentTimeMillis() - startTime));
-
- */
