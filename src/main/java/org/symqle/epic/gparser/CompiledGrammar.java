@@ -20,7 +20,6 @@ public class CompiledGrammar {
     private final String[] nonTerminals;
     private final String[] terminals;
     private final Map<Integer, List<NapaRule>> napaRules;
-    private final Map<Integer, List<CompiledRule>> rules;
     private final PackedDfa<TokenProperties> tokenizerDfa;
     private final Map<Integer, Set<Integer>> firstSets = new HashMap<>();
     private final Set<Integer> haveEmptyDerivation = new HashSet<>();
@@ -32,14 +31,13 @@ public class CompiledGrammar {
         haveEmptyDerivation.addAll(findEmpty(rules));
         firstSets.putAll(calculateFirstSets(rules));
         this.napaRules = rules.stream().map(x -> x.toNapaRule(this)).collect(Collectors.groupingBy(NapaRule::getTarget));
-        this.rules = rules.stream().collect(Collectors.groupingBy(CompiledRule::getTarget));
         verify();
     }
 
     private Set<Integer> findEmpty(List<CompiledRule> rules) {
         Set<Integer> known = new HashSet<>();
         for (CompiledRule rule: rules) {
-            if (canHaveEmptyDerivation(rule)) {
+            if (canHaveEmptyDerivation(rule, rules)) {
                 known.add(rule.getTarget());
             }
 
@@ -48,9 +46,10 @@ public class CompiledGrammar {
         return Collections.unmodifiableSet(known);
     }
 
-    private boolean canHaveEmptyDerivation(CompiledRule rule) {
-        ChartNode start = new ChartNode(rule.getTarget(), rule.getItems(), 0, null, Collections.emptyList(), this);
-        Set<ChartNode> workSet = new HashSet<>();
+    private boolean canHaveEmptyDerivation(CompiledRule rule, List<CompiledRule> allRules) {
+        ChartNode0 start = new ChartNode0(rule.getTarget(), rule.getItems(), 0, null,
+                allRules.stream().collect(Collectors.groupingBy(CompiledRule::getTarget)));
+        Set<ChartNode0> workSet = new HashSet<>();
         workSet.add(start);
         int iterations = 0;
         while (!workSet.isEmpty()) {
@@ -58,44 +57,42 @@ public class CompiledGrammar {
             if (iterations > 100) {
                 System.err.println("Cannot accept rule: " + start.toString());
                 System.err.println("Working set =====");
-                for (ChartNode node: workSet) {
+                for (ChartNode0 node: workSet) {
                     System.err.println(node);
                 }
                 System.err.println("====");
                 throw new GrammarException("Too ambiguous or too complex to parse");
             }
-            Set<ChartNode> workCopy = new HashSet<>(workSet);
-            workSet.clear();
-            for (ChartNode next: workCopy) {
-                switch (next.availableAction(null)) {
-                    case SHIFT:
-                        break;
-                    case REDUCE:
-                        final List<ChartNode> reduce = next.reduce(null);
-                        //                        for (ChartNode node: reduce) {
-                        //                            System.out.println("Reduced: " + node);
-                        //                        }
-                        workSet.addAll(reduce);
-                        break;
-                    case PREDICT:
-                        final List<ChartNode> predict = next.predict();
-                        //                        for (ChartNode node: predict) {
-                        //                            System.out.println("Predicted:" + node);
-                        //                        }
-                        workSet.addAll(predict);
-                        break;
-                    case EXPAND:
-                        final List<ChartNode> expand = next.expand();
-                        //                        for (ChartNode node: expand) {
-                        //                            System.out.println("Expanded:" + node);
-                        //                        }
-                        workSet.addAll(expand);
-                        break;
-                    case ACCEPT:
-                        return true;
-                    default:
-                        // NONE: do nothing
-                }
+            ChartNode0 next = workSet.iterator().next();
+            workSet.remove(next);
+            switch (next.availableAction(null)) {
+                case SHIFT:
+                    break;
+                case REDUCE:
+                    final List<ChartNode0> reduce = next.reduce(null);
+                    //                        for (ChartNode node: reduce) {
+                    //                            System.out.println("Reduced: " + node);
+                    //                        }
+                    workSet.addAll(reduce);
+                    break;
+                case PREDICT:
+                    final List<ChartNode0> predict = next.predict();
+                    //                        for (ChartNode node: predict) {
+                    //                            System.out.println("Predicted:" + node);
+                    //                        }
+                    workSet.addAll(predict);
+                    break;
+                case EXPAND:
+                    final List<ChartNode0> expand = next.expand();
+                    //                        for (ChartNode node: expand) {
+                    //                            System.out.println("Expanded:" + node);
+                    //                        }
+                    workSet.addAll(expand);
+                    break;
+                case ACCEPT:
+                    return true;
+                default:
+                    // NONE: do nothing
             }
         }
         return false;
@@ -227,17 +224,13 @@ public class CompiledGrammar {
 
     private void verify() {
         for (int i = 0; i < nonTerminals.length; i++) {
-            if (!rules.containsKey(i)) {
+            if (!napaRules.containsKey(i)) {
                 throw new GrammarException("No rule for " + nonTerminals[i]);
             }
         }
     }
 
 
-
-    public List<CompiledRule> getRules(int index) {
-        return Collections.unmodifiableList(rules.get(index));
-    }
 
     public String getTerminalName(int index) {
         return terminals[index];
