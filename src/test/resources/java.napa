@@ -859,7 +859,7 @@ LeftHandSide =
   ExpressionName
 |  FieldAccess
 |  ArrayAccess
-| PrimaryNoNewArray {AccessField | AccessArray} ;
+| PrimaryNoNewArray {AccessField | InvokeMethod | AccessArray | CreateClassInstance} (AccessField | AccessArray) ;
 
 AssignmentOperator = '=' | '*=' | '/=' | '%=' | '+=' | '-=' | '<<=' | '>>=' | '>>>=' | '&=' | '^=' | '|=' ;
 
