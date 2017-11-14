@@ -378,7 +378,7 @@ ExplicitConstructorInvocation =
   [TypeArguments] 'this' '(' [ArgumentList] ')' ';'
 | [TypeArguments] 'super' '(' [ArgumentList] ')' ';'
 | ExpressionName '.' [TypeArguments] 'super' '(' [ArgumentList] ')' ';'
-| BasicPrimary {PrimaryContinuation} '.' [TypeArguments] 'super' '(' [ArgumentList] ')' ';' ;
+| Primary '.' [TypeArguments] 'super' '(' [ArgumentList] ')' ';' ;
 
 # 8.9 Enum Types
 
@@ -670,37 +670,26 @@ Expression =
 # 15.8. Primary Expressions
 
 Primary =
-    BasicPrimary
-|   ExtendedPrimaryNoNewArray ;
+  PrimaryNoNewArray {AccessField | InvokeMethod | AccessArray | CreateClassInstance}
+|  ArrayCreationExpression
+|  ArrayCreationExpression (AccessField | InvokeMethod | CreateClassInstance) {AccessField | InvokeMethod | AccessArray | CreateClassInstance};
 
-
-BasicPrimary =
-  PrimaryNoNewArray
-|  ArrayCreationExpression ;
-
-ExtendedPrimaryNoNewArray =
-   FieldAccess
-|   ArrayAccess
-|  MethodInvocation
-|  MethodReference
-|  ClassInstanceCreationExpression ;
-
-PrimaryContinuation =
-    '.' Identifier # field access
-|   '[' Expression ']' # array access
-|   '.' [TypeArguments] Identifier '(' [ArgumentList] ')' ; # method invocation
-
+AccessField = '.' Identifier ;
+AccessArray = '[' Expression ']' ;
+InvokeMethod = '.' [TypeArguments] Identifier '(' [ArgumentList] ')' ;
+CreateClassInstance = '.' UnqualifiedClassInstanceCreationExpression ;
 
 PrimaryNoNewArray =
   Literal
 |  ClassLiteral
 |  'this'
 |  TypeName '.' 'this'
-|   SimpleMethodInvocation
-|  '(' Expression ')' ;
-
-SimpleMethodInvocation =
-    MethodName '(' [ArgumentList] ')' ;
+|  '(' Expression ')'
+|  FieldAccess
+|  ArrayAccess
+|  MethodInvocation
+|  MethodReference
+|  ClassInstanceCreationExpression ;
 
 
 # 15.8.2. Class Literals
@@ -715,8 +704,7 @@ ClassLiteral =
 
 ClassInstanceCreationExpression =
     UnqualifiedClassInstanceCreationExpression
-|   ExpressionName '.' UnqualifiedClassInstanceCreationExpression
-|   BasicPrimary {PrimaryContinuation} '.' UnqualifiedClassInstanceCreationExpression ;
+|   ExpressionName '.' UnqualifiedClassInstanceCreationExpression ;
 
 UnqualifiedClassInstanceCreationExpression =
     'new' [TypeArguments] ClassOrInterfaceTypeToInstantiate '(' [ArgumentList] ')' [ClassBody] ;
@@ -744,22 +732,19 @@ DimExpr = {Annotation} '[' Expression ']' ;
 # 15.10.3. Array Access Expressions
 
 ArrayAccess =
-  ExpressionName '[' Expression ']'
-|  PrimaryNoNewArray {PrimaryContinuation} '[' Expression ']' ;
+  ExpressionName '[' Expression ']' ;
 
 
 # 15.11. Field Access Expressions
 
 FieldAccess =
-  BasicPrimary {PrimaryContinuation} '.' Identifier
-|  'super' '.' Identifier
+   'super' '.' Identifier
 |  TypeName '.' 'super' '.' Identifier ;
 
 # 15.12. Method Invocation Expressions
 
 MethodInvocation =
    AmbiguousName '.' [TypeArguments] Identifier '(' [ArgumentList] ')'
-|   BasicPrimary {PrimaryContinuation} '.' [TypeArguments] Identifier '(' [ArgumentList] ')'
 |   'super' '.' [TypeArguments] Identifier '(' [ArgumentList] ')'
 |   TypeName '.' 'super' '.' [TypeArguments] Identifier '(' [ArgumentList] ')' ;
 
@@ -770,7 +755,6 @@ ArgumentList = Expression {',' Expression} ;
 MethodReference =
     ArrayType '::' [TypeArguments] Identifier
 |    ExpressionNameOrClassOrInterfaceType '::' [TypeArguments] Identifier
-|   BasicPrimary {PrimaryContinuation} '::' [TypeArguments] Identifier
 |   'super' '::' [TypeArguments] Identifier
 |   TypeName '.' 'super' '::' [TypeArguments] Identifier
 |   ClassType '::' [TypeArguments] 'new'
