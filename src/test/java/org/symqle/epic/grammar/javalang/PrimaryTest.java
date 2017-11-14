@@ -25,17 +25,16 @@ public class PrimaryTest extends TestCase {
         Assert.assertEquals(1, forest.size());
         SyntaxTree tree1 = forest.iterator().next();
         Assert.assertEquals("this.a", tree1.getSource());
-        SyntaxTree tree = tree1;
-        tree.print(System.out);
+        tree1.print(System.out);
 
     }
 
     public void testThisAsExpression() throws Exception {
 
-        List<SyntaxTree> forest = g.parse("Expression", new StringReader("a(b)"), 1000);
+        List<SyntaxTree> forest = g.parse("Expression", new StringReader("a.b[i++] = z.c(d(x), y+z+w(3))"), 1000);
         Assert.assertEquals(1, forest.size());
         SyntaxTree tree = forest.iterator().next();
-        tree.print(System.out);
+//        tree.print(System.out);
 
     }
 

@@ -10,14 +10,14 @@ import java.util.List;
 /**
  * Created by aizyurov on 10/31/17.
  */
-public class LeafNode extends AbstractNode {
+public class LeafNode extends SyntaxTree {
 
     private final String name;
     private final String value;
     private final List<String> preface;
 
     public LeafNode(String name, String value, SyntaxTree parent, List<String> preface, int line, int pos) {
-        super(line, pos, parent);
+        super(parent, line, pos);
         this.name = name;
         this.value = value;
         this.preface = preface;
@@ -54,7 +54,7 @@ public class LeafNode extends AbstractNode {
     }
 
     @Override
-    public void print(final Writer writer) throws IOException {
+    protected void print(final Writer writer) throws IOException {
         writer.write("'");
         writer.write(value);
         writer.write("'");

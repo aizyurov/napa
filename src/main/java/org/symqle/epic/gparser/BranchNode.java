@@ -1,7 +1,5 @@
 package org.symqle.epic.gparser;
 
-import org.symqle.AbstractNode;
-
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
@@ -12,13 +10,13 @@ import java.util.stream.Collectors;
 /**
  * Created by aizyurov on 10/31/17.
  */
-public class BranchNode extends AbstractNode {
+public class BranchNode extends SyntaxTree {
 
     private final String name;
     private List<SyntaxTree> children;
 
     public BranchNode(String name, SyntaxTree parent, int line, int pos, List<RawSyntaxNode> rawSyntaxNodes, CompiledGrammar grammar) {
-        super(line, pos, parent);
+        super(parent, line, pos);
         this.name = name;
         this.children = rawSyntaxNodes.stream().map(rawSyntaxNode -> rawSyntaxNode.toSyntaxTreeNode(this, grammar)).collect(Collectors.toList());
     }
@@ -61,7 +59,7 @@ public class BranchNode extends AbstractNode {
     }
 
     @Override
-    public void print(final Writer writer) throws IOException {
+    protected void print(final Writer writer) throws IOException {
         writer.write(getName());
         writer.write("\n");
     }

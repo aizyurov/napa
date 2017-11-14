@@ -12,25 +12,45 @@ import java.util.List;
 /**
  * Created by aizyurov on 10/28/17.
  */
-public interface SyntaxTree {
+public abstract class SyntaxTree {
 
-    List<String> getPreface();
-    String getName();
-    String getValue();
-    SyntaxTree getParent();
-    List<SyntaxTree> getChildren();
-    int getLine();
-    int getPos();
-    String getSource();
+    private final SyntaxTree parent;
+    private final int line;
+    private final int pos;
 
-    default List<SyntaxTree> find(final String path) {
+    public SyntaxTree(final SyntaxTree parent, final int line, final int pos) {
+        this.parent = parent;
+        this.line = line;
+        this.pos = pos;
+    }
+
+    public abstract List<String> getPreface();
+    public abstract String getName();
+    public abstract String getValue();
+    public abstract List<SyntaxTree> getChildren();
+    public abstract String getSource();
+
+    public int getLine() {
+        return line;
+    }
+
+    public int getPos() {
+        return pos;
+    }
+
+    public SyntaxTree getParent() {
+        return parent;
+    }
+
+
+    public List<SyntaxTree> find(final String path) {
         final List<String> nameList = path == null || path.equals("")
                 ? Collections.<String>emptyList()
                 : Arrays.asList(path.split("\\."));
         return find(nameList);
     }
 
-    default List<SyntaxTree> find(List<String> nameList) {
+    protected List<SyntaxTree> find(List<String> nameList) {
         if (nameList.isEmpty()) {
             return Collections.singletonList(this);
         } else {
@@ -50,7 +70,7 @@ public interface SyntaxTree {
         }
     }
 
-    default void print(int offset, Writer writer) throws IOException {
+    protected void print(int offset, Writer writer) throws IOException {
         for (int i=0; i<offset; i++) {
             writer.write("    ");
         }
@@ -60,9 +80,9 @@ public interface SyntaxTree {
         }
     }
 
-    void print(Writer writer) throws IOException ;
+    protected abstract void print(Writer writer) throws IOException ;
 
-    default void print(OutputStream out) throws IOException {
+    public void print(OutputStream out) throws IOException {
         Writer writer = new OutputStreamWriter(out, "UTF-8");
         print(0, writer);
         writer.write("\n");
