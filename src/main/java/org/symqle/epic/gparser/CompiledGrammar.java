@@ -98,27 +98,9 @@ public class CompiledGrammar {
         return false;
     }
 
-    private boolean mayBeEmpty(List<RuleItem> items, Set<Integer> knownEmpty) {
-        for (RuleItem item: items) {
-            switch (item.getType()) {
-                case TERMINAL:
-                    return false;
-                case NON_TERMINAL:
-                    if (!knownEmpty.contains(item.getValue())) {
-                        return false;
-                    }
-                    break;
-                case COMPOUND:
-                    boolean definitelyNotEmpty = true;
-                    for (List<RuleItem> children: item.expand()) {
-                        definitelyNotEmpty &= mayBeEmpty(children, knownEmpty);
-                    }
-                    if (definitelyNotEmpty) {
-                        return false;
-                    }
-            }
-        }
-        return true;
+    private boolean mayBeEmpty(List<RuleItem> items, List<CompiledRule> allRules) {
+        CompiledRule compiledRule = new CompiledRule(-1, items);
+        return  canHaveEmptyDerivation(compiledRule, allRules);
     }
 
     private Map<Integer, Set<Integer>> calculateFirstSets(List<CompiledRule> rules) {
@@ -126,7 +108,7 @@ public class CompiledGrammar {
         for (CompiledRule rule: rules) {
             int target = rule.getTarget();
             final Set<Integer> dependencySet = dependencies.getOrDefault(target, new HashSet<>());
-            dependencySet.addAll(findFirstNonTerminals(rule.getItems()));
+            dependencySet.addAll(findFirstNonTerminals(rule.getItems(), rules));
             dependencies.put(target, dependencySet);
         }
         for (int dependent = 0; dependent < nonTerminals.length; dependent ++) {
@@ -145,7 +127,7 @@ public class CompiledGrammar {
         for (Integer key: sortedNonTerminals) {
             Set<Integer> firstSet = new HashSet<>();
             for (CompiledRule rule: ruleByTarget.get(key)) {
-                firstSet.addAll(findFirstTerminals(rule.getItems(), Collections.unmodifiableMap(firstSets)));
+                firstSet.addAll(findFirstTerminals(rule.getItems(), Collections.unmodifiableMap(firstSets), rules));
             }
             firstSets.put(key, firstSet);
         }
@@ -162,7 +144,7 @@ public class CompiledGrammar {
         return builder.toString();
     }
 
-    private Set<Integer> findFirstTerminals(List<RuleItem> items, Map<Integer, Set<Integer>> knownFirstSets) {
+    private Set<Integer> findFirstTerminals(List<RuleItem> items, Map<Integer, Set<Integer>> knownFirstSets, List<CompiledRule> allRules) {
         Set<Integer> first = new HashSet<>();
         for (RuleItem item: items) {
             switch(item.getType()) {
@@ -177,11 +159,12 @@ public class CompiledGrammar {
                     break;
                 case COMPOUND:
                     for (List<RuleItem> children: item.expand()) {
-                        first.addAll(findFirstTerminals(children, knownFirstSets));
+                        if (!mayBeEmpty(children, allRules))
+                        first.addAll(findFirstTerminals(children, knownFirstSets, allRules));
                     }
                     boolean definitelyNotEmpty = true;
                     for (List<RuleItem> children: item.expand()) {
-                        definitelyNotEmpty &= mayBeEmpty(children, haveEmptyDerivation);
+                        definitelyNotEmpty &= mayBeEmpty(children, allRules);
                     }
                     if (definitelyNotEmpty) {
                         return first;
@@ -192,7 +175,7 @@ public class CompiledGrammar {
 
     }
 
-    private Set<Integer> findFirstNonTerminals(List<RuleItem> items) {
+    private Set<Integer> findFirstNonTerminals(List<RuleItem> items,List<CompiledRule> allRules) {
         Set<Integer> first = new HashSet<>();
         for (RuleItem item: items) {
             switch(item.getType()) {
@@ -206,11 +189,13 @@ public class CompiledGrammar {
                     break;
                 case COMPOUND:
                     for (List<RuleItem> children: item.expand()) {
-                        first.addAll(findFirstNonTerminals(children));
+                        if (!mayBeEmpty(items, allRules)) {
+                            first.addAll(findFirstNonTerminals(children, allRules));
+                        }
                     }
                     boolean definitelyNotEmpty = true;
                     for (List<RuleItem> children: item.expand()) {
-                        definitelyNotEmpty &= mayBeEmpty(children, haveEmptyDerivation);
+                        definitelyNotEmpty &= mayBeEmpty(children, allRules);
                     }
                     if (definitelyNotEmpty) {
                         return first;

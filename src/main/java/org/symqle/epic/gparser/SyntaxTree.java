@@ -1,5 +1,9 @@
 package org.symqle.epic.gparser;
 
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -45,4 +49,24 @@ public interface SyntaxTree {
             return result;
         }
     }
+
+    default void print(int offset, Writer writer) throws IOException {
+        for (int i=0; i<offset; i++) {
+            writer.write("    ");
+        }
+        print(writer);
+        for (SyntaxTree child: getChildren()) {
+            child.print(offset + 1, writer);
+        }
+    }
+
+    void print(Writer writer) throws IOException ;
+
+    default void print(OutputStream out) throws IOException {
+        Writer writer = new OutputStreamWriter(out, "UTF-8");
+        print(0, writer);
+        writer.write("\n");
+        writer.flush();
+    }
+
 }

@@ -2,6 +2,8 @@ package org.symqle;
 
 import org.symqle.epic.gparser.SyntaxTree;
 
+import java.io.IOException;
+import java.io.Writer;
 import java.util.Collections;
 import java.util.List;
 
@@ -49,5 +51,13 @@ public class LeafNode extends AbstractNode {
         }
         stringBuilder.append(value);
         return stringBuilder.toString();
+    }
+
+    @Override
+    public void print(final Writer writer) throws IOException {
+        writer.write("'");
+        writer.write(value);
+        writer.write("'");
+        writer.write("\n");
     }
 }

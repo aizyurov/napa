@@ -744,7 +744,8 @@ FieldAccess =
 # 15.12. Method Invocation Expressions
 
 MethodInvocation =
-   AmbiguousName '.' [TypeArguments] Identifier '(' [ArgumentList] ')'
+   MethodName '(' [ArgumentList] ')'
+|   AmbiguousName '.' [TypeArguments] Identifier '(' [ArgumentList] ')'
 |   'super' '.' [TypeArguments] Identifier '(' [ArgumentList] ')'
 |   TypeName '.' 'super' '.' [TypeArguments] Identifier '(' [ArgumentList] ')' ;
 
@@ -857,7 +858,8 @@ Assignment = LeftHandSide AssignmentOperator Expression ;
 LeftHandSide =
   ExpressionName
 |  FieldAccess
-|  ArrayAccess ;
+|  ArrayAccess
+| PrimaryNoNewArray {AccessField | AccessArray} ;
 
 AssignmentOperator = '=' | '*=' | '/=' | '%=' | '+=' | '-=' | '<<=' | '>>=' | '>>>=' | '&=' | '^=' | '|=' ;
 

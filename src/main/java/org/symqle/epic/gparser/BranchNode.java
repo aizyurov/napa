@@ -2,6 +2,8 @@ package org.symqle.epic.gparser;
 
 import org.symqle.AbstractNode;
 
+import java.io.IOException;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -56,5 +58,11 @@ public class BranchNode extends AbstractNode {
         } else {
             throw new IllegalStateException("Cannot set children twice");
         }
+    }
+
+    @Override
+    public void print(final Writer writer) throws IOException {
+        writer.write(getName());
+        writer.write("\n");
     }
 }

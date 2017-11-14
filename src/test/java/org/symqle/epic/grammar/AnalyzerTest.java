@@ -3,13 +3,15 @@ package org.symqle.epic.grammar;
 import junit.framework.Assert;
 import junit.framework.TestCase;
 import org.symqle.epic.analyser.grammar.GaGrammar;
-import org.symqle.epic.gparser.*;
+import org.symqle.epic.gparser.CompiledGrammar;
+import org.symqle.epic.gparser.GrammarException;
+import org.symqle.epic.gparser.Parser;
+import org.symqle.epic.gparser.SyntaxTree;
 
 import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -105,6 +107,15 @@ public class AnalyzerTest extends TestCase {
         for (SyntaxTree tree : forest) {
             Assert.assertEquals(source, tree.getSource());
         }
+    }
+
+    public void testNestedZeroOrMore() throws Exception {
+        String grammar = "A = {{'a'}};";
+        String source = "a";
+        CompiledGrammar g = new GaGrammar().parse(new StringReader(grammar));
+        List<SyntaxTree> forest = new Parser(g).parse("A", new StringReader(source), 20);
+        Assert.assertEquals(1, forest.size());
+
     }
 
     public void testLalrFail() throws Exception {

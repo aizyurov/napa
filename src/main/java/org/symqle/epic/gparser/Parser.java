@@ -53,7 +53,14 @@ public class Parser {
                 totalIterations += 1;
                 if (iterations == complexityLimit) {
                     System.out.println("Complexity limit reached");
-//                    throw new GrammarException("Too ambiguous or too complex to parse");
+                        syntaxTreeCandidates.stream().map(x -> x.toSyntaxTreeNode(null, grammar)).forEach(x -> {
+                            try {
+                                x.print(System.out);
+                            } catch (IOException e) {
+                                throw new RuntimeException("TODO: handle me", e);
+                            }
+                        });
+                    throw new GrammarException("bebe");
                 }
                 RuleInProgress nextRule = workSet.keySet().iterator().next();
                 NapaChartNode nextNode = workSet.get(nextRule);
