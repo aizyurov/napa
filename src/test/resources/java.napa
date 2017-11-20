@@ -571,7 +571,9 @@ StatementExpression =
     Assignment
 |   PreIncrementExpression
 |   PreDecrementExpression
-|   PostfixExpression
+|   PostIncrementExpression
+|   PostDecrementExpression
+|   MethodInvocation
 |   ClassInstanceCreationExpression ;
 
 # 14.9. The if Statement
@@ -670,9 +672,20 @@ Expression =
 # 15.8. Primary Expressions
 
 Primary =
-  PrimaryNoNewArray {AccessField | InvokeMethod | AccessArray | CreateClassInstance}
-|  ArrayCreationExpression
-|  ArrayCreationExpression (AccessField | InvokeMethod | CreateClassInstance) {AccessField | InvokeMethod | AccessArray | CreateClassInstance};
+  PrimaryNoNewArray
+|  ArrayCreationExpression ;
+
+
+PrimaryNoNewArrayPrefix =
+  PrimaryNoNewArray0 {AccessField | InvokeMethod | AccessArray | CreateClassInstance}
+| ArrayCreationExpression (AccessField | InvokeMethod | CreateClassInstance) {AccessField | InvokeMethod | AccessArray | CreateClassInstance} ;
+
+PrimaryPrefix =
+  PrimaryNoNewArray0 {AccessField | InvokeMethod | AccessArray | CreateClassInstance}
+| ArrayCreationExpression
+| ArrayCreationExpression (AccessField | InvokeMethod | CreateClassInstance) {AccessField | InvokeMethod | AccessArray | CreateClassInstance} ;
+
+
 
 AccessField = '.' Identifier ;
 AccessArray = '[' Expression ']' ;
@@ -691,6 +704,19 @@ PrimaryNoNewArray =
 |  MethodReference
 |  ClassInstanceCreationExpression ;
 
+PrimaryNoNewArray0 =
+  Literal
+|  ClassLiteral
+|  'this'
+|  TypeName '.' 'this'
+|  '(' Expression ')'
+|  FieldAccess0
+|  ArrayAccess0
+|  MethodInvocation0
+|  MethodReference0
+|  ClassInstanceCreationExpression0 ;
+
+
 
 # 15.8.2. Class Literals
 
@@ -703,8 +729,13 @@ ClassLiteral =
 # 15.9. Class Instance Creation Expressions
 
 ClassInstanceCreationExpression =
+  ClassInstanceCreationExpression0
+|   PrimaryPrefix '.' UnqualifiedClassInstanceCreationExpression ;
+
+ClassInstanceCreationExpression0 =
     UnqualifiedClassInstanceCreationExpression
 |   ExpressionName '.' UnqualifiedClassInstanceCreationExpression ;
+
 
 UnqualifiedClassInstanceCreationExpression =
     'new' [TypeArguments] ClassOrInterfaceTypeToInstantiate '(' [ArgumentList] ')' [ClassBody] ;
@@ -732,18 +763,29 @@ DimExpr = {Annotation} '[' Expression ']' ;
 # 15.10.3. Array Access Expressions
 
 ArrayAccess =
-  ExpressionName '[' Expression ']' ;
+  ArrayAccess0
+| PrimaryNoNewArrayPrefix '[' Expression ']' ;
+
+ArrayAccess0 = ExpressionName '[' Expression ']' ;
 
 
 # 15.11. Field Access Expressions
 
 FieldAccess =
+  PrimaryPrefix AccessField
+| FieldAccess0 ;
+
+FieldAccess0 =
    'super' '.' Identifier
 |  TypeName '.' 'super' '.' Identifier ;
 
 # 15.12. Method Invocation Expressions
 
 MethodInvocation =
+  PrimaryPrefix InvokeMethod
+| MethodInvocation0 ;
+
+MethodInvocation0 =
    MethodName '(' [ArgumentList] ')'
 |   AmbiguousName '.' [TypeArguments] Identifier '(' [ArgumentList] ')'
 |   'super' '.' [TypeArguments] Identifier '(' [ArgumentList] ')'
@@ -754,6 +796,10 @@ ArgumentList = Expression {',' Expression} ;
 # 15.13. Method Reference Expressions
 
 MethodReference =
+    PrimaryPrefix '::' [TypeArguments] Identifier
+|   MethodReference0 ;
+
+MethodReference0 =
     ArrayType '::' [TypeArguments] Identifier
 |    ExpressionNameOrClassOrInterfaceType '::' [TypeArguments] Identifier
 |   'super' '::' [TypeArguments] Identifier
@@ -766,7 +812,21 @@ ExpressionNameOrClassOrInterfaceType = AnnotatedIdentifierWithTypeArguments { '.
 
 #  15.14. Postfix Expressions
 
-PostfixExpression = (Primary | ExpressionName) {'++'|'--'} ;
+PostfixExpression =
+  Primary
+| ExpressionName
+| PostIncrementExpression
+| PostDecrementExpression ;
+
+# 15.14.2. Postfix Increment Operator ++
+# left recursion eliminated
+
+PostIncrementExpression = (Primary | ExpressionName) {'++'|'--'} '++';
+
+# 15.14.3. Postfix Decrement Operator ++
+# left recursion eliminated
+
+PostDecrementExpression = (Primary | ExpressionName) {'++'|'--'} '--';
 
 
 # 15.15. Unary Operators
@@ -858,16 +918,28 @@ Assignment = LeftHandSide AssignmentOperator Expression ;
 LeftHandSide =
   ExpressionName
 |  FieldAccess
-|  ArrayAccess
-| PrimaryNoNewArray {AccessField | InvokeMethod | AccessArray | CreateClassInstance} (AccessField | AccessArray) ;
+|  ArrayAccess ;
 
 AssignmentOperator = '=' | '*=' | '/=' | '%=' | '+=' | '-=' | '<<=' | '>>=' | '>>>=' | '&=' | '^=' | '|=' ;
 
 # 15.27. Lambda Expressions
-# TODO
 
-LambdaExpression = '#LambdaExpression#';
+LambdaExpression = LambdaParameters '->' LambdaBody ;
 
+# 15.27.1. Lambda Parameters
+
+LambdaParameters =
+    Identifier
+|    '(' [FormalParameterList] ')'
+|   '(' InferredFormalParameterList ')' ;
+
+InferredFormalParameterList = Identifier {',' Identifier} ;
+
+# 15.27.2. Lambda Body
+
+LambdaBody =
+  Expression
+| Block ;
 
 
 # 15.28. Constant Expressions

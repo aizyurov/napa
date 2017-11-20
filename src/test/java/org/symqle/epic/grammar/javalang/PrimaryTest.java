@@ -38,4 +38,12 @@ public class PrimaryTest extends TestCase {
 
     }
 
+    public void testLambda() throws Exception {
+        List<SyntaxTree> forest = g.parse("Expression", new StringReader("() -> {}"), 1000);
+        Assert.assertEquals(1, forest.size());
+        SyntaxTree tree = forest.iterator().next();
+        tree.print(System.out);
+
+    }
+
 }
