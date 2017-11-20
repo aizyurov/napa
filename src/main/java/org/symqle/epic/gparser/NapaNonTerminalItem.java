@@ -67,9 +67,8 @@ public class NapaNonTerminalItem implements NapaRuleItem {
 
         NapaNonTerminalItem that = (NapaNonTerminalItem) o;
 
-        if (value != that.value) return false;
+        return value == that.value;
 
-        return true;
     }
 
     @Override

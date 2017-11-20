@@ -5,7 +5,6 @@ import org.symqle.epic.tokenizer.Token;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -74,7 +73,7 @@ public class RuleInProgress {
         NapaRuleItem currentItem = items.get(offset);
         List<RuleInProgress> newNodes = new ArrayList<>();
         for (List<NapaRuleItem> expansion: currentItem.expand(lookAhead)) {
-            List<NapaRuleItem> expanded = new ArrayList<>();
+            List<NapaRuleItem> expanded = new ArrayList<>(items.size() + expansion.size());
             expanded.addAll(items.subList(0, offset));
             expanded.addAll(expansion);
             expanded.addAll(items.subList(offset +1, items.size()));
@@ -131,13 +130,23 @@ public class RuleInProgress {
         final RuleInProgress that = (RuleInProgress) o;
         return target == that.target &&
                 offset == that.offset &&
-                Objects.equals(items, that.items) &&
-                Objects.equals(syntaxNodes, that.syntaxNodes) &&
-                Objects.equals(grammar, that.grammar);
+                items.equals(that.items) &&
+                syntaxNodes.equals(that.syntaxNodes);
     }
+
 
     @Override
     public int hashCode() {
-        return Objects.hash(target, items, offset, syntaxNodes, grammar);
+        int h = hash;
+        if (h == 0) {
+            h = target;
+            h = h * 31 + items.hashCode();
+            h = h * 31 + offset;
+            h = h * 31 + syntaxNodes.hashCode();
+            hash = h;
+        }
+        return h;
     }
+
+    private int hash;
 }

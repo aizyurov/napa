@@ -15,23 +15,25 @@ import java.util.stream.Collectors;
  */
 public class Parser {
 
-    private final CompiledGrammar grammar;
-    private Tokenizer<TokenProperties> tokenizer;
+    private final CompiledGrammar compiledGrammar;
 
-    public Parser(final CompiledGrammar grammar) throws IOException {
-        this.grammar = grammar;
+    public Parser(final CompiledGrammar compiledGrammar) throws IOException {
+        this.compiledGrammar = compiledGrammar;
     }
 
     public List<SyntaxTree> parse(final String target, final Reader reader, final int complexityLimit) throws IOException {
-        this.tokenizer = new AsyncTokenizer<>(new DfaTokenizer<>(grammar.getTokenizerDfa(), reader));
+        final CompiledGrammar grammar = this.compiledGrammar;
+        final Tokenizer<TokenProperties> tokenizer = new AsyncTokenizer<>(new DfaTokenizer<>(grammar.getTokenizerDfa(), reader));
 //        this.tokenizer = new DfaTokenizer<>(grammar.getTokenizerDfa(), reader);
+        final Map<RuleInProgress, NapaChartNode> workSet = new LinkedHashMap<>();
+        final Map<RuleInProgress, NapaChartNode> shiftCandidates = new HashMap<>();
+        final List<RawSyntaxNode> syntaxTreeCandidates = new ArrayList<>();
+
         final long startTime = System.currentTimeMillis();
         int targetTag = grammar.findNonTerminalByName(target).orElseThrow(() -> new GrammarException("NonTerminal not found: " + target));
-        workSet.clear();
-        shiftCandidates.clear();
-        syntaxTreeCandidates.clear();
-        RuleInProgress ruleInProgress = new RuleInProgress(-1, Collections.singletonList(new NapaNonTerminalItem(targetTag, grammar)), 0, Collections.emptyList(), grammar);
-        final NapaChartNode startNode = new NapaChartNode(ruleInProgress, Collections.emptySet());
+
+        RuleInProgress startRule = new RuleInProgress(-1, Collections.singletonList(new NapaNonTerminalItem(targetTag, grammar)), 0, Collections.emptyList(), grammar);
+        final NapaChartNode startNode = new NapaChartNode(startRule, Collections.emptySet());
         workSet.put(startNode.getRuleInProgress(), startNode);
         int maxComplexity = 0;
         List<Token<TokenProperties>> preface = new ArrayList<>();
@@ -67,12 +69,14 @@ public class Parser {
                 ProcessingResult result = nextNode.process(nextToken);
                 workSet.remove(nextRule);
                 for (NapaChartNode node: result.getNoShift()) {
-                    workSet.put(node.getRuleInProgress(),
-                            node.merge(workSet.get(node.getRuleInProgress())));
+                    RuleInProgress ruleInProgress = node.getRuleInProgress();
+                    workSet.put(ruleInProgress,
+                            node.merge(workSet.get(ruleInProgress)));
                 }
 
                 for (NapaChartNode node: result.getShiftCandidates()) {
-                    shiftCandidates.put(node.getRuleInProgress(), node.merge(shiftCandidates.get(node.getRuleInProgress())));
+                    RuleInProgress ruleInProgress = node.getRuleInProgress();
+                    shiftCandidates.put(ruleInProgress, node.merge(shiftCandidates.get(ruleInProgress)));
                 }
 
                 syntaxTreeCandidates.addAll(result.getAccepted());
@@ -103,7 +107,8 @@ public class Parser {
             for (NapaChartNode candidate : shiftCandidates.values()) {
                 List<NapaChartNode> shifted = candidate.shift(nextToken, prefaceCopy);
                 for (NapaChartNode node: shifted) {
-                    workSet.put(node.getRuleInProgress(), node.merge(workSet.get(node.getRuleInProgress())));
+                    RuleInProgress ruleInProgress = node.getRuleInProgress();
+                    workSet.put(ruleInProgress, node.merge(workSet.get(ruleInProgress)));
                 }
             }
             if (workSet.isEmpty()) {
@@ -138,11 +143,6 @@ public class Parser {
 
 
 
-    private final Map<RuleInProgress, NapaChartNode> workSet = new LinkedHashMap<>();
-
-    private final Map<RuleInProgress, NapaChartNode> shiftCandidates = new HashMap<>();
-
-    private final Set<RawSyntaxNode> syntaxTreeCandidates = new HashSet<>();
 
 
 

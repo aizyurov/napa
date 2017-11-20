@@ -90,13 +90,17 @@ public abstract class AbstractNapaCompoundItem implements NapaRuleItem {
 
         AbstractNapaCompoundItem that = (AbstractNapaCompoundItem) o;
 
-        if (!options.equals(that.options)) return false;
-
-        return true;
+        return options.equals(that.options);
     }
 
     @Override
     public int hashCode() {
-        return options.hashCode();
+        if (hash == 0) {
+            hash = options.hashCode();
+        }
+        return hash;
+
     }
+
+    private int hash;
 }
