@@ -20,6 +20,7 @@ public class RuleInProgress {
     private final int offset;
     private final RawSyntaxNode[] syntaxNodes;
     private final CompiledGrammar grammar;
+    private final NapaRuleItem currentItem;
 
     private static final RawSyntaxNode[] NO_NODES = {};
     private static final RuleInProgress[] NO_RULES = {};
@@ -31,6 +32,8 @@ public class RuleInProgress {
         this.offset = offset;
         this.syntaxNodes = syntaxNodes;
         this.grammar = grammar;
+        this.currentItem = offset < items.length ? items[offset] : null;
+
     }
 
     static RuleInProgress startRule(NapaRuleItem targetItem, CompiledGrammar grammar) {
@@ -46,8 +49,7 @@ public class RuleInProgress {
     }
 
     public List<RuleInProgress> predict(Token<TokenProperties> lookAhead) {
-        if (offset < items.length) {
-            NapaRuleItem currentItem = items[offset];
+        if (currentItem != null) {
             List<List<NapaRuleItem>> predict = currentItem.predict(lookAhead);
             if (predict.isEmpty()) {
                 return Collections.emptyList();
@@ -64,7 +66,7 @@ public class RuleInProgress {
     }
 
     public Optional<RawSyntaxNode> reduce(Token<TokenProperties> lookAhead) {
-        if (offset == items.length) {
+        if (currentItem == null) {
             RawSyntaxNode newNode;
             if (syntaxNodes.length == 0) {
                 newNode = new EmptyNode(target, lookAhead.getLine(), lookAhead.getPos());
@@ -86,10 +88,9 @@ public class RuleInProgress {
     }
 
     public List<RuleInProgress> expand(Token<TokenProperties> lookAhead) {
-        if (offset >= items.length) {
+        if (currentItem == null) {
             return Collections.emptyList();
         }
-        NapaRuleItem currentItem = items[offset];
         List<RuleInProgress> newNodes = new ArrayList<>();
         for (List<NapaRuleItem> expansion: currentItem.expand(lookAhead)) {
             NapaRuleItem[] expanded = new NapaRuleItem[items.length + expansion.size() - 1];
@@ -103,27 +104,10 @@ public class RuleInProgress {
         return newNodes;
     }
 
-    public boolean canShift(Token<TokenProperties> lookAhead) {
-        if (offset >= items.length || lookAhead == null) {
-            return false;
-        }
-        NapaRuleItem currentItem = items[offset];
-        return currentItem.getType() == TERMINAL && lookAhead.getType().matches(currentItem.first());
-    }
-
-    public boolean beforeTerminal(Token<TokenProperties> lookAhead) {
-        if (offset >= items.length || lookAhead == null) {
-            return false;
-        }
-        NapaRuleItem currentItem = items[offset];
-        return currentItem.getType() == TERMINAL;
-    }
-
     public List<RuleInProgress> shift(Token<TokenProperties> token, List<Token<TokenProperties>> preface) {
-        if (offset >= items.length) {
+        if (currentItem == null) {
             return Collections.emptyList();
         }
-        NapaRuleItem currentItem = items[offset];
         assert currentItem.getType() == TERMINAL;
         if (!token.getType().matches(currentItem.getValue())) {
             return Collections.emptyList();
@@ -132,6 +116,22 @@ public class RuleInProgress {
         System.arraycopy(syntaxNodes, 0, newSyntaxNodes, 0, syntaxNodes.length);
         newSyntaxNodes[syntaxNodes.length] = new TerminalNode(currentItem.getValue(), preface, token);
         return Collections.singletonList(new RuleInProgress(target, items, offset + 1, newSyntaxNodes, grammar));
+    }
+
+    public Action availableAction(Token<TokenProperties> lookAhead) {
+        if (currentItem == null) {
+            return Action.reduce;
+        }
+        switch (currentItem.getType()) {
+            case TERMINAL:
+                return lookAhead != null && lookAhead.getType().matches(currentItem.first()) ? Action.shift : Action.none;
+            case NON_TERMINAL:
+                return currentItem.hasEmptyDerivation() || lookAhead != null && lookAhead.getType().matches(currentItem.first()) ? Action.predict : Action.none;
+            case COMPOUND:
+                return currentItem.hasEmptyDerivation() || lookAhead != null && lookAhead.getType().matches(currentItem.first()) ? Action.expand : Action.none;
+            default:
+                throw new IllegalArgumentException("Unexpected item type: " + currentItem.getType());
+        }
     }
 
     @Override
@@ -179,4 +179,12 @@ public class RuleInProgress {
     }
 
     private int hash;
+
+    public enum Action {
+        predict,
+        expand,
+        reduce,
+        shift,
+        none
+    }
 }

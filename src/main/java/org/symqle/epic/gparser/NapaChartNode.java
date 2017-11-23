@@ -33,31 +33,6 @@ public class NapaChartNode {
         }
     }
 
-    public ProcessingResult process(Token<TokenProperties> lookAhead) {
-        List<NapaChartNode> noShift = new ArrayList<>();
-        List<NapaChartNode> shift = new ArrayList<>();
-        List<RawSyntaxNode> accepted = new ArrayList<>();
-        sortNodes(lookAhead, noShift, shift, predict(lookAhead));
-        sortNodes(lookAhead, noShift, shift, expand(lookAhead));
-        sortNodes(lookAhead, noShift, shift, reduce(lookAhead));
-        if (getRuleInProgress().canShift(lookAhead)) {
-            shift.add(this);
-        }
-        accepted.addAll(accept());
-        return new ProcessingResult(noShift, shift,
-                accepted);
-    }
-
-    private void sortNodes(final Token<TokenProperties> lookAhead, final List<NapaChartNode> noShift, final List<NapaChartNode> shift, final List<NapaChartNode> predicted) {
-        for (NapaChartNode node: predicted) {
-            if (!node.getRuleInProgress().beforeTerminal(lookAhead)) {
-                noShift.add(node);
-            } else if (node.getRuleInProgress().canShift(lookAhead)) {
-                shift.add(node);
-            }
-        }
-    }
-
     public List<RawSyntaxNode> accept() {
         if (enclosing.isEmpty()) {
             return ruleInProgress.accept();

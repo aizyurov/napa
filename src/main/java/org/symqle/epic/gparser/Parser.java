@@ -7,6 +7,7 @@ import org.symqle.epic.tokenizer.Tokenizer;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.nio.file.NotDirectoryException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -66,24 +67,55 @@ public class Parser {
                 }
                 RuleInProgress nextRule = workSet.keySet().iterator().next();
                 NapaChartNode nextNode = workSet.get(nextRule);
-                ProcessingResult result = nextNode.process(nextToken);
+                List<NapaChartNode> processingResult;
+                switch(nextNode.getRuleInProgress().availableAction(nextToken)) {
+                    case expand:
+                        processingResult = nextNode.expand(nextToken);
+                        break;
+                    case predict:
+                        processingResult = nextNode.predict(nextToken);
+                        break;
+                    case reduce:
+                        if (nextNode.getEnclosing().isEmpty()) {
+                            syntaxTreeCandidates.addAll(nextNode.accept());
+                            processingResult = Collections.emptyList();
+                        } else {
+                            processingResult = nextNode.reduce(nextToken);
+                        }
+                        break;
+                    case shift:
+                        processingResult = Collections.singletonList(nextNode);
+                        break;
+                    default:
+                        // do nothing
+                        processingResult = Collections.emptyList();
+                }
                 workSet.remove(nextRule);
-                System.out.println("<<< " + nextNode);
-                for (NapaChartNode node: result.getNoShift()) {
+//                System.out.println("<<< " + nextNode);
+                // sort nodes
+                List<NapaChartNode> forWorkSet = new ArrayList<>();
+                List<NapaChartNode> forShiftCandidates = new ArrayList<>();
+                for (NapaChartNode node: processingResult) {
+                    final RuleInProgress.Action action = node.getRuleInProgress().availableAction(nextToken);
+                    if (action == RuleInProgress.Action.shift) {
+                        forShiftCandidates.add(node);
+                    } else if (action != RuleInProgress.Action.none) {
+                        forWorkSet.add(node);
+                    }
+                }
+                for (NapaChartNode node: forWorkSet) {
                     RuleInProgress ruleInProgress = node.getRuleInProgress();
-                    final NapaChartNode merged = node.merge(workSet.get(ruleInProgress));
-                    workSet.put(ruleInProgress,
-                            merged);
-                    System.out.println(">>> " + merged);
+                        workSet.put(ruleInProgress,
+                                node.merge(workSet.get(ruleInProgress)));
+//                    System.out.println(">>> " + ruleInProgress);
+                }
+                for (NapaChartNode node: forShiftCandidates) {
+                    RuleInProgress ruleInProgress = node.getRuleInProgress();
+                    shiftCandidates.put(ruleInProgress,
+                            node.merge(shiftCandidates.get(ruleInProgress)));
+//                    System.out.println("=== " + ruleInProgress);
                 }
 
-                for (NapaChartNode node: result.getShiftCandidates()) {
-                    RuleInProgress ruleInProgress = node.getRuleInProgress();
-                    shiftCandidates.put(ruleInProgress, node.merge(shiftCandidates.get(ruleInProgress)));
-                    System.out.println("=== " + ruleInProgress);
-                }
-
-                syntaxTreeCandidates.addAll(result.getAccepted());
 //                for (ChartNode node: workSet) {
 //                    System.out.println(node);
 //                }
