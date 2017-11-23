@@ -22,6 +22,17 @@ public class FieldDeclarationTest extends TestCase {
         g = JavaGrammar.getParser();
     }
 
+    public void testSimple() throws Exception {
+        SyntaxTree tree = parse("private String s;");
+        Assert.assertEquals(Arrays.asList("private"),
+                tree.find("FieldModifier").stream().map(SyntaxTree::getValue).collect(Collectors.toList()));
+        Assert.assertEquals(Collections.singletonList("String"),
+                tree.find("UnannType.UnannReferenceType.UnannClassOrInterfaceType.Identifier").stream().map(SyntaxTree::getValue).collect(Collectors.toList()));
+        Assert.assertEquals(Collections.singletonList("s"),
+                tree.find("VariableDeclaratorList.VariableDeclarator.VariableDeclaratorId.Identifier").stream().map(SyntaxTree::getValue).collect(Collectors.toList()));
+
+    }
+
     public void testBasic() throws Exception {
         SyntaxTree tree = parse("private static final String s;");
         Assert.assertEquals(Arrays.asList("private", "static", "final"),

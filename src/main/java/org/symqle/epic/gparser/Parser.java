@@ -50,7 +50,7 @@ public class Parser {
 //            System.out.println("Workset size: " + workSet.size());
             while (!workSet.isEmpty()) {
                 maxWorkset = Math.max(maxWorkset, workSet.size());
-//                maxNodes = Math.max(maxNodes, countChartNodes(workSet.values()));
+                maxNodes = Math.max(maxNodes, countChartNodes(workSet.values()));
                 iterations += 1;
                 totalIterations += 1;
                 if (iterations == complexityLimit) {

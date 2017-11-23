@@ -7,35 +7,23 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * @author lvovich
  */
 public abstract class AbstractNapaCompoundItem implements NapaRuleItem {
-    private final List<List<NapaRuleItem>> options;
-    private final Set<Integer> first;
+    private final List<RuleItemSequence> options;
+    private Set<Integer> first;
+    private Boolean canBeEmpty;
 
     public AbstractNapaCompoundItem(final List<List<NapaRuleItem>> options) {
-        this.options = options;
-        first = new HashSet<>();
-        for (List<NapaRuleItem> option: options) {
-            for (int i = 0; i < option.size(); i ++) {
-                first.addAll(calculateFirst(option));
-            }
-        }
+        this.options = options.stream().map(RuleItemSequence::new).collect(Collectors.toList());
     }
 
 
-    private Set<Integer> calculateFirst(List<NapaRuleItem> itemList) {
-        Set<Integer> firstSet = new HashSet<>();
-        for (int i = 0; i < itemList.size(); i++) {
-            NapaRuleItem item = itemList.get(i);
-            firstSet.addAll(item.first());
-            if (!item.hasEmptyDerivation()) {
-                return  firstSet;
-            }
-        }
-        return firstSet;
+    private Set<Integer> calculateFirst() {
+        return options.stream().flatMap(s -> s.firstSet().stream()).collect(Collectors.toSet());
     }
 
     @Override
@@ -50,12 +38,14 @@ public abstract class AbstractNapaCompoundItem implements NapaRuleItem {
 
     @Override
     public List<List<NapaRuleItem>> expand(Token<TokenProperties> lookAhead) {
-        if (lookAhead != null && !lookAhead.getType().matches(first)) {
+        if (lookAhead != null && !lookAhead.getType().matches(first())) {
             return Collections.emptyList();
         }
         List<List<NapaRuleItem>> expansion = new ArrayList<>();
-        for (List<NapaRuleItem> option: options) {
-            expansion.add(Collections.unmodifiableList(option));
+        for (RuleItemSequence option: options) {
+            if (option.canBeEmpty() || lookAhead != null && lookAhead.getType().matches(option.firstSet())) {
+                expansion.add(Collections.unmodifiableList(option.getSequence()));
+            }
         }
         return expansion;
     }
@@ -67,6 +57,9 @@ public abstract class AbstractNapaCompoundItem implements NapaRuleItem {
 
     @Override
     public Set<Integer> first() {
+        if (first == null) {
+            first = calculateFirst();
+        }
         return first;
     }
 
@@ -76,7 +69,7 @@ public abstract class AbstractNapaCompoundItem implements NapaRuleItem {
             if (i != 0) {
                 builder.append(" |");
             }
-            for (NapaRuleItem item: options.get(i)) {
+            for (NapaRuleItem item: options.get(i).getSequence()) {
                 builder.append(" ").append(item.toString());
             }
         }
@@ -103,4 +96,8 @@ public abstract class AbstractNapaCompoundItem implements NapaRuleItem {
     }
 
     private int hash;
+
+    protected List<RuleItemSequence> getOptions() {
+        return options;
+    }
 }

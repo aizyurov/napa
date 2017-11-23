@@ -9,11 +9,10 @@ import java.util.List;
  */
 public class NapaChoiceItem extends AbstractNapaCompoundItem {
 
-    private final boolean hasEmptyDerivation;
+    private Boolean hasEmptyDerivation;
 
     public NapaChoiceItem(final List<List<NapaRuleItem>> options) {
         super(options);
-        hasEmptyDerivation = findEmptyDerivation();
     }
 
     @Override
@@ -26,15 +25,8 @@ public class NapaChoiceItem extends AbstractNapaCompoundItem {
     }
 
     private boolean findEmptyDerivation() {
-        for (List<NapaRuleItem> option: expand(null)) {
-            boolean hasEmptyDerivation = true;
-            for (NapaRuleItem item: option) {
-                if (!item.hasEmptyDerivation()) {
-                    hasEmptyDerivation = false;
-                    break;
-                }
-            }
-            if (hasEmptyDerivation) {
+        for (RuleItemSequence sequence: getOptions()) {
+            if (sequence.canBeEmpty()) {
                 return true;
             }
         }
@@ -43,6 +35,9 @@ public class NapaChoiceItem extends AbstractNapaCompoundItem {
 
     @Override
     public boolean hasEmptyDerivation() {
+        if (hasEmptyDerivation == null) {
+            hasEmptyDerivation = findEmptyDerivation();
+        }
         return hasEmptyDerivation;
     }
 
