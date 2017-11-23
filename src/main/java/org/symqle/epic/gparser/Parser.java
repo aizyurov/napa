@@ -68,15 +68,19 @@ public class Parser {
                 NapaChartNode nextNode = workSet.get(nextRule);
                 ProcessingResult result = nextNode.process(nextToken);
                 workSet.remove(nextRule);
+                System.out.println("<<< " + nextNode);
                 for (NapaChartNode node: result.getNoShift()) {
                     RuleInProgress ruleInProgress = node.getRuleInProgress();
+                    final NapaChartNode merged = node.merge(workSet.get(ruleInProgress));
                     workSet.put(ruleInProgress,
-                            node.merge(workSet.get(ruleInProgress)));
+                            merged);
+                    System.out.println(">>> " + merged);
                 }
 
                 for (NapaChartNode node: result.getShiftCandidates()) {
                     RuleInProgress ruleInProgress = node.getRuleInProgress();
                     shiftCandidates.put(ruleInProgress, node.merge(shiftCandidates.get(ruleInProgress)));
+                    System.out.println("=== " + ruleInProgress);
                 }
 
                 syntaxTreeCandidates.addAll(result.getAccepted());
