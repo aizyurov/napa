@@ -54,4 +54,27 @@ public class RuleItemSequence {
     private Boolean canBeEmpty;
 
     private Set<Integer> firstSet;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        RuleItemSequence that = (RuleItemSequence) o;
+
+        return sequence.equals(that.sequence);
+
+    }
+
+    @Override
+    public int hashCode() {
+        int h = hash;
+        if (h == 0) {
+            h = sequence.hashCode();
+            hash = h;
+        }
+        return h;
+    }
+
+    private int hash;
 }

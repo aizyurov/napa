@@ -103,4 +103,15 @@ public class NapaChartNode {
     public Set<NapaChartNode> getEnclosing() {
         return enclosing;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        return this == obj;
+
+    }
+
+    public int hashCode() {
+        return 1;
+
+    }
 }

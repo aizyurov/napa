@@ -49,8 +49,16 @@ public class NonTerminalNode implements RawSyntaxNode {
 
     @Override
     public int hashCode() {
-        int result = tag;
-        result = 31 * result + children.hashCode();
-        return result;
+        int h = hash;
+        if (h == 0) {
+            int result = tag;
+            result = 31 * result + children.hashCode();
+            hash = result;
+            return result;
+        } else {
+            return h;
+        }
     }
+
+    private int hash;
 }
