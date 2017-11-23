@@ -111,6 +111,14 @@ public class RuleInProgress {
         return currentItem.getType() == TERMINAL && lookAhead.getType().matches(currentItem.first());
     }
 
+    public boolean beforeTerminal(Token<TokenProperties> lookAhead) {
+        if (offset >= items.length || lookAhead == null) {
+            return false;
+        }
+        NapaRuleItem currentItem = items[offset];
+        return currentItem.getType() == TERMINAL;
+    }
+
     public List<RuleInProgress> shift(Token<TokenProperties> token, List<Token<TokenProperties>> preface) {
         if (offset >= items.length) {
             return Collections.emptyList();
