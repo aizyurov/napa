@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 /**
  * @author lvovich
@@ -14,18 +13,18 @@ import java.util.Set;
 public class NapaChartNode {
 
     private final RuleInProgress ruleInProgress;
-    private final Set<NapaChartNode> enclosing;
+    private final List<NapaChartNode> enclosing;
 
-    public NapaChartNode(final RuleInProgress ruleInProgress, final Set<NapaChartNode> enclosing) {
+    public NapaChartNode(final RuleInProgress ruleInProgress, final List<NapaChartNode> enclosing) {
         this.ruleInProgress = ruleInProgress;
-        this.enclosing = new HashSet<>(enclosing);
+        this.enclosing = enclosing;
     }
 
     public NapaChartNode merge(NapaChartNode other) {
         if (this == other || other == null) {
             return this;
         } else if (ruleInProgress.equals(other.ruleInProgress)) {
-            Set<NapaChartNode> mergedEnclosing = new HashSet<>(enclosing);
+            List<NapaChartNode> mergedEnclosing = new ArrayList<>(enclosing);
             mergedEnclosing.addAll(other.enclosing);
             return new NapaChartNode(ruleInProgress, mergedEnclosing);
         } else {
@@ -44,7 +43,7 @@ public class NapaChartNode {
     public List<NapaChartNode> predict(Token<TokenProperties> lookAhead) {
         List<RuleInProgress> predicted = ruleInProgress.predict(lookAhead);
         List<NapaChartNode> newNodes = new ArrayList<>(predicted.size());
-        Set<NapaChartNode> thisNode = Collections.singleton(this);
+        List<NapaChartNode> thisNode = Collections.singletonList(this);
         for (RuleInProgress rule: predicted) {
             newNodes.add(new NapaChartNode(rule, thisNode));
         }
@@ -57,7 +56,7 @@ public class NapaChartNode {
         } else {
             List<NapaChartNode> result = new ArrayList<>();
             ruleInProgress.reduce(lookAhead).ifPresent(s -> {
-                for (NapaChartNode parent: enclosing) {
+                for (NapaChartNode parent: new HashSet<NapaChartNode>(enclosing)) {
                     result.addAll(parent.acceptNonTerminal(s));
                 }
             });
@@ -100,7 +99,7 @@ public class NapaChartNode {
         return ruleInProgress;
     }
 
-    public Set<NapaChartNode> getEnclosing() {
+    public List<NapaChartNode> getEnclosing() {
         return enclosing;
     }
 

@@ -7,7 +7,6 @@ import org.symqle.epic.tokenizer.Tokenizer;
 
 import java.io.IOException;
 import java.io.Reader;
-import java.nio.file.NotDirectoryException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -34,7 +33,7 @@ public class Parser {
         int targetTag = grammar.findNonTerminalByName(target).orElseThrow(() -> new GrammarException("NonTerminal not found: " + target));
 
         RuleInProgress startRule = RuleInProgress.startRule(new NapaNonTerminalItem(targetTag, grammar), grammar);
-        final NapaChartNode startNode = new NapaChartNode(startRule, Collections.emptySet());
+        final NapaChartNode startNode = new NapaChartNode(startRule, Collections.emptyList());
         workSet.put(startNode.getRuleInProgress(), startNode);
         int maxComplexity = 0;
         List<Token<TokenProperties>> preface = new ArrayList<>();
