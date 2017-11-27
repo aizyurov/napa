@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author lvovich
@@ -13,9 +14,9 @@ import java.util.List;
 public class NapaChartNode {
 
     private final RuleInProgress ruleInProgress;
-    private final List<NapaChartNode> enclosing;
+    private final Set<NapaChartNode> enclosing;
 
-    public NapaChartNode(final RuleInProgress ruleInProgress, final List<NapaChartNode> enclosing) {
+    public NapaChartNode(final RuleInProgress ruleInProgress, final Set<NapaChartNode> enclosing) {
         this.ruleInProgress = ruleInProgress;
         this.enclosing = enclosing;
     }
@@ -24,7 +25,7 @@ public class NapaChartNode {
         if (this == other || other == null) {
             return this;
         } else if (ruleInProgress.equals(other.ruleInProgress)) {
-            List<NapaChartNode> mergedEnclosing = new ArrayList<>(enclosing);
+            Set<NapaChartNode> mergedEnclosing = new HashSet<>(enclosing);
             mergedEnclosing.addAll(other.enclosing);
             return new NapaChartNode(ruleInProgress, mergedEnclosing);
         } else {
@@ -43,7 +44,7 @@ public class NapaChartNode {
     public List<NapaChartNode> predict(Token<TokenProperties> lookAhead) {
         List<RuleInProgress> predicted = ruleInProgress.predict(lookAhead);
         List<NapaChartNode> newNodes = new ArrayList<>(predicted.size());
-        List<NapaChartNode> thisNode = Collections.singletonList(this);
+        Set<NapaChartNode> thisNode = Collections.singleton(this);
         for (RuleInProgress rule: predicted) {
             newNodes.add(new NapaChartNode(rule, thisNode));
         }
@@ -56,7 +57,7 @@ public class NapaChartNode {
         } else {
             List<NapaChartNode> result = new ArrayList<>();
             ruleInProgress.reduce(lookAhead).ifPresent(s -> {
-                for (NapaChartNode parent: new HashSet<NapaChartNode>(enclosing)) {
+                for (NapaChartNode parent: enclosing) {
                     result.addAll(parent.acceptNonTerminal(s));
                 }
             });
@@ -99,8 +100,12 @@ public class NapaChartNode {
         return ruleInProgress;
     }
 
-    public List<NapaChartNode> getEnclosing() {
+    Set<NapaChartNode> getEnclosing() {
         return enclosing;
+    }
+
+    public boolean isStartNode() {
+        return enclosing.isEmpty();
     }
 
     @Override

@@ -15,14 +15,19 @@ public class CharacterSet {
 
         CharacterSet that = (CharacterSet) o;
 
-        if (!bitSet.equals(that.bitSet)) return false;
-
-        return true;
+        return bitSet.equals(that.bitSet);
     }
+
+    private int hash;
 
     @Override
     public int hashCode() {
-        return bitSet.hashCode();
+        int h = hash;
+        if (h == 0) {
+            h = bitSet.hashCode();
+            hash = h;
+        }
+        return h;
     }
 
     public boolean contains(char c) {
