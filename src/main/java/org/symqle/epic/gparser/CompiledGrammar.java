@@ -35,15 +35,20 @@ public class CompiledGrammar {
     }
 
     private Set<Integer> findEmpty(List<CompiledRule> rules) {
-        Set<Integer> known = new HashSet<>();
-        for (CompiledRule rule: rules) {
-            if (canHaveEmptyDerivation(rule, rules)) {
-                known.add(rule.getTarget());
-            }
+        long startTs = System.currentTimeMillis();
+        try {
+            Set<Integer> known = new HashSet<>();
+            for (CompiledRule rule: rules) {
+                if (canHaveEmptyDerivation(rule, rules)) {
+                    known.add(rule.getTarget());
+                }
 
+            }
+            System.err.println("May be empty: " + known.stream().map(i -> nonTerminals[i]).collect(Collectors.toList()));
+            return Collections.unmodifiableSet(known);
+        } finally {
+            System.err.println("findEmpty: " + (System.currentTimeMillis() - startTs));
         }
-        System.err.println("May be empty: " + known.stream().map(i -> nonTerminals[i]).collect(Collectors.toList()));
-        return Collections.unmodifiableSet(known);
     }
 
     private boolean canHaveEmptyDerivation(CompiledRule rule, List<CompiledRule> allRules) {
@@ -104,34 +109,39 @@ public class CompiledGrammar {
     }
 
     private Map<Integer, Set<Integer>> calculateFirstSets(List<CompiledRule> rules) {
-        Map<Integer, Set<Integer>> dependencies = new HashMap<>();
-        for (CompiledRule rule: rules) {
-            int target = rule.getTarget();
-            final Set<Integer> dependencySet = dependencies.getOrDefault(target, new HashSet<>());
-            dependencySet.addAll(findFirstNonTerminals(rule.getItems(), rules));
-            dependencies.put(target, dependencySet);
-        }
-        for (int dependent = 0; dependent < nonTerminals.length; dependent ++) {
-            dependencies.putIfAbsent(dependent, Collections.emptySet());
-        }
-        TSort tSort = new TSort(dependencies);
-        final List<Integer> sortedNonTerminals;
+        long startTs = System.currentTimeMillis();
         try {
-            sortedNonTerminals = tSort.sort();
-        } catch (TSort.CyclicDependencyException e) {
-            final List<String> cycle = e.getCycle().stream().map(this::formatSortedItem).collect(Collectors.toList());
-            throw new GrammarException("Cyclic dependency: " + cycle);
-        }
-        Map<Integer, Set<Integer>> firstSets = new HashMap<>();
-        final Map<Integer, List<CompiledRule>> ruleByTarget = rules.stream().collect(Collectors.groupingBy(CompiledRule::getTarget));
-        for (Integer key: sortedNonTerminals) {
-            Set<Integer> firstSet = new HashSet<>();
-            for (CompiledRule rule: ruleByTarget.get(key)) {
-                firstSet.addAll(findFirstTerminals(rule.getItems(), Collections.unmodifiableMap(firstSets), rules));
+            Map<Integer, Set<Integer>> dependencies = new HashMap<>();
+            for (CompiledRule rule: rules) {
+                int target = rule.getTarget();
+                final Set<Integer> dependencySet = dependencies.getOrDefault(target, new HashSet<>());
+                dependencySet.addAll(findFirstNonTerminals(rule.getItems(), rules));
+                dependencies.put(target, dependencySet);
             }
-            firstSets.put(key, firstSet);
+            for (int dependent = 0; dependent < nonTerminals.length; dependent ++) {
+                dependencies.putIfAbsent(dependent, Collections.emptySet());
+            }
+            TSort tSort = new TSort(dependencies);
+            final List<Integer> sortedNonTerminals;
+            try {
+                sortedNonTerminals = tSort.sort();
+            } catch (TSort.CyclicDependencyException e) {
+                final List<String> cycle = e.getCycle().stream().map(this::formatSortedItem).collect(Collectors.toList());
+                throw new GrammarException("Cyclic dependency: " + cycle);
+            }
+            Map<Integer, Set<Integer>> firstSets = new HashMap<>();
+            final Map<Integer, List<CompiledRule>> ruleByTarget = rules.stream().collect(Collectors.groupingBy(CompiledRule::getTarget));
+            for (Integer key: sortedNonTerminals) {
+                Set<Integer> firstSet = new HashSet<>();
+                for (CompiledRule rule: ruleByTarget.get(key)) {
+                    firstSet.addAll(findFirstTerminals(rule.getItems(), Collections.unmodifiableMap(firstSets), rules));
+                }
+                firstSets.put(key, firstSet);
+            }
+            return firstSets;
+        } finally {
+            System.err.println("calculateFirstSets: " + (System.currentTimeMillis() - startTs));
         }
-        return firstSets;
     }
 
     private String formatSortedItem(TSort.SortedItem s) {

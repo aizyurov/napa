@@ -24,7 +24,7 @@ public class Parser {
     public List<SyntaxTree> parse(final String target, final Reader reader, final int complexityLimit) throws IOException {
         final CompiledGrammar grammar = this.compiledGrammar;
         final Tokenizer<TokenProperties> tokenizer = new AsyncTokenizer<>(new DfaTokenizer<>(grammar.getTokenizerDfa(), reader));
-//        this.tokenizer = new DfaTokenizer<>(grammar.getTokenizerDfa(), reader);
+//        final Tokenizer<TokenProperties> tokenizer = new DfaTokenizer<>(grammar.getTokenizerDfa(), reader);
         final Map<RuleInProgress, NapaChartNode> workSet = new LinkedHashMap<>();
         final Map<RuleInProgress, NapaChartNode> shiftCandidates = new HashMap<>();
         final List<RawSyntaxNode> syntaxTreeCandidates = new ArrayList<>();
@@ -33,7 +33,7 @@ public class Parser {
         int targetTag = grammar.findNonTerminalByName(target).orElseThrow(() -> new GrammarException("NonTerminal not found: " + target));
 
         RuleInProgress startRule = RuleInProgress.startRule(new NapaNonTerminalItem(targetTag, grammar), grammar);
-        final NapaChartNode startNode = new NapaChartNode(startRule, Collections.emptySet());
+        final NapaChartNode startNode = new NapaChartNode(startRule, Collections.emptyList());
         workSet.put(startNode.getRuleInProgress(), startNode);
         int maxComplexity = 0;
         List<Token<TokenProperties>> preface = new ArrayList<>();
@@ -75,7 +75,7 @@ public class Parser {
                         processingResult = nextNode.predict(nextToken);
                         break;
                     case reduce:
-                        if (nextNode.isStartNode()) {
+                        if (nextNode.getEnclosing().isEmpty()) {
                             syntaxTreeCandidates.addAll(nextNode.accept());
                             processingResult = Collections.emptyList();
                         } else {

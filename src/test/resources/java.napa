@@ -977,7 +977,3 @@ ResourceList = Resource {';' Resource} ;
 
 Resource = {VariableModifier} UnannType VariableDeclaratorId '=' Expression ;
 
-
-
-
-
