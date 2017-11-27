@@ -2,10 +2,7 @@ package org.symqle.epic.gparser;
 
 import org.symqle.epic.tokenizer.Token;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author lvovich
@@ -56,7 +53,7 @@ public class NapaChartNode {
         } else {
             List<NapaChartNode> result = new ArrayList<>();
             ruleInProgress.reduce(lookAhead).ifPresent(s -> {
-                for (NapaChartNode parent: new HashSet<NapaChartNode>(enclosing)) {
+                for (NapaChartNode parent: new LinkedHashSet<NapaChartNode>(enclosing)) {
                     result.addAll(parent.acceptNonTerminal(s));
                 }
             });
@@ -107,14 +104,4 @@ public class NapaChartNode {
         return enclosing.isEmpty();
     }
 
-    @Override
-    public boolean equals(Object obj) {
-        return this == obj;
-
-    }
-
-    public int hashCode() {
-        return 1;
-
-    }
 }

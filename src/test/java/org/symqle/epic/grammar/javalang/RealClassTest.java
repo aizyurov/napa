@@ -24,8 +24,22 @@ public class RealClassTest extends TestCase {
     }
 
     public void testEDS() throws Exception {
-        List<SyntaxTree> forest = g.parse("CompilationUnit", new InputStreamReader(getClass().getClassLoader().getResourceAsStream("EnvironmentDeploymentService.txt")), 1000);
-        Assert.assertEquals(1, forest.size());
+        {
+            List<SyntaxTree> forest = g.parse("CompilationUnit", new InputStreamReader(getClass().getClassLoader().getResourceAsStream("EnvironmentDeploymentService.txt")), 1000);
+            Assert.assertEquals(1, forest.size());
+        }
+        {
+            List<SyntaxTree> forest = g.parse("CompilationUnit", new InputStreamReader(getClass().getClassLoader().getResourceAsStream("EnvironmentDeploymentService.txt")), 1000);
+            Assert.assertEquals(1, forest.size());
+        }
+        {
+            List<SyntaxTree> forest = g.parse("CompilationUnit", new InputStreamReader(getClass().getClassLoader().getResourceAsStream("EnvironmentDeploymentService.txt")), 1000);
+            Assert.assertEquals(1, forest.size());
+        }
+        {
+            List<SyntaxTree> forest = g.parse("CompilationUnit", new InputStreamReader(getClass().getClassLoader().getResourceAsStream("EnvironmentDeploymentService.txt")), 1000);
+            Assert.assertEquals(1, forest.size());
+        }
     }
 
 }
