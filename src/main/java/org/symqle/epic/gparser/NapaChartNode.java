@@ -14,7 +14,7 @@ public class NapaChartNode {
 
     public NapaChartNode(final RuleInProgress ruleInProgress, final List<NapaChartNode> enclosing) {
         this.ruleInProgress = ruleInProgress;
-        this.enclosing = enclosing;
+        this.enclosing = Collections.unmodifiableList(enclosing);
     }
 
     public NapaChartNode merge(NapaChartNode other) {
