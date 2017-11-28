@@ -58,6 +58,11 @@ public class LeafNode extends SyntaxTree {
         writer.write("'");
         writer.write(value);
         writer.write("'");
+        writer.write("[");
+        writer.write(String.valueOf(getLine()));
+        writer.write(":");
+        writer.write(String.valueOf(getPos()));
+        writer.write(("]"));
         writer.write("\n");
     }
 }

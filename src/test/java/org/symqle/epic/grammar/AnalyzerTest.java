@@ -118,6 +118,36 @@ public class AnalyzerTest extends TestCase {
 
     }
 
+    public void testEmptyInTheEnd() throws Exception {
+        String grammar = "T = 'a' B; B = 'b' | ;";
+        String source = "a";
+        CompiledGrammar g = new GaGrammar().parse(new StringReader(grammar));
+        List<SyntaxTree> forest = new Parser(g).parse("T", new StringReader(source), 20);
+        Assert.assertEquals(1, forest.size());
+        SyntaxTree tree = forest.get(0);
+        tree.print(System.out);
+    }
+
+    public void testEmptyInTheEnd2() throws Exception {
+        String grammar = "T = 'a' ['b']; ";
+        String source = "a";
+        CompiledGrammar g = new GaGrammar().parse(new StringReader(grammar));
+        List<SyntaxTree> forest = new Parser(g).parse("T", new StringReader(source), 20);
+        Assert.assertEquals(1, forest.size());
+        SyntaxTree tree = forest.get(0);
+        tree.print(System.out);
+    }
+
+    public void testEmptyInTheEnd3() throws Exception {
+        String grammar = "T = 'a' B; B = ['b']; ";
+        String source = "a";
+        CompiledGrammar g = new GaGrammar().parse(new StringReader(grammar));
+        List<SyntaxTree> forest = new Parser(g).parse("T", new StringReader(source), 20);
+        Assert.assertEquals(1, forest.size());
+        SyntaxTree tree = forest.get(0);
+        tree.print(System.out);
+    }
+
     public void testLalrFail() throws Exception {
         CompiledGrammar g = new GaGrammar().parse(new InputStreamReader(getClass().getClassLoader().getResourceAsStream("lalr_fail.napa")));
         String source = "bed";

@@ -42,7 +42,7 @@ public class Parser {
         int totalIterations= 0;
         while (true) {
             Token<TokenProperties> nextToken = tokenizer.nextToken();
-            while (nextToken != null && nextToken.getType().isIgnoreOnly()) {
+            while (nextToken.getType() != null && nextToken.getType().isIgnoreOnly()) {
                 preface.add(nextToken);
                 nextToken = tokenizer.nextToken();
             }
@@ -120,7 +120,7 @@ public class Parser {
 //                }
             }
 //            System.out.println("Iterations: " + iterations);
-            if (nextToken == null) {
+            if (nextToken.getType() == null) {
                 System.out.println("Max complexity: " + maxComplexity);
                 System.out.println("Max workset: " + maxWorkset);
                 System.out.println("Max nodes: " + maxNodes);

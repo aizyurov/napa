@@ -1,5 +1,7 @@
 package org.symqle.epic.tokenizer;
 
+import org.symqle.epic.gparser.GrammarException;
+
 import java.io.IOException;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -13,7 +15,7 @@ public class AsyncTokenizer<T> implements Tokenizer<T> {
 
     private BlockingQueue<Token<T>> queue = new ArrayBlockingQueue<Token<T>>(1000);
 
-    private boolean eofReached = false;
+    private Token<T> eofToken = null;
 
     private IOException exception = null;
 
@@ -27,29 +29,32 @@ public class AsyncTokenizer<T> implements Tokenizer<T> {
         if (exception != null) {
             throw exception;
         }
-        if (eofReached) {
-            return null;
+        if (eofToken != null) {
+            return eofToken;
         }
         Token<T> token = null;
         try {
             token = queue.take();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            return null;
+            throw new GrammarException("Unexpected interrupt");
         }
         if (token.getType() == null) {
-            eofReached = true;
-            return null;
+            eofToken = token;
+            return token;
         }
         return token;
     }
 
     private void pollTokens() {
         try {
-            for (Token<T> token = delegate.nextToken(); token != null; token = delegate.nextToken()) {
+            while(true) {
+                Token<T> token = delegate.nextToken();
                 queue.put(token);
+                if (token.getType() == null) {
+                    break;
+                }
             }
-            queue.put(new Token<T>(null, -1, -1, null));
         } catch (IOException e) {
             exception = e;
         } catch (InterruptedException e) {

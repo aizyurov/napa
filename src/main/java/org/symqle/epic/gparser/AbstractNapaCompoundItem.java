@@ -4,7 +4,6 @@ import org.symqle.epic.tokenizer.Token;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -38,12 +37,12 @@ public abstract class AbstractNapaCompoundItem implements NapaRuleItem {
 
     @Override
     public List<List<NapaRuleItem>> expand(Token<TokenProperties> lookAhead) {
-        if (lookAhead != null && !lookAhead.getType().matches(first())) {
+        if (lookAhead.getType() != null && !lookAhead.getType().matches(first())) {
             return Collections.emptyList();
         }
         List<List<NapaRuleItem>> expansion = new ArrayList<>();
         for (RuleItemSequence option: options) {
-            if (option.canBeEmpty() || lookAhead != null && lookAhead.getType().matches(option.firstSet())) {
+            if (option.canBeEmpty() || lookAhead.getType() != null && lookAhead.getType().matches(option.firstSet())) {
                 expansion.add(Collections.unmodifiableList(option.getSequence()));
             }
         }

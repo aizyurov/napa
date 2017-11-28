@@ -2,7 +2,6 @@ package org.symqle.epic.gparser;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -50,17 +49,18 @@ public class BranchNode extends SyntaxTree {
         return stringBuilder.toString();
     }
 
-    public void setChildren(List<SyntaxTree> children) {
-        if (this.children == null) {
-            this.children = new ArrayList<>(children);
-        } else {
-            throw new IllegalStateException("Cannot set children twice");
-        }
-    }
-
     @Override
     protected void print(final Writer writer) throws IOException {
         writer.write(getName());
+        writer.write("[");
+        writer.write(String.valueOf(getLine()));
+        writer.write(":");
+        writer.write(String.valueOf(getPos()));
+        writer.write(("]"));
+
+        if (getChildren().isEmpty()) {
+            writer.write("(empty)");
+        }
         writer.write("\n");
     }
 }

@@ -50,7 +50,7 @@ public class GaGrammar {
             PackedDfa<GaTokenType> dfa = new GaLexer().compile();
             tokenizer = new GaTokenizer(new DfaTokenizer<>(dfa, source));
             nextToken = tokenizer.nextToken();
-            while(nextToken != null) {
+            while(nextToken.getType() != null) {
                 switch(nextToken.getType()) {
                     case IDENTIFIER:
                         addRule(rule());

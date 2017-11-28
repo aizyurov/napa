@@ -14,7 +14,7 @@ public class DfaTokenizer<T> implements Tokenizer<T> {
     private final PackedDfa<T> dfa;
     private final Reader reader;
     private int line = 1;
-    private int pos = 0;
+    private int pos = 1;
     private int state = 0;
     private Position position = Position.REGULAR;
     private List<AttributedCharacter> buffer = new ArrayList<>();
@@ -51,7 +51,7 @@ public class DfaTokenizer<T> implements Tokenizer<T> {
                         break;
                     case END_OF_LINE:
                         line += 1;
-                        pos = 0;
+                        pos = 1;
                         break;
                     default:
                         position = Position.END_OF_LINE;
@@ -83,7 +83,7 @@ public class DfaTokenizer<T> implements Tokenizer<T> {
             final int nextChar = attributedCharacter.getCharacter();
             if (nextChar == -1) {
                 if (state == 0) {
-                    return null;
+                    return new Token<>(null, line, pos, null);
                 } else {
                     return constructToken(nextChar);
                 }

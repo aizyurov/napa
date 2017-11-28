@@ -122,13 +122,14 @@ public class RuleInProgress {
         if (currentItem == null) {
             return Action.reduce;
         }
+        TokenProperties tokenType = lookAhead.getType();
         switch (currentItem.getType()) {
             case TERMINAL:
-                return lookAhead != null && lookAhead.getType().matches(currentItem.first()) ? Action.shift : Action.none;
+                return tokenType != null && tokenType.matches(currentItem.first()) ? Action.shift : Action.none;
             case NON_TERMINAL:
-                return currentItem.hasEmptyDerivation() || lookAhead != null && lookAhead.getType().matches(currentItem.first()) ? Action.predict : Action.none;
+                return currentItem.hasEmptyDerivation() || tokenType != null && tokenType.matches(currentItem.first()) ? Action.predict : Action.none;
             case COMPOUND:
-                return currentItem.hasEmptyDerivation() || lookAhead != null && lookAhead.getType().matches(currentItem.first()) ? Action.expand : Action.none;
+                return currentItem.hasEmptyDerivation() || tokenType != null && tokenType.matches(currentItem.first()) ? Action.expand : Action.none;
             default:
                 throw new IllegalArgumentException("Unexpected item type: " + currentItem.getType());
         }

@@ -19,7 +19,7 @@ public class GaTokenizer implements Tokenizer<GaTokenType> {
     @Override
     public Token<GaTokenType> nextToken() throws IOException {
         Token<GaTokenType> next = delegate.nextToken();
-        while (next != null && next.getType() == GaTokenType.IGNORE) {
+        while (next.getType() == GaTokenType.IGNORE) {
             next = delegate.nextToken();
         }
         return next;
