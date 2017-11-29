@@ -18,7 +18,7 @@ public class NapaChoiceItem extends AbstractNapaCompoundItem {
     @Override
     public List<List<NapaRuleItem>> expand(final Token<TokenProperties> lookAhead) {
         if (hasEmptyDerivation()) {
-            return super.expand(null);
+            return super.expand(new Token<TokenProperties>(null, lookAhead.getLine(), lookAhead.getPos(), null));
         } else {
             return super.expand(lookAhead);
         }

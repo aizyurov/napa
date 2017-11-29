@@ -61,5 +61,27 @@ public class ZeroOrOneItem implements RuleItem {
         return new NapaZeroOrOneItem(napaOptions);
     }
 
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        final ZeroOrOneItem that = (ZeroOrOneItem) o;
+
+        return options.equals(that.options);
+
+    }
+
+    @Override
+    public int hashCode() {
+        int h = hash;
+        if (h == 0) {
+            hash = h = options.hashCode();
+        }
+        return h;
+    }
+
+    private int hash;
+
 
 }

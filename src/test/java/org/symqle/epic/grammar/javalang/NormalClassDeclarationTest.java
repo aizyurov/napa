@@ -53,7 +53,7 @@ public class NormalClassDeclarationTest extends TestCase {
     }
 
     private SyntaxTree parse(final String source) throws IOException {
-        List<SyntaxTree> forest = g.parse("NormalClassDeclaration", new StringReader(source), 100);
+        List<SyntaxTree> forest = g.parse("NormalClassDeclaration", new StringReader(source), 300);
         Assert.assertEquals(1, forest.size());
         SyntaxTree tree = forest.iterator().next();
         Assert.assertEquals(source, tree.getSource());

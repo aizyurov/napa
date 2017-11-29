@@ -36,4 +36,20 @@ public class NonTerminalItem implements RuleItem {
     public NapaRuleItem toNapaRuleItem(final CompiledGrammar grammar) {
         return new NapaNonTerminalItem(value, grammar);
     }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        final NonTerminalItem that = (NonTerminalItem) o;
+
+        return value == that.value;
+
+    }
+
+    @Override
+    public int hashCode() {
+        return value;
+    }
 }

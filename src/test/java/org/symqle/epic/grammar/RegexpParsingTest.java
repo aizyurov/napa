@@ -100,7 +100,7 @@ public class RegexpParsingTest extends TestCase {
 //        Reader reader = new StringReader("public  class  Lexer {}");
         Reader reader = new StringReader("/** comment */ public class Abc implements Def {\n   int i;\r   long j;\r\n}\n\r\nhaha");
         Tokenizer<Set<String>> tokenizer = new DfaTokenizer<>(packedDfa, reader);
-        for (Token<Set<String>> token = tokenizer.nextToken(); token != null; token = tokenizer.nextToken()) {
+        for (Token<Set<String>> token = tokenizer.nextToken(); token.getType() != null; token = tokenizer.nextToken()) {
             System.out.println(token);
         }
         System.out.println("================");
@@ -130,7 +130,7 @@ public class RegexpParsingTest extends TestCase {
         Reader reader = new StringReader("/** comment */ public class @Abc implements Def {\n   int i;\r   long j;\r\n}\n\r\nhaha");
         Tokenizer<Set<String>> tokenizer = new DfaTokenizer<>(packedDfa, reader);
         try {
-            for (Token<Set<String>> token = tokenizer.nextToken(); token != null; token = tokenizer.nextToken()) {
+            for (Token<Set<String>> token = tokenizer.nextToken(); token.getType() != null; token = tokenizer.nextToken()) {
                 System.out.println(token);
             }
             fail("Exception expected");
@@ -164,7 +164,7 @@ public class RegexpParsingTest extends TestCase {
         Reader reader = new InputStreamReader(getClass().getClassLoader().getResourceAsStream("sample.txt"), "UTF-8");
         final long startTokens = System.currentTimeMillis();
         Tokenizer<Set<String>> tokenizer = new DfaTokenizer<>(packedDfa, reader);
-        for (Token<Set<String>> token = tokenizer.nextToken(); token != null; token = tokenizer.nextToken()) {
+        for (Token<Set<String>> token = tokenizer.nextToken(); token.getType() != null; token = tokenizer.nextToken()) {
             System.out.println(token);
         }
         System.out.println("Time: " + (System.currentTimeMillis()-startTokens));
