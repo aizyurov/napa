@@ -5,6 +5,7 @@ import junit.framework.TestCase;
 import org.symqle.epic.gparser.Parser;
 import org.symqle.epic.gparser.SyntaxTree;
 
+import java.io.FileOutputStream;
 import java.io.InputStreamReader;
 import java.util.List;
 
@@ -39,6 +40,9 @@ public class RealClassTest extends TestCase {
         {
             List<SyntaxTree> forest = g.parse("CompilationUnit", new InputStreamReader(getClass().getClassLoader().getResourceAsStream("EnvironmentDeploymentService.txt")), 1000);
             Assert.assertEquals(1, forest.size());
+            SyntaxTree tree = forest.get(0);
+            tree.print(new FileOutputStream("true2"));
+
         }
     }
 
