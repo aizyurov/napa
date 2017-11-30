@@ -1,11 +1,14 @@
 package org.symqle.epic.gparser;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author lvovich
  */
-public class NonTerminalItem implements RuleItem {
+public class NonTerminalItem extends AbstractRuleItem  {
 
     private final int value;
 
@@ -25,16 +28,20 @@ public class NonTerminalItem implements RuleItem {
 
     @Override
     public List<List<RuleItem>> expand() {
-        throw new UnsupportedOperationException("Not applicable");
+        return Collections.emptyList();
     }
 
     public String toString(CompiledGrammar grammar) {
         return grammar.getNonTerminalName(value);
     }
 
+
     @Override
-    public NapaRuleItem toNapaRuleItem(final CompiledGrammar grammar) {
-        return new NapaNonTerminalItem(value, grammar);
+    protected NapaRuleItem createNapaRuleItem(final CompiledGrammar grammar, final Map<RuleItem, NapaRuleItem> cache) {
+        boolean hasEmptyDerivation = grammar.hasEmptyDerivation(this);
+        Set<Integer> firstSet = grammar.getFirstSet(this);
+        NapaNonTerminalItem napaNonTerminalItem = new NapaNonTerminalItem(value, grammar, hasEmptyDerivation, firstSet);
+        return napaNonTerminalItem;
     }
 
     @Override

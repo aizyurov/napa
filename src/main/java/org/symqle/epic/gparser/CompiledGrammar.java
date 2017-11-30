@@ -14,8 +14,8 @@ public class CompiledGrammar {
     private final String[] terminals;
     private final Map<Integer, List<NapaRule>> napaRules;
     private final PackedDfa<TokenProperties> tokenizerDfa;
-    private final Map<Integer, Set<Integer>> firstSets = new HashMap<>();
-    private final Set<Integer> haveEmptyDerivation = new HashSet<>();
+    private final Map<RuleItem, Set<Integer>> firstSets = new HashMap<>();
+    private final Set<RuleItem> haveEmptyDerivation = new HashSet<>();
 
     public CompiledGrammar(final String[] nonTerminals, final String[] terminals, List<CompiledRule> rules, final PackedDfa<TokenProperties> tokenizerDfa) {
         verify(nonTerminals, rules.stream().map(CompiledRule::getTarget).collect(Collectors.toSet()));
@@ -23,21 +23,37 @@ public class CompiledGrammar {
         this.terminals = terminals;
         this.tokenizerDfa = tokenizerDfa;
         Map<Integer, List<CompiledRule>> ruleMap = rules.stream().collect(Collectors.groupingBy(CompiledRule::getTarget));
+        Set<RuleItem> allItems = new HashSet<>();
+        for (CompiledRule rule: rules) {
+            addItems(allItems, Collections.singletonList(new NonTerminalItem(rule.getTarget())));
+            addItems(allItems, rule.getItems());
+        }
         long startTs = System.currentTimeMillis();
-        for (int target = 0; target < nonTerminals.length; target++) {
-            Set<Integer> first = analyze(target, ruleMap);
+        for (RuleItem item: allItems) {
+            Set<Integer> first = analyze(item, ruleMap);
             if (first.remove(-1)) {
-                haveEmptyDerivation.add(target);
+                haveEmptyDerivation.add(item);
             }
-            firstSets.put(target, first);
+            firstSets.put(item, first);
 
         }
         System.err.println("Analyser: " + (System.currentTimeMillis() - startTs) );
-        this.napaRules = rules.stream().map(x -> x.toNapaRule(this)).collect(Collectors.groupingBy(NapaRule::getTarget));
+        Map<RuleItem, NapaRuleItem> cache = new HashMap<>();
+        this.napaRules = rules.stream().map(x -> x.toNapaRule(this, cache)).collect(Collectors.groupingBy(NapaRule::getTarget));
     }
 
-    private Set<Integer> analyze(int target, Map<Integer, List<CompiledRule>> ruleMap) {
-        RuleInProgress0 startRule = new RuleInProgress0(-1, Collections.singletonList(new NonTerminalItem(target)), 0, ruleMap);
+    private void addItems(Set<RuleItem> allITems, List<RuleItem> items) {
+        for (RuleItem item: items) {
+            if (allITems.contains(item)) {
+                continue;
+            }
+            allITems.add(item);
+            addItems(allITems, item.expand().stream().flatMap(List::stream).collect(Collectors.toList()));
+        }
+    }
+
+    private Set<Integer> analyze(RuleItem item, Map<Integer, List<CompiledRule>> ruleMap) {
+        RuleInProgress0 startRule = new RuleInProgress0(-1, Collections.singletonList(item), 0, ruleMap);
         ChartNode0 startNode = new ChartNode0(startRule, null);
         final Map<RuleInProgress0, ChartNode0> workSet = new LinkedHashMap<>();
         final Map<RuleInProgress0, ChartNode0> shiftCandidates = new HashMap<>();
@@ -153,12 +169,12 @@ public class CompiledGrammar {
         return tokenizerDfa;
     }
 
-    public Set<Integer> getFirstSet(int target) {
-        return firstSets.get(target);
+    public Set<Integer> getFirstSet(RuleItem ruleItem) {
+        return firstSets.getOrDefault(ruleItem, Collections.emptySet());
     }
 
-    public boolean hasEmptyDerivation(int tag) {
-        return haveEmptyDerivation.contains(tag);
+    public boolean hasEmptyDerivation(RuleItem item) {
+        return haveEmptyDerivation.contains(item);
     }
 
     public List<NapaRule> getNapaRules(int target) {

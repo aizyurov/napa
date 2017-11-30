@@ -5,14 +5,15 @@ import org.symqle.epic.tokenizer.Token;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author lvovich
  */
 public class NapaZeroOrOneItem extends AbstractNapaCompoundItem {
 
-    public NapaZeroOrOneItem(final List<List<NapaRuleItem>> options) {
-        super(options);
+    public NapaZeroOrOneItem(final List<List<NapaRuleItem>> options, boolean canBeEmpty, Set<Integer> first) {
+        super(options, canBeEmpty, first);
     }
 
     @Override
@@ -21,11 +22,6 @@ public class NapaZeroOrOneItem extends AbstractNapaCompoundItem {
         expansion.add(Collections.emptyList()); // zero
         expansion.addAll(super.expand(lookAhead));
         return expansion;
-    }
-
-    @Override
-    public boolean hasEmptyDerivation() {
-        return true;
     }
 
     @Override

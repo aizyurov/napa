@@ -3,16 +3,15 @@ package org.symqle.epic.gparser;
 import org.symqle.epic.tokenizer.Token;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author lvovich
  */
 public class NapaChoiceItem extends AbstractNapaCompoundItem {
 
-    private Boolean hasEmptyDerivation;
-
-    public NapaChoiceItem(final List<List<NapaRuleItem>> options) {
-        super(options);
+    public NapaChoiceItem(final List<List<NapaRuleItem>> options, boolean canBeEmpty, Set<Integer> first) {
+        super(options, canBeEmpty, first);
     }
 
     @Override
@@ -31,14 +30,6 @@ public class NapaChoiceItem extends AbstractNapaCompoundItem {
             }
         }
         return false;
-    }
-
-    @Override
-    public boolean hasEmptyDerivation() {
-        if (hasEmptyDerivation == null) {
-            hasEmptyDerivation = findEmptyDerivation();
-        }
-        return hasEmptyDerivation;
     }
 
     @Override

@@ -1,6 +1,7 @@
 package org.symqle.epic.gparser;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -24,7 +25,7 @@ public class CompiledRule {
         return items;
     }
 
-    public NapaRule toNapaRule(CompiledGrammar grammar) {
-        return new NapaRule(target, items.stream().map(x -> x.toNapaRuleItem(grammar)).collect(Collectors.toList()));
+    public NapaRule toNapaRule(CompiledGrammar grammar, Map<RuleItem, NapaRuleItem> cache) {
+        return new NapaRule(target, items.stream().map(x -> x.toNapaRuleItem(grammar, cache)).collect(Collectors.toList()));
     }
 }

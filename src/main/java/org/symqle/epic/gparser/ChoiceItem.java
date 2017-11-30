@@ -3,12 +3,13 @@ package org.symqle.epic.gparser;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
  * @author lvovich
  */
-public class ChoiceItem implements RuleItem {
+public class ChoiceItem extends AbstractRuleItem {
 
     private final List<List<RuleItem>> options;
 
@@ -52,12 +53,12 @@ public class ChoiceItem implements RuleItem {
     }
 
     @Override
-    public NapaRuleItem toNapaRuleItem(final CompiledGrammar grammar) {
+    protected NapaRuleItem createNapaRuleItem(final CompiledGrammar grammar, final Map<RuleItem, NapaRuleItem> cache) {
         List<List<NapaRuleItem>> napaOptions = new ArrayList<>();
         for (List<RuleItem> items: options) {
-            napaOptions.add(items.stream().map(x -> x.toNapaRuleItem(grammar)).collect(Collectors.toList()));
+            napaOptions.add(items.stream().map(x -> x.toNapaRuleItem(grammar, cache)).collect(Collectors.toList()));
         }
-        return new NapaChoiceItem(napaOptions);
+        return new NapaChoiceItem(napaOptions, grammar.hasEmptyDerivation(this), grammar.getFirstSet(this));
     }
 
     @Override
