@@ -5,6 +5,7 @@ import junit.framework.TestCase;
 import org.symqle.epic.gparser.Parser;
 import org.symqle.epic.gparser.SyntaxTree;
 
+import java.io.BufferedInputStream;
 import java.io.InputStreamReader;
 import java.util.List;
 
@@ -25,19 +26,19 @@ public class RealClassTest extends TestCase {
 
     public void testEDS() throws Exception {
         {
-            List<SyntaxTree> forest = g.parse("CompilationUnit", new InputStreamReader(getClass().getClassLoader().getResourceAsStream("EnvironmentDeploymentService.txt")), 1000);
+            List<SyntaxTree> forest = g.parse("CompilationUnit", new InputStreamReader(new BufferedInputStream(getClass().getClassLoader().getResourceAsStream("EnvironmentDeploymentService.txt"))), 1000);
             Assert.assertEquals(1, forest.size());
         }
         {
-            List<SyntaxTree> forest = g.parse("CompilationUnit", new InputStreamReader(getClass().getClassLoader().getResourceAsStream("EnvironmentDeploymentService.txt")), 1000);
+            List<SyntaxTree> forest = g.parse("CompilationUnit", new InputStreamReader(new BufferedInputStream(getClass().getClassLoader().getResourceAsStream("EnvironmentDeploymentService.txt"))), 1000);
             Assert.assertEquals(1, forest.size());
         }
         {
-            List<SyntaxTree> forest = g.parse("CompilationUnit", new InputStreamReader(getClass().getClassLoader().getResourceAsStream("EnvironmentDeploymentService.txt")), 1000);
+            List<SyntaxTree> forest = g.parse("CompilationUnit", new InputStreamReader(new BufferedInputStream(getClass().getClassLoader().getResourceAsStream("EnvironmentDeploymentService.txt"))), 1000);
             Assert.assertEquals(1, forest.size());
         }
         {
-            List<SyntaxTree> forest = g.parse("CompilationUnit", new InputStreamReader(getClass().getClassLoader().getResourceAsStream("EnvironmentDeploymentService.txt")), 1000);
+            List<SyntaxTree> forest = g.parse("CompilationUnit", new InputStreamReader(new BufferedInputStream(getClass().getClassLoader().getResourceAsStream("EnvironmentDeploymentService.txt"))), 1000);
             Assert.assertEquals(1, forest.size());
         }
     }

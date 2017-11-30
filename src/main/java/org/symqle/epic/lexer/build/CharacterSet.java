@@ -11,7 +11,7 @@ public class CharacterSet {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || ! (o instanceof CharacterSet)) return false;
+        if (o == null || o.getClass() != getClass()) return false;
 
         CharacterSet that = (CharacterSet) o;
 
