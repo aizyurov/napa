@@ -32,7 +32,8 @@ public class Parser {
         final long startTime = System.currentTimeMillis();
         int targetTag = grammar.findNonTerminalByName(target).orElseThrow(() -> new GrammarException("NonTerminal not found: " + target));
 
-        RuleInProgress startRule = RuleInProgress.startRule(new NapaNonTerminalItem(targetTag, grammar), grammar);
+
+        RuleInProgress startRule = RuleInProgress.startRule(new NonTerminalItem(targetTag).toNapaRuleItem(grammar, new HashMap<>()), grammar);
         final NapaChartNode startNode = new NapaChartNode(startRule, Collections.emptyList());
         workSet.put(startNode.getRuleInProgress(), startNode);
         int maxComplexity = 0;

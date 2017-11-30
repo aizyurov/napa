@@ -13,16 +13,18 @@ import java.util.stream.Collectors;
  */
 public abstract class AbstractNapaCompoundItem implements NapaRuleItem {
     private final List<RuleItemSequence> options;
-    private Set<Integer> first;
-    private Boolean canBeEmpty;
+    private final Set<Integer> first;
+    private final boolean canBeEmpty;
 
-    public AbstractNapaCompoundItem(final List<List<NapaRuleItem>> options) {
+    public AbstractNapaCompoundItem(final List<List<NapaRuleItem>> options, boolean canBeEmpty, Set<Integer> first) {
         this.options = options.stream().map(RuleItemSequence::new).collect(Collectors.toList());
+        this.canBeEmpty = canBeEmpty;
+        this.first = first;
     }
 
-
-    private Set<Integer> calculateFirst() {
-        return options.stream().flatMap(s -> s.firstSet().stream()).collect(Collectors.toSet());
+    @Override
+    public boolean hasEmptyDerivation() {
+        return canBeEmpty;
     }
 
     @Override
@@ -56,9 +58,6 @@ public abstract class AbstractNapaCompoundItem implements NapaRuleItem {
 
     @Override
     public Set<Integer> first() {
-        if (first == null) {
-            first = calculateFirst();
-        }
         return first;
     }
 

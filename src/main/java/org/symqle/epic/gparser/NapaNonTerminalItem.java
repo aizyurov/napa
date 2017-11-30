@@ -16,9 +16,14 @@ public class NapaNonTerminalItem implements NapaRuleItem {
 
     private final CompiledGrammar grammar;
 
-    public NapaNonTerminalItem(final int value, CompiledGrammar grammar) {
+    private boolean hasEmptyDerivation;
+    private Set<Integer> first;
+
+    public NapaNonTerminalItem(final int value, CompiledGrammar grammar, boolean hasEmptyDerivation, Set<Integer> first) {
         this.value = value;
         this.grammar = grammar;
+        this.hasEmptyDerivation = hasEmptyDerivation;
+        this.first = first;
     }
 
     @Override
@@ -33,12 +38,12 @@ public class NapaNonTerminalItem implements NapaRuleItem {
 
     @Override
     public boolean hasEmptyDerivation() {
-        return grammar.hasEmptyDerivation(value);
+        return hasEmptyDerivation;
     }
 
     @Override
     public Set<Integer> first() {
-        return grammar.getFirstSet(value);
+        return first;
     }
 
     @Override

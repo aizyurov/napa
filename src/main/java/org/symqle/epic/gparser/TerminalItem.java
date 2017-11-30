@@ -1,11 +1,13 @@
 package org.symqle.epic.gparser;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author lvovich
  */
-public class TerminalItem implements RuleItem {
+public class TerminalItem extends AbstractRuleItem {
 
     private final int value;
 
@@ -24,15 +26,16 @@ public class TerminalItem implements RuleItem {
 
     @Override
     public List<List<RuleItem>> expand() {
-        throw new UnsupportedOperationException("Not applicable");
+        return Collections.emptyList();
     }
 
     public String toString(CompiledGrammar grammar) {
         return grammar.getTerminalName(value);
     }
 
+
     @Override
-    public NapaRuleItem toNapaRuleItem(final CompiledGrammar grammar) {
+    protected NapaRuleItem createNapaRuleItem(final CompiledGrammar grammar, final Map<RuleItem, NapaRuleItem> cache) {
         return new NapaTerminalItem(value, grammar);
     }
 
