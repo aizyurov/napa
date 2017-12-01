@@ -68,13 +68,18 @@ public class CompiledGrammar {
         while (!workSet.isEmpty()) {
             iterations += 1;
             if (iterations > 1000) {
-                System.err.println("Cannot accept rule: " + startRule.toString());
+                StringBuilder stringBuilder = new StringBuilder();
+                stringBuilder.append("Too ambiguous or too complex: ").append(startRule.toString(this))
+                        .append("\n");
+                stringBuilder.append("Stop at\n");
+                System.err.println("Cannot process rule: " + startRule.toString(this));
                 System.err.println("Working set =====");
                 for (ChartNode0 node: workSet.values()) {
+                    stringBuilder.append("    ").append(node.format(this));
                     System.err.println(node.format(this));
                 }
                 System.err.println("====");
-                throw new GrammarException("Too ambiguous or too complex to parse");
+                throw new GrammarException("Too ambiguous or too complex to parse: " + stringBuilder);
             }
             RuleInProgress0 nextRule = workSet.keySet().iterator().next();
             ChartNode0 next = workSet.remove(nextRule);

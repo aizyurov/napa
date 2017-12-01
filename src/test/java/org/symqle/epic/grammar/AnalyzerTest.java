@@ -154,6 +154,18 @@ public class AnalyzerTest extends TestCase {
         tree.print(System.out);
     }
 
+    public void testInfiniteEmpty() throws Exception {
+        String grammar = "A = {B} 'a' ; B = 'b' | ;";
+        String source = "a";
+        CompiledGrammar g = null;
+        try {
+            g = new GaGrammar().parse(new StringReader(grammar));
+            fail("GrammarException expected");
+        } catch (GrammarException expected) {
+            System.out.println(expected.getMessage());
+        }
+    }
+
     public void testEmptyBrackets() throws Exception {
         String grammar = "A = 'a' [] 'b' ;";
         String source = "ab";

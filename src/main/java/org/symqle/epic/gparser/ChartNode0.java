@@ -91,6 +91,15 @@ public class ChartNode0 {
         return ruleInProgress.toString(grammar);
     }
 
+    public String trace(CompiledGrammar grammar) {
+        StringBuilder stringBuilder = new StringBuilder();
+        for (Trace trace: traces) {
+            appendHighlihtedTrace(stringBuilder, trace, null, grammar);
+        }
+        stringBuilder.append("-");
+        return stringBuilder.toString();
+    }
+
     private static class Trace {
         private final RuleInProgress0 ruleInProgress;
         private final Trace predecessor;
