@@ -3,6 +3,7 @@ package org.symqle.epic.gparser;
 import org.symqle.epic.tokenizer.PackedDfa;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 /**
@@ -29,8 +30,9 @@ public class CompiledGrammar {
             addItems(allItems, rule.getItems());
         }
         long startTs = System.currentTimeMillis();
+        AtomicInteger maxIterations = new AtomicInteger();
         for (RuleItem item: allItems) {
-            Set<Integer> first = analyze(item, ruleMap);
+            Set<Integer> first = analyze(item, ruleMap, maxIterations);
             if (first.remove(-1)) {
                 haveEmptyDerivation.add(item);
             }
@@ -38,6 +40,7 @@ public class CompiledGrammar {
 
         }
         System.err.println("Analyser: " + (System.currentTimeMillis() - startTs) );
+        System.err.println("Max iterations: " + maxIterations.get());
         Map<RuleItem, NapaRuleItem> cache = new HashMap<>();
         this.napaRules = rules.stream().map(x -> x.toNapaRule(this, cache)).collect(Collectors.groupingBy(NapaRule::getTarget));
     }
@@ -52,12 +55,13 @@ public class CompiledGrammar {
         }
     }
 
-    private Set<Integer> analyze(RuleItem item, Map<Integer, List<CompiledRule>> ruleMap) {
+    private Set<Integer> analyze(RuleItem item, Map<Integer, List<CompiledRule>> ruleMap, AtomicInteger maxIterations) {
         RuleInProgress0 startRule = new RuleInProgress0(-1, Collections.singletonList(item), 0, ruleMap);
         ChartNode0 startNode = new ChartNode0(startRule, null);
         final Map<RuleInProgress0, ChartNode0> workSet = new LinkedHashMap<>();
         final Map<RuleInProgress0, ChartNode0> shiftCandidates = new HashMap<>();
         final Map<RuleInProgress0, Integer> ruleCounts = new HashMap<>();
+        final Set<RuleInProgress0> knownRules = new HashSet<>();
         workSet.put(startRule, startNode);
         int iterations = 0;
         List<ChartNode0> accepted = new ArrayList<>();
@@ -75,6 +79,9 @@ public class CompiledGrammar {
             RuleInProgress0 nextRule = workSet.keySet().iterator().next();
             ChartNode0 next = workSet.remove(nextRule);
 //            System.out.println("<<< " + next.format(this));
+            if (!knownRules.add(nextRule)) {
+                next.infiniteRecursionCheck(this);
+            }
             switch (next.availableAction()) {
                 case SHIFT:
                     shiftCandidates.put(nextRule, next.merge(workSet.get(nextRule)));
@@ -123,19 +130,21 @@ public class CompiledGrammar {
         if (!accepted.isEmpty()) {
             first.add(-1);
         }
-        int maxCount = 0;
-        RuleInProgress0 maxRule = null;
-        for (RuleInProgress0 key: ruleCounts.keySet()) {
-            Integer count = ruleCounts.get(key);
-            if (count > maxCount) {
-                maxCount = count;
-                maxRule = key;
-            }
-        }
-        if (maxRule != null && maxCount > 1) {
-            System.err.println("Max duplicates: " + maxCount + " - " + maxRule.toString(this));
-        }
+//        int maxCount = 0;
+//        RuleInProgress0 maxRule = null;
+//        for (RuleInProgress0 key: ruleCounts.keySet()) {
+//            Integer count = ruleCounts.get(key);
+//            if (count > maxCount) {
+//                maxCount = count;
+//                maxRule = key;
+//            }
+//        }
+//        if (maxRule != null && maxCount > 1) {
+//            System.err.println("Max duplicates: " + maxCount + " - " + maxRule.toString(this));
+//        }
+        maxIterations.set(Math.max(maxIterations.get(), iterations));
         return first;
+
     }
 
     private void verify(String[] nonTerminals, Set<Integer> targets) {

@@ -5,6 +5,7 @@ import junit.framework.TestCase;
 import org.symqle.epic.gparser.Parser;
 import org.symqle.epic.gparser.SyntaxTree;
 
+import java.io.BufferedReader;
 import java.io.FileOutputStream;
 import java.io.InputStreamReader;
 import java.util.List;
@@ -25,25 +26,30 @@ public class RealClassTest extends TestCase {
     }
 
     public void testEDS() throws Exception {
+        System.out.println("=== Benchmark ===");
         {
-            List<SyntaxTree> forest = g.parse("CompilationUnit", new InputStreamReader(getClass().getClassLoader().getResourceAsStream("EnvironmentDeploymentService.txt")), 1000);
+            List<SyntaxTree> forest = g.parse("CompilationUnit", reader(), 1000);
             Assert.assertEquals(1, forest.size());
         }
         {
-            List<SyntaxTree> forest = g.parse("CompilationUnit", new InputStreamReader(getClass().getClassLoader().getResourceAsStream("EnvironmentDeploymentService.txt")), 1000);
+            List<SyntaxTree> forest = g.parse("CompilationUnit", reader(), 1000);
             Assert.assertEquals(1, forest.size());
         }
         {
-            List<SyntaxTree> forest = g.parse("CompilationUnit", new InputStreamReader(getClass().getClassLoader().getResourceAsStream("EnvironmentDeploymentService.txt")), 1000);
+            List<SyntaxTree> forest = g.parse("CompilationUnit", reader(), 1000);
             Assert.assertEquals(1, forest.size());
         }
         {
-            List<SyntaxTree> forest = g.parse("CompilationUnit", new InputStreamReader(getClass().getClassLoader().getResourceAsStream("EnvironmentDeploymentService.txt")), 1000);
+            List<SyntaxTree> forest = g.parse("CompilationUnit", reader(), 1000);
             Assert.assertEquals(1, forest.size());
             SyntaxTree tree = forest.get(0);
             tree.print(new FileOutputStream("true2"));
 
         }
+    }
+
+    private BufferedReader reader() {
+        return new BufferedReader(new InputStreamReader(getClass().getClassLoader().getResourceAsStream("EnvironmentDeploymentService.txt")));
     }
 
 }

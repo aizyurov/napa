@@ -112,11 +112,70 @@ public class AnalyzerTest extends TestCase {
     public void testNestedZeroOrMore() throws Exception {
         String grammar = "A = {{'a'}};";
         String source = "a";
+        try {
+            CompiledGrammar g = new GaGrammar().parse(new StringReader(grammar));
+            fail("GrammarException expected");
+        } catch (GrammarException expected) {
+            Assert.assertTrue(expected.getMessage().startsWith("Infinite recursion"));
+        }
+    }
+
+    public void testLeftRecursion() throws Exception {
+        String grammar = "T = A | 'a'; A = 'b' | A 'b' ;";
+        String source = "a";
+        try {
+            CompiledGrammar g = new GaGrammar().parse(new StringReader(grammar));
+            fail("GrammarException expected");
+        } catch (GrammarException expected) {
+            Assert.assertTrue(expected.getMessage().startsWith("Infinite recursion"));
+            System.out.println(expected.getMessage());
+        }
+    }
+
+    public void testHiddenRecursion() throws Exception {
+        String grammar = "T = A | 'a'; A = 'b' | {'x'} B ; B = ['c'] A 'd'; ";
+        String source = "a";
+        try {
+            CompiledGrammar g = new GaGrammar().parse(new StringReader(grammar));
+            fail("GrammarException expected");
+        } catch (GrammarException expected) {
+            Assert.assertTrue(expected.getMessage().startsWith("Infinite recursion"));
+            System.out.println(expected.getMessage());
+        }
+    }
+
+    public void testEmptyParentheses() throws Exception {
+        String grammar = "A = 'a' () 'b' ;";
+        String source = "ab";
         CompiledGrammar g = new GaGrammar().parse(new StringReader(grammar));
         List<SyntaxTree> forest = new Parser(g).parse("A", new StringReader(source), 20);
         Assert.assertEquals(1, forest.size());
-
+        SyntaxTree tree = forest.get(0);
+        tree.print(System.out);
     }
+
+    public void testEmptyBrackets() throws Exception {
+        String grammar = "A = 'a' [] 'b' ;";
+        String source = "ab";
+        CompiledGrammar g = new GaGrammar().parse(new StringReader(grammar));
+        List<SyntaxTree> forest = new Parser(g).parse("A", new StringReader(source), 20);
+        Assert.assertEquals(1, forest.size());
+        SyntaxTree tree = forest.get(0);
+        tree.print(System.out);
+    }
+
+    public void testEmptyBraces() throws Exception {
+        String grammar = "A = 'a' {} 'b' ;";
+        String source = "ab";
+        try {
+            CompiledGrammar g = new GaGrammar().parse(new StringReader(grammar));
+            fail("GrammarException expected");
+        } catch (GrammarException expected) {
+            Assert.assertTrue(expected.getMessage().startsWith("Infinite recursion"));
+            System.out.println(expected.getMessage());
+        }
+    }
+
 
     public void testEmptyInTheEnd() throws Exception {
         String grammar = "T = 'a' B; B = 'b' | ;";
