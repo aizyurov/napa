@@ -2,12 +2,11 @@ package org.symqle.epic.gparser;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author lvovich
  */
-public class TerminalItem extends AbstractRuleItem {
+public class TerminalItem implements RuleItem {
 
     private final int value;
 
@@ -35,7 +34,7 @@ public class TerminalItem extends AbstractRuleItem {
 
 
     @Override
-    protected NapaRuleItem createNapaRuleItem(final CompiledGrammar grammar, final Map<RuleItem, NapaRuleItem> cache) {
+    public NapaRuleItem toNapaRuleItem(final CompiledGrammar grammar) {
         return new NapaTerminalItem(value, grammar);
     }
 

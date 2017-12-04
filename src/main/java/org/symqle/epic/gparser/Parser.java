@@ -33,7 +33,7 @@ public class Parser {
         int targetTag = grammar.findNonTerminalByName(target).orElseThrow(() -> new GrammarException("NonTerminal not found: " + target));
 
 
-        RuleInProgress startRule = RuleInProgress.startRule(new NonTerminalItem(targetTag).toNapaRuleItem(grammar, new HashMap<>()), grammar);
+        RuleInProgress startRule = RuleInProgress.startRule(new NonTerminalItem(targetTag).toNapaRuleItem(grammar), grammar);
         final NapaChartNode startNode = new NapaChartNode(startRule, Collections.emptyList());
         workSet.put(startNode.getRuleInProgress(), startNode);
         int maxComplexity = 0;
@@ -41,6 +41,7 @@ public class Parser {
         int maxNodes = 0;
         int maxWorkset = 0;
         int totalIterations= 0;
+        int tokenCount = 0;
         while (true) {
             Token<TokenProperties> nextToken = tokenizer.nextToken();
             while (nextToken.getType() != null && nextToken.getType().isIgnoreOnly()) {
@@ -66,7 +67,7 @@ public class Parser {
                     throw new GrammarException("bebe");
                 }
                 RuleInProgress nextRule = workSet.keySet().iterator().next();
-                NapaChartNode nextNode = workSet.get(nextRule);
+                NapaChartNode nextNode = workSet.remove(nextRule);
                 List<NapaChartNode> processingResult;
                 switch(nextNode.getRuleInProgress().availableAction(nextToken)) {
                     case expand:
@@ -90,7 +91,6 @@ public class Parser {
                         // do nothing
                         processingResult = Collections.emptyList();
                 }
-                workSet.remove(nextRule);
 //                System.out.println("<<< " + nextNode);
                 // sort nodes
                 List<NapaChartNode> forWorkSet = new ArrayList<>();
@@ -105,8 +105,9 @@ public class Parser {
                 }
                 for (NapaChartNode node: forWorkSet) {
                     RuleInProgress ruleInProgress = node.getRuleInProgress();
-                        workSet.put(ruleInProgress,
-                                node.merge(workSet.get(ruleInProgress)));
+                    final NapaChartNode existing = workSet.get(ruleInProgress);
+                    workSet.put(ruleInProgress,
+                                node.merge(existing));
 //                    System.out.println(">>> " + ruleInProgress);
                 }
                 for (NapaChartNode node: forShiftCandidates) {
@@ -126,6 +127,7 @@ public class Parser {
                 System.out.println("Max workset: " + maxWorkset);
                 System.out.println("Max nodes: " + maxNodes);
                 System.out.println("Total iterations: " + totalIterations);
+                System.out.println("Tokens: " + tokenCount);
                 System.out.println("Parse time: " + (System.currentTimeMillis() - startTime));
                 return syntaxTreeCandidates.stream().map(s -> s.toSyntaxTreeNode(null, grammar)).collect(Collectors.toList());
             }
@@ -147,6 +149,7 @@ public class Parser {
                     workSet.put(ruleInProgress, node.merge(workSet.get(ruleInProgress)));
                 }
             }
+            tokenCount += 1;
             if (workSet.isEmpty()) {
                 // no node accepted the token
                 if (nextToken.getType().isIgnorable()) {

@@ -41,8 +41,7 @@ public class CompiledGrammar {
         }
         System.err.println("Analyser: " + (System.currentTimeMillis() - startTs) );
         System.err.println("Max iterations: " + maxIterations.get());
-        Map<RuleItem, NapaRuleItem> cache = new HashMap<>();
-        this.napaRules = rules.stream().map(x -> x.toNapaRule(this, cache)).collect(Collectors.groupingBy(NapaRule::getTarget));
+        this.napaRules = rules.stream().map(x -> x.toNapaRule(this)).collect(Collectors.groupingBy(NapaRule::getTarget));
     }
 
     private void addItems(Set<RuleItem> allITems, List<RuleItem> items) {

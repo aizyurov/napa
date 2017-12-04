@@ -2,13 +2,12 @@ package org.symqle.epic.gparser;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**
  * @author lvovich
  */
-public class NonTerminalItem extends AbstractRuleItem  {
+public class NonTerminalItem implements RuleItem  {
 
     private final int value;
 
@@ -36,8 +35,9 @@ public class NonTerminalItem extends AbstractRuleItem  {
     }
 
 
+
     @Override
-    protected NapaRuleItem createNapaRuleItem(final CompiledGrammar grammar, final Map<RuleItem, NapaRuleItem> cache) {
+    public NapaRuleItem toNapaRuleItem(final CompiledGrammar grammar) {
         boolean hasEmptyDerivation = grammar.hasEmptyDerivation(this);
         Set<Integer> firstSet = grammar.getFirstSet(this);
         NapaNonTerminalItem napaNonTerminalItem = new NapaNonTerminalItem(value, grammar, hasEmptyDerivation, firstSet);
