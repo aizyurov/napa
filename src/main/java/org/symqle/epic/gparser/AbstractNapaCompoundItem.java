@@ -52,7 +52,7 @@ public abstract class AbstractNapaCompoundItem implements NapaRuleItem {
     }
 
     @Override
-    public List<List<NapaRuleItem>> predict(final Token<TokenProperties> lookAhead) {
+    public List<List<NapaRuleItem>> predict(final Token<TokenProperties> lookAhead, final CompiledGrammar grammar) {
         return Collections.emptyList();
     }
 

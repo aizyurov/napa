@@ -37,8 +37,8 @@ public class NapaChartNode {
         }
     }
 
-    public List<NapaChartNode> predict(Token<TokenProperties> lookAhead) {
-        List<RuleInProgress> predicted = ruleInProgress.predict(lookAhead);
+    public List<NapaChartNode> predict(Token<TokenProperties> lookAhead, CompiledGrammar grammar) {
+        List<RuleInProgress> predicted = ruleInProgress.predict(lookAhead, grammar);
         List<NapaChartNode> newNodes = new ArrayList<>(predicted.size());
         List<NapaChartNode> thisNode = Collections.singletonList(this);
         for (RuleInProgress rule: predicted) {

@@ -16,7 +16,7 @@ public interface NapaRuleItem {
 
     List<List<NapaRuleItem>> expand(Token<TokenProperties> lookAhead);
 
-    List<List<NapaRuleItem>> predict(Token<TokenProperties> lookAhead);
+    List<List<NapaRuleItem>> predict(Token<TokenProperties> lookAhead, final CompiledGrammar grammar);
 
     boolean hasEmptyDerivation();
 

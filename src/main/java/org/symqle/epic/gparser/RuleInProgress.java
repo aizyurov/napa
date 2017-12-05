@@ -18,36 +18,34 @@ public class RuleInProgress {
     private final NapaRuleItem[] items;
     private final int offset;
     private final RawSyntaxNode[] syntaxNodes;
-    private final CompiledGrammar grammar;
     private final NapaRuleItem currentItem;
 
     private static final RawSyntaxNode[] NO_NODES = {};
     private static final RuleInProgress[] NO_RULES = {};
 
     // Note: no protective copying. The caller should not modify items and syntaxNodes, provide a copy when necessary.
-    private RuleInProgress(final int target, final NapaRuleItem[] items, final int offset, final RawSyntaxNode[] syntaxNodes, CompiledGrammar grammar) {
+    private RuleInProgress(final int target, final NapaRuleItem[] items, final int offset, final RawSyntaxNode[] syntaxNodes) {
         this.target = target;
         this.items = items;
         this.offset = offset;
         this.syntaxNodes = syntaxNodes;
-        this.grammar = grammar;
         this.currentItem = offset < items.length ? items[offset] : null;
 
     }
 
     static RuleInProgress startRule(NapaRule rule, CompiledGrammar grammar) {
-        return new RuleInProgress(rule.getTarget(), rule.getItems().toArray(new NapaRuleItem[rule.getItems().size()]), 0, NO_NODES, grammar);
+        return new RuleInProgress(rule.getTarget(), rule.getItems().toArray(new NapaRuleItem[rule.getItems().size()]), 0, NO_NODES);
     }
 
-    public List<RuleInProgress> predict(Token<TokenProperties> lookAhead) {
+    public List<RuleInProgress> predict(Token<TokenProperties> lookAhead, CompiledGrammar grammar) {
         if (currentItem != null) {
-            List<List<NapaRuleItem>> predict = currentItem.predict(lookAhead);
+            List<List<NapaRuleItem>> predict = currentItem.predict(lookAhead, grammar);
             if (predict.isEmpty()) {
                 return Collections.emptyList();
             } else {
                 List<RuleInProgress>  result = new ArrayList<>(predict.size());
                 for (List<NapaRuleItem> items : predict) {
-                    result.add(new RuleInProgress(currentItem.getValue(), items.toArray(new NapaRuleItem[items.size()]), 0, NO_NODES, grammar));
+                    result.add(new RuleInProgress(currentItem.getValue(), items.toArray(new NapaRuleItem[items.size()]), 0, NO_NODES));
                 }
                 return result;
             }
@@ -75,7 +73,7 @@ public class RuleInProgress {
         RawSyntaxNode[] nodes = new RawSyntaxNode[length + 1];
         System.arraycopy(syntaxNodes, 0, nodes, 0, length);
         nodes[length] = node;
-        return Collections.singletonList(new RuleInProgress(target, items, offset + 1, nodes, grammar));
+        return Collections.singletonList(new RuleInProgress(target, items, offset + 1, nodes));
     }
 
     public List<RuleInProgress> expand(Token<TokenProperties> lookAhead) {
@@ -90,7 +88,7 @@ public class RuleInProgress {
                 expanded[offset + i] = expansion.get(i);
             }
             System.arraycopy(items, offset + 1, expanded, offset + expansion.size(), items.length - offset - 1);
-            newNodes.add(new RuleInProgress(target, expanded, offset, syntaxNodes, grammar));
+            newNodes.add(new RuleInProgress(target, expanded, offset, syntaxNodes));
         }
         return newNodes;
     }
@@ -106,7 +104,7 @@ public class RuleInProgress {
         RawSyntaxNode[] newSyntaxNodes = new RawSyntaxNode[syntaxNodes.length + 1];
         System.arraycopy(syntaxNodes, 0, newSyntaxNodes, 0, syntaxNodes.length);
         newSyntaxNodes[syntaxNodes.length] = new TerminalNode(currentItem.getValue(), preface, token);
-        return Collections.singletonList(new RuleInProgress(target, items, offset + 1, newSyntaxNodes, grammar));
+        return Collections.singletonList(new RuleInProgress(target, items, offset + 1, newSyntaxNodes));
     }
 
     public Action availableAction(Token<TokenProperties> lookAhead) {
@@ -126,8 +124,7 @@ public class RuleInProgress {
         }
     }
 
-    @Override
-    public String toString() {
+    public String toString(CompiledGrammar grammar) {
         StringBuilder stringBuilder = new StringBuilder();
         if (target >= 0) {
             stringBuilder.append(grammar.getNonTerminalName(target)).append(" =");

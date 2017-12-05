@@ -40,8 +40,7 @@ public class NonTerminalItem implements RuleItem  {
     public NapaRuleItem toNapaRuleItem(final CompiledGrammar grammar) {
         boolean hasEmptyDerivation = grammar.hasEmptyDerivation(this);
         Set<Integer> firstSet = grammar.getFirstSet(this);
-        NapaNonTerminalItem napaNonTerminalItem = new NapaNonTerminalItem(value, grammar, hasEmptyDerivation, firstSet);
-        return napaNonTerminalItem;
+        return new NapaNonTerminalItem(value, grammar.getNonTerminalName(value), hasEmptyDerivation, firstSet);
     }
 
     @Override

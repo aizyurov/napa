@@ -13,15 +13,15 @@ import java.util.stream.Collectors;
 public class NapaNonTerminalItem implements NapaRuleItem {
 
     private final int value;
+    private final String name;
 
-    private final CompiledGrammar grammar;
 
     private boolean hasEmptyDerivation;
     private Set<Integer> first;
 
-    public NapaNonTerminalItem(final int value, CompiledGrammar grammar, boolean hasEmptyDerivation, Set<Integer> first) {
+    public NapaNonTerminalItem(final int value, String name, boolean hasEmptyDerivation, Set<Integer> first) {
         this.value = value;
-        this.grammar = grammar;
+        this.name = name;
         this.hasEmptyDerivation = hasEmptyDerivation;
         this.first = first;
     }
@@ -48,7 +48,7 @@ public class NapaNonTerminalItem implements NapaRuleItem {
 
     @Override
     public String toString() {
-        return grammar.getNonTerminalName(value);
+        return name;
     }
 
     @Override
@@ -57,7 +57,7 @@ public class NapaNonTerminalItem implements NapaRuleItem {
     }
 
     @Override
-    public List<List<NapaRuleItem>> predict(final Token<TokenProperties> lookAhead) {
+    public List<List<NapaRuleItem>> predict(final Token<TokenProperties> lookAhead, final CompiledGrammar grammar) {
         if (hasEmptyDerivation() || lookAhead.getType() != null && lookAhead.getType().matches(first())) {
             return grammar.getNapaRules(value).stream().map(NapaRule::getItems).collect(Collectors.toList());
         } else {

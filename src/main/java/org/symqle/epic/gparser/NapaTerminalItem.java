@@ -12,12 +12,11 @@ import java.util.Set;
 public class NapaTerminalItem implements NapaRuleItem {
 
     private final int value;
+    private final String name;
 
-    private final CompiledGrammar grammar;
-
-    public NapaTerminalItem(final int value, CompiledGrammar grammar) {
+    public NapaTerminalItem(final int value, String name) {
         this.value = value;
-        this.grammar = grammar;
+        this.name = name;
     }
 
     @Override
@@ -31,7 +30,7 @@ public class NapaTerminalItem implements NapaRuleItem {
 
     @Override
     public String toString() {
-        return grammar.getTerminalName(value);
+        return name;
     }
 
     @Override
@@ -50,7 +49,7 @@ public class NapaTerminalItem implements NapaRuleItem {
     }
 
     @Override
-    public List<List<NapaRuleItem>> predict(final Token<TokenProperties> lookAhead) {
+    public List<List<NapaRuleItem>> predict(final Token<TokenProperties> lookAhead, final CompiledGrammar grammar) {
         return Collections.emptyList();
     }
 

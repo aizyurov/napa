@@ -75,7 +75,7 @@ public class Parser {
                         processingResult = nextNode.expand(nextToken);
                         break;
                     case predict:
-                        processingResult = nextNode.predict(nextToken);
+                        processingResult = nextNode.predict(nextToken, grammar);
                         break;
                     case reduce:
                         if (nextNode.getEnclosing().isEmpty()) {

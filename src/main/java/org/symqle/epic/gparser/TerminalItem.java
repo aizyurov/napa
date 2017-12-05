@@ -35,7 +35,7 @@ public class TerminalItem implements RuleItem {
 
     @Override
     public NapaRuleItem toNapaRuleItem(final CompiledGrammar grammar) {
-        return new NapaTerminalItem(value, grammar);
+        return new NapaTerminalItem(value, grammar.getTerminalName(value));
     }
 
     @Override
