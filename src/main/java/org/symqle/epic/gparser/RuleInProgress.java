@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 import static org.symqle.epic.gparser.RuleItemType.TERMINAL;
 
@@ -36,16 +35,8 @@ public class RuleInProgress {
 
     }
 
-    static RuleInProgress startRule(NapaRuleItem targetItem, CompiledGrammar grammar) {
-        return new RuleInProgress(-1, new NapaRuleItem[]{targetItem}, 0, NO_NODES, grammar);
-    }
-
-    public List<RawSyntaxNode> accept() {
-        if (offset == items.length) {
-            return Collections.singletonList(syntaxNodes[0]);
-        } else {
-            return Collections.emptyList();
-        }
+    static RuleInProgress startRule(NapaRule rule, CompiledGrammar grammar) {
+        return new RuleInProgress(rule.getTarget(), rule.getItems().toArray(new NapaRuleItem[rule.getItems().size()]), 0, NO_NODES, grammar);
     }
 
     public List<RuleInProgress> predict(Token<TokenProperties> lookAhead) {
@@ -65,7 +56,7 @@ public class RuleInProgress {
         }
     }
 
-    public Optional<RawSyntaxNode> reduce(Token<TokenProperties> lookAhead) {
+    public List<RawSyntaxNode> reduce(Token<TokenProperties> lookAhead) {
         if (currentItem == null) {
             RawSyntaxNode newNode;
             if (syntaxNodes.length == 0) {
@@ -73,9 +64,9 @@ public class RuleInProgress {
             } else {
                 newNode = new NonTerminalNode(target, Arrays.asList(syntaxNodes));
             }
-            return Optional.of(newNode);
+            return Collections.singletonList(newNode);
         } else {
-            return Optional.empty();
+            return Collections.emptyList();
         }
     }
 

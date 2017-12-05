@@ -33,9 +33,10 @@ public class Parser {
         int targetTag = grammar.findNonTerminalByName(target).orElseThrow(() -> new GrammarException("NonTerminal not found: " + target));
 
 
-        RuleInProgress startRule = RuleInProgress.startRule(new NonTerminalItem(targetTag).toNapaRuleItem(grammar), grammar);
-        final NapaChartNode startNode = new NapaChartNode(startRule, Collections.emptyList());
-        workSet.put(startNode.getRuleInProgress(), startNode);
+        List<NapaRule> startRules = grammar.getNapaRules(targetTag);
+        workSet.putAll(startRules.stream()
+                .map(x -> new NapaChartNode(RuleInProgress.startRule(x, grammar), Collections.emptyList()))
+                .collect(Collectors.toMap(NapaChartNode::getRuleInProgress, n -> n)));
         int maxComplexity = 0;
         List<Token<TokenProperties>> preface = new ArrayList<>();
         int maxNodes = 0;
@@ -78,7 +79,9 @@ public class Parser {
                         break;
                     case reduce:
                         if (nextNode.getEnclosing().isEmpty()) {
-                            syntaxTreeCandidates.addAll(nextNode.accept());
+                            if (nextToken.getType() == null) {
+                                syntaxTreeCandidates.addAll(nextNode.accept(nextToken));
+                            }
                             processingResult = Collections.emptyList();
                         } else {
                             processingResult = nextNode.reduce(nextToken);

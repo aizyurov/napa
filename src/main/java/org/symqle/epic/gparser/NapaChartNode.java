@@ -29,9 +29,9 @@ public class NapaChartNode {
         }
     }
 
-    public List<RawSyntaxNode> accept() {
+    public List<RawSyntaxNode> accept(Token<TokenProperties> lookAhead) {
         if (enclosing.isEmpty()) {
-            return ruleInProgress.accept();
+            return ruleInProgress.reduce(lookAhead);
         } else {
             return Collections.emptyList();
         }
@@ -52,7 +52,7 @@ public class NapaChartNode {
             return Collections.emptyList();
         } else {
             List<NapaChartNode> result = new ArrayList<>();
-            ruleInProgress.reduce(lookAhead).ifPresent(s -> {
+            ruleInProgress.reduce(lookAhead).stream().forEach(s -> {
                 for (NapaChartNode parent: new LinkedHashSet<NapaChartNode>(enclosing)) {
                     result.addAll(parent.acceptNonTerminal(s));
                 }
