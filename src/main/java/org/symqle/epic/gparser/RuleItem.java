@@ -13,8 +13,8 @@ public interface RuleItem {
     List<List<RuleItem>> expand();
 
 
-    String toString(CompiledGrammar grammar);
+    String toString(Vocabulary grammar);
 
-    NapaRuleItem toNapaRuleItem(CompiledGrammar grammar);
+    NapaRuleItem toNapaRuleItem(Vocabulary grammar);
 
 }

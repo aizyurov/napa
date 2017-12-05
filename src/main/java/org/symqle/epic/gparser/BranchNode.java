@@ -14,10 +14,10 @@ public class BranchNode extends SyntaxTree {
     private final String name;
     private List<SyntaxTree> children;
 
-    public BranchNode(String name, SyntaxTree parent, int line, int pos, List<RawSyntaxNode> rawSyntaxNodes, CompiledGrammar grammar) {
+    public BranchNode(String name, SyntaxTree parent, int line, int pos, List<RawSyntaxNode> rawSyntaxNodes) {
         super(parent, line, pos);
         this.name = name;
-        this.children = rawSyntaxNodes.stream().map(rawSyntaxNode -> rawSyntaxNode.toSyntaxTreeNode(this, grammar)).collect(Collectors.toList());
+        this.children = rawSyntaxNodes.stream().map(rawSyntaxNode -> rawSyntaxNode.toSyntaxTreeNode(this)).collect(Collectors.toList());
     }
 
     @Override

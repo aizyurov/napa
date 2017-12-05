@@ -14,6 +14,8 @@ public interface NapaRuleItem {
 
     int getValue();
 
+    String getName();
+
     List<List<NapaRuleItem>> expand(Token<TokenProperties> lookAhead);
 
     List<List<NapaRuleItem>> predict(Token<TokenProperties> lookAhead, final CompiledGrammar grammar);

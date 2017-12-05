@@ -37,6 +37,11 @@ public class NapaNonTerminalItem implements NapaRuleItem {
     }
 
     @Override
+    public String getName() {
+        return name;
+    }
+
+    @Override
     public boolean hasEmptyDerivation() {
         return hasEmptyDerivation;
     }

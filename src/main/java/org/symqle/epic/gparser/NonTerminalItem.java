@@ -30,14 +30,14 @@ public class NonTerminalItem implements RuleItem  {
         return Collections.emptyList();
     }
 
-    public String toString(CompiledGrammar grammar) {
+    public String toString(Vocabulary grammar) {
         return grammar.getNonTerminalName(value);
     }
 
 
 
     @Override
-    public NapaRuleItem toNapaRuleItem(final CompiledGrammar grammar) {
+    public NapaRuleItem toNapaRuleItem(final Vocabulary grammar) {
         boolean hasEmptyDerivation = grammar.hasEmptyDerivation(this);
         Set<Integer> firstSet = grammar.getFirstSet(this);
         return new NapaNonTerminalItem(value, grammar.getNonTerminalName(value), hasEmptyDerivation, firstSet);

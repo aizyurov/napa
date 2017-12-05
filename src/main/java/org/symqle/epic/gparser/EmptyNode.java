@@ -8,18 +8,20 @@ import java.util.Collections;
 public class EmptyNode implements RawSyntaxNode {
 
     final int tag;
+    final String name;
     final int line;
     final int pos;
 
-    public EmptyNode(int tag, int line, int pos) {
+    public EmptyNode(final int tag, final String name, final int line, final int pos) {
         this.tag = tag;
+        this.name = name;
         this.line = line;
         this.pos = pos;
     }
 
     @Override
-    public SyntaxTree toSyntaxTreeNode(SyntaxTree parent, CompiledGrammar grammar) {
-        return new BranchNode(grammar.getNonTerminalName(tag), parent, line, pos, Collections.emptyList(), grammar);
+    public SyntaxTree toSyntaxTreeNode(SyntaxTree parent) {
+        return new BranchNode(name, parent, line, pos, Collections.emptyList());
     }
 
     @Override

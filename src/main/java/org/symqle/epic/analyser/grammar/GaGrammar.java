@@ -3,6 +3,7 @@ package org.symqle.epic.analyser.grammar;
 import org.symqle.epic.analyser.lexis.GaLexer;
 import org.symqle.epic.analyser.lexis.GaTokenType;
 import org.symqle.epic.analyser.lexis.GaTokenizer;
+import org.symqle.epic.gparser.Assembler;
 import org.symqle.epic.gparser.CompiledGrammar;
 import org.symqle.epic.gparser.CompiledRule;
 import org.symqle.epic.gparser.GrammarException;
@@ -16,12 +17,7 @@ import org.symqle.epic.tokenizer.Tokenizer;
 
 import java.io.IOException;
 import java.io.Reader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -110,7 +106,7 @@ public class GaGrammar {
             System.err.println("NonTerminals: " + nonTerminals.length);
             System.err.println("Terminals: " + tokenDefinitions.size());
 
-            return new CompiledGrammar(nonTerminals, terminals, compiledRules, napaDfa);
+            return new Assembler(nonTerminals, terminals, compiledRules, napaDfa).assemble();
         } finally {
             System.err.println("Grammar compiled in " + (System.currentTimeMillis() - beforeStart));
         }

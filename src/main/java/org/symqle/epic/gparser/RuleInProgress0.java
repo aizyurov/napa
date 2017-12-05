@@ -97,7 +97,7 @@ public class RuleInProgress0 {
         return offset;
     }
 
-    public String toString(CompiledGrammar grammar) {
+    public String toString(Vocabulary grammar) {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(target == -1 ? "$" : grammar.getNonTerminalName(target))
                 .append(" =");

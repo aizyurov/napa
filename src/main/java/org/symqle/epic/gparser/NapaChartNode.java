@@ -29,9 +29,9 @@ public class NapaChartNode {
         }
     }
 
-    public List<RawSyntaxNode> accept(Token<TokenProperties> lookAhead) {
+    public List<RawSyntaxNode> accept(Token<TokenProperties> lookAhead, CompiledGrammar grammar) {
         if (enclosing.isEmpty()) {
-            return ruleInProgress.reduce(lookAhead);
+            return ruleInProgress.reduce(lookAhead, grammar);
         } else {
             return Collections.emptyList();
         }
@@ -47,12 +47,12 @@ public class NapaChartNode {
         return newNodes;
     }
 
-    public List<NapaChartNode> reduce(Token<TokenProperties> lookAhead) {
+    public List<NapaChartNode> reduce(Token<TokenProperties> lookAhead, CompiledGrammar grammar) {
         if (enclosing.isEmpty()) {
             return Collections.emptyList();
         } else {
             List<NapaChartNode> result = new ArrayList<>();
-            ruleInProgress.reduce(lookAhead).stream().forEach(s -> {
+            ruleInProgress.reduce(lookAhead, grammar).stream().forEach(s -> {
                 for (NapaChartNode parent: new LinkedHashSet<NapaChartNode>(enclosing)) {
                     result.addAll(parent.acceptNonTerminal(s));
                 }

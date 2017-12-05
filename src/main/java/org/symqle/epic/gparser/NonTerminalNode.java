@@ -1,7 +1,5 @@
 package org.symqle.epic.gparser;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -10,18 +8,19 @@ import java.util.List;
 public class NonTerminalNode implements RawSyntaxNode {
 
     private final int tag;
+    private final String name;
     private final List<RawSyntaxNode> children;
 
 
-
-    public NonTerminalNode(int tag, List<RawSyntaxNode> children) {
+    public NonTerminalNode(final int tag, final String name, final List<RawSyntaxNode> children) {
         this.tag = tag;
+        this.name = name;
         this.children = children;
     }
 
     @Override
-    public SyntaxTree toSyntaxTreeNode(SyntaxTree parent, CompiledGrammar grammar) {
-        return new BranchNode(grammar.getNonTerminalName(tag), parent, getLine(), getPos(), children, grammar);
+    public SyntaxTree toSyntaxTreeNode(SyntaxTree parent) {
+        return new BranchNode(name, parent, getLine(), getPos(), children);
     }
 
     @Override

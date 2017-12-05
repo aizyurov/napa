@@ -87,11 +87,11 @@ public class ChartNode0 {
         return ruleInProgress;
     }
 
-    public String format(CompiledGrammar grammar) {
+    public String format(Vocabulary grammar) {
         return ruleInProgress.toString(grammar);
     }
 
-    public String trace(CompiledGrammar grammar) {
+    public String trace(Vocabulary grammar) {
         StringBuilder stringBuilder = new StringBuilder();
         for (Trace trace: traces) {
             appendHighlihtedTrace(stringBuilder, trace, null, grammar);
@@ -118,7 +118,7 @@ public class ChartNode0 {
         }
     }
 
-    public void infiniteRecursionCheck(CompiledGrammar grammar) {
+    public void infiniteRecursionCheck(Vocabulary grammar) {
         for (Trace trace: traces) {
             if (infiniteRecursion(trace)) {
                 StringBuilder stringBuilder = new StringBuilder();
@@ -138,12 +138,12 @@ public class ChartNode0 {
         return false;
     }
 
-    private void appendTrace(StringBuilder stringBuilder, Trace last, CompiledGrammar grammar) {
+    private void appendTrace(StringBuilder stringBuilder, Trace last, Vocabulary grammar) {
         RuleInProgress0 duplicate = last.getRuleInProgress();
         appendHighlihtedTrace(stringBuilder, last, duplicate, grammar);
     }
 
-    private void appendHighlihtedTrace(StringBuilder stringBuilder, Trace last, RuleInProgress0 duplicate, CompiledGrammar grammar) {
+    private void appendHighlihtedTrace(StringBuilder stringBuilder, Trace last, RuleInProgress0 duplicate, Vocabulary grammar) {
         if (last != null) {
             appendHighlihtedTrace(stringBuilder, last.getPredecessor(), duplicate, grammar);
             stringBuilder.append(last.getRuleInProgress().equals(duplicate) ? "*   " : "    ");

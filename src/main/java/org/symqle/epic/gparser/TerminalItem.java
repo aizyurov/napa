@@ -28,13 +28,13 @@ public class TerminalItem implements RuleItem {
         return Collections.emptyList();
     }
 
-    public String toString(CompiledGrammar grammar) {
+    public String toString(Vocabulary grammar) {
         return grammar.getTerminalName(value);
     }
 
 
     @Override
-    public NapaRuleItem toNapaRuleItem(final CompiledGrammar grammar) {
+    public NapaRuleItem toNapaRuleItem(final Vocabulary grammar) {
         return new NapaTerminalItem(value, grammar.getTerminalName(value));
     }
 

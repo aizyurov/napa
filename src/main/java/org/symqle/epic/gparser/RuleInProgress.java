@@ -54,13 +54,13 @@ public class RuleInProgress {
         }
     }
 
-    public List<RawSyntaxNode> reduce(Token<TokenProperties> lookAhead) {
+    public List<RawSyntaxNode> reduce(Token<TokenProperties> lookAhead, CompiledGrammar grammar) {
         if (currentItem == null) {
             RawSyntaxNode newNode;
             if (syntaxNodes.length == 0) {
-                newNode = new EmptyNode(target, lookAhead.getLine(), lookAhead.getPos());
+                newNode = new EmptyNode(target, grammar.nonTerminalName(target), lookAhead.getLine(), lookAhead.getPos());
             } else {
-                newNode = new NonTerminalNode(target, Arrays.asList(syntaxNodes));
+                newNode = new NonTerminalNode(target, grammar.nonTerminalName(target), Arrays.asList(syntaxNodes));
             }
             return Collections.singletonList(newNode);
         } else {
@@ -103,7 +103,7 @@ public class RuleInProgress {
         }
         RawSyntaxNode[] newSyntaxNodes = new RawSyntaxNode[syntaxNodes.length + 1];
         System.arraycopy(syntaxNodes, 0, newSyntaxNodes, 0, syntaxNodes.length);
-        newSyntaxNodes[syntaxNodes.length] = new TerminalNode(currentItem.getValue(), preface, token);
+        newSyntaxNodes[syntaxNodes.length] = new TerminalNode(currentItem.getValue(), currentItem.getName(), preface, token);
         return Collections.singletonList(new RuleInProgress(target, items, offset + 1, newSyntaxNodes));
     }
 
@@ -127,7 +127,7 @@ public class RuleInProgress {
     public String toString(CompiledGrammar grammar) {
         StringBuilder stringBuilder = new StringBuilder();
         if (target >= 0) {
-            stringBuilder.append(grammar.getNonTerminalName(target)).append(" =");
+            stringBuilder.append(grammar.nonTerminalName(target)).append(" =");
         }
         for (int i = 0; i<items.length; i++) {
             if (offset == i) {

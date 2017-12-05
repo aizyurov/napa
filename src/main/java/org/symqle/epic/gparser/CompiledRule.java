@@ -24,7 +24,7 @@ public class CompiledRule {
         return items;
     }
 
-    public NapaRule toNapaRule(CompiledGrammar grammar) {
+    public NapaRule toNapaRule(Vocabulary grammar) {
         return new NapaRule(target, items.stream().map(x -> x.toNapaRuleItem(grammar)).collect(Collectors.toList()));
     }
 }

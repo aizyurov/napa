@@ -30,8 +30,10 @@ public class Parser {
         final List<RawSyntaxNode> syntaxTreeCandidates = new ArrayList<>();
 
         final long startTime = System.currentTimeMillis();
-        int targetTag = grammar.findNonTerminalByName(target).orElseThrow(() -> new GrammarException("NonTerminal not found: " + target));
-
+        int targetTag = grammar.findNonTerminalByName(target);
+        if (targetTag < 0) {
+            throw new GrammarException("NonTerminal not found: " + target);
+        }
 
         List<NapaRule> startRules = grammar.getNapaRules(targetTag);
         workSet.putAll(startRules.stream()
@@ -58,7 +60,7 @@ public class Parser {
                 totalIterations += 1;
                 if (iterations == complexityLimit) {
                     System.out.println("Complexity limit reached");
-                        syntaxTreeCandidates.stream().map(x -> x.toSyntaxTreeNode(null, grammar)).forEach(x -> {
+                        syntaxTreeCandidates.stream().map(x -> x.toSyntaxTreeNode(null)).forEach(x -> {
                             try {
                                 x.print(System.out);
                             } catch (IOException e) {
@@ -80,11 +82,11 @@ public class Parser {
                     case reduce:
                         if (nextNode.getEnclosing().isEmpty()) {
                             if (nextToken.getType() == null) {
-                                syntaxTreeCandidates.addAll(nextNode.accept(nextToken));
+                                syntaxTreeCandidates.addAll(nextNode.accept(nextToken, grammar));
                             }
                             processingResult = Collections.emptyList();
                         } else {
-                            processingResult = nextNode.reduce(nextToken);
+                            processingResult = nextNode.reduce(nextToken, grammar);
                         }
                         break;
                     case shift:
@@ -132,7 +134,7 @@ public class Parser {
                 System.out.println("Total iterations: " + totalIterations);
                 System.out.println("Tokens: " + tokenCount);
                 System.out.println("Parse time: " + (System.currentTimeMillis() - startTime));
-                return syntaxTreeCandidates.stream().map(s -> s.toSyntaxTreeNode(null, grammar)).collect(Collectors.toList());
+                return syntaxTreeCandidates.stream().map(s -> s.toSyntaxTreeNode(null)).collect(Collectors.toList());
             }
             maxComplexity = Math.max(iterations, maxComplexity);
 //            System.out.println("=========== Shifting: " + nextToken.getText() + " at " + nextToken.getLine() + ":" + nextToken.getPos());

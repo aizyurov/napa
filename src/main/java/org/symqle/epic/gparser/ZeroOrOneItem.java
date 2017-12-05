@@ -37,7 +37,7 @@ public class ZeroOrOneItem implements RuleItem {
     }
 
     @Override
-    public String toString(CompiledGrammar grammar) {
+    public String toString(Vocabulary grammar) {
         StringBuilder builder = new StringBuilder();
         builder.append("[");
         for (int i = 0; i < options.size(); i++) {
@@ -53,7 +53,7 @@ public class ZeroOrOneItem implements RuleItem {
     }
 
     @Override
-    public NapaRuleItem toNapaRuleItem(final CompiledGrammar grammar) {
+    public NapaRuleItem toNapaRuleItem(final Vocabulary grammar) {
         List<List<NapaRuleItem>> napaOptions = new ArrayList<>();
         for (List<RuleItem> items: options) {
             napaOptions.add(items.stream().map(x -> x.toNapaRuleItem(grammar)).collect(Collectors.toList()));

@@ -38,6 +38,11 @@ public abstract class AbstractNapaCompoundItem implements NapaRuleItem {
     }
 
     @Override
+    public String getName() {
+        throw new UnsupportedOperationException("Not applicable");
+    }
+
+    @Override
     public List<List<NapaRuleItem>> expand(Token<TokenProperties> lookAhead) {
         if (lookAhead.getType() != null && !lookAhead.getType().matches(first())) {
             return Collections.emptyList();
@@ -71,6 +76,7 @@ public abstract class AbstractNapaCompoundItem implements NapaRuleItem {
                 builder.append(" ").append(item.toString());
             }
         }
+        builder.append(" ");
         return builder.toString();
     }
 
