@@ -101,7 +101,4 @@ public abstract class AbstractNapaCompoundItem implements NapaRuleItem {
 
     private int hash;
 
-    protected List<RuleItemSequence> getOptions() {
-        return options;
-    }
 }

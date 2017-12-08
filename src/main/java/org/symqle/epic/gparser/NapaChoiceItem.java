@@ -23,15 +23,6 @@ public class NapaChoiceItem extends AbstractNapaCompoundItem {
         }
     }
 
-    private boolean findEmptyDerivation() {
-        for (RuleItemSequence sequence: getOptions()) {
-            if (sequence.canBeEmpty()) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     @Override
     public String toString() {
         return "(" + optionsToString() + ")";
