@@ -112,10 +112,10 @@ public class DfaTokenizer<T> implements Tokenizer<T> {
         }
         if (acceptedIndex < 0) {
             if (nextChar == -1) {
-                throw new IllegalStateException("Unexpected EOF at " + line + ":" + pos);
+                throw new TokenizerException("Unexpected EOF at " + line + ":" + pos);
             }
             String wrong = Character.isISOControl(nextChar) ? "(" + nextChar + ")" : "'" + (char)nextChar + "'" + "(" + nextChar + ")";
-            throw new IllegalStateException("Unexpected character " + wrong + " at " + line + ":" + pos);
+            throw new TokenizerException("Unexpected character " + wrong + " at " + line + ":" + pos);
         }
         StringBuilder stringBuilder = new StringBuilder(acceptedIndex + 1);
         final T tag = queue.get(acceptedIndex).getTag();

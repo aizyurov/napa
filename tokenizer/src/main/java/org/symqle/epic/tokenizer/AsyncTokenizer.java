@@ -1,7 +1,5 @@
 package org.symqle.epic.tokenizer;
 
-import org.symqle.epic.gparser.GrammarException;
-
 import java.io.IOException;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -37,7 +35,7 @@ public class AsyncTokenizer<T> implements Tokenizer<T> {
             token = queue.take();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new GrammarException("Unexpected interrupt");
+            throw new TokenizerException("Unexpected interrupt");
         }
         if (token.getType() == null) {
             eofToken = token;

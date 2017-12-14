@@ -1,4 +1,4 @@
-package org.symqle;
+package org.symqle.epic.gparser;
 
 import org.symqle.epic.gparser.SyntaxTree;
 

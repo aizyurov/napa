@@ -1,6 +1,5 @@
 package org.symqle.epic.gparser;
 
-import org.symqle.LeafNode;
 import org.symqle.epic.tokenizer.Token;
 
 import java.util.List;
