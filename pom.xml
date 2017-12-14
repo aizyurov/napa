@@ -4,10 +4,10 @@
                       http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>org.symqle.tools</groupId>
-  <artifactId>symqle-epic</artifactId>
+  <groupId>org.symqle.napa</groupId>
+  <artifactId>napa-parent</artifactId>
   <version>1.0-SNAPSHOT</version>
-  <packaging>jar</packaging>
+  <packaging>pom</packaging>
   <name>Symqle interpreting compiler</name>
 
   <url>http://epic.symqle.org</url>
@@ -34,7 +34,7 @@
   </developers>
 
   <scm>
-    <url>http://symqle.org/git?p=symqle-epic.gitr</url>
+    <url>http://symqle.org/git?p=symqle-epic.git</url>
     <connection>scm:git:git://symqle.org/symqle-epic.git</connection>
     <developerConnection>scm:git:ssh://git@symqle.org/git/symqle-epic.git</developerConnection>
   </scm>
@@ -266,5 +266,12 @@
         <scope>test</scope>
       </dependency>
     </dependencies>
+
+    <modules>
+        <module>tokenizer</module>
+        <module>lexer</module>
+        <module>parser</module>
+        <module>compiler</module>
+    </modules>
 
 </project>

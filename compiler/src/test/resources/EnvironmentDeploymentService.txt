@@ -1,0 +1,1087 @@
+package ru.yandex.qe.qloud.application.deployment;
+
+import com.codahale.metrics.InstrumentedExecutorService;
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.Timer;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.thrift.TException;
+import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.event.ContextStartedEvent;
+import org.springframework.stereotype.Component;
+import ru.yandex.iss.Instance;
+import ru.yandex.qe.auth.api.AuthService;
+import ru.yandex.qe.qloud.api.DataValidationException;
+import ru.yandex.qe.qloud.application.DistributedLockFactory;
+import ru.yandex.qe.qloud.application.IssInstanceHasher;
+import ru.yandex.qe.qloud.application.LockAcquireException;
+import ru.yandex.qe.qloud.application.access.AuthorizationService;
+import ru.yandex.qe.qloud.application.balancer.BalancerOperations;
+import ru.yandex.qe.qloud.application.check.HttpAgent;
+import ru.yandex.qe.qloud.application.component.QloudComponentFactory;
+import ru.yandex.qe.qloud.application.container.ComponentAllocationService;
+import ru.yandex.qe.qloud.application.deployment.paas.DeploymentProcessor;
+import ru.yandex.qe.qloud.application.environment.AbstractQloudEnvironment;
+import ru.yandex.qe.qloud.application.environment.EnvironmentLifecycleListener;
+import ru.yandex.qe.qloud.application.environment.QloudRunningEnvironment;
+import ru.yandex.qe.qloud.application.environment2.AbstractPaasEnvironment;
+import ru.yandex.qe.qloud.application.juggler.JugglerOperations;
+import ru.yandex.qe.qloud.application.management.QloudManagementService;
+import ru.yandex.qe.qloud.application.monitoring.MonitoringService;
+import ru.yandex.qe.qloud.application.operations.EnvironmentManagement;
+import ru.yandex.qe.qloud.application.operations.EnvironmentOperationsService;
+import ru.yandex.qe.qloud.application.utils.concurrent.ExecutorServiceBuilder;
+import ru.yandex.qe.qloud.domain.Allocation;
+import ru.yandex.qe.qloud.domain.AppComponent;
+import ru.yandex.qe.qloud.domain.Box;
+import ru.yandex.qe.qloud.domain.Cluster;
+import ru.yandex.qe.qloud.domain.EnvironmentStatus;
+import ru.yandex.qe.qloud.domain.EnvironmentStatusCache;
+import ru.yandex.qe.qloud.domain.InstanceStatus;
+import ru.yandex.qe.qloud.domain.IssSlotStatus;
+import ru.yandex.qe.qloud.domain.ListeningEnvironment;
+import ru.yandex.qe.qloud.domain.ReadonlyAllocation;
+import ru.yandex.qe.qloud.domain.ReadonlyIssSlotStatus;
+import ru.yandex.qe.qloud.domain.Slb;
+import ru.yandex.qe.qloud.domain.SlotAttributes;
+import ru.yandex.qe.qloud.domain.SlotStats;
+import ru.yandex.qe.qloud.domain.StableEnvironment;
+import ru.yandex.qe.qloud.domain.StableEnvironmentInfo;
+import ru.yandex.qe.qloud.domain.StatusHistory;
+import ru.yandex.qe.qloud.domain.StringStatusMessage;
+import ru.yandex.qe.qloud.domain.UnstableEnvironment;
+import ru.yandex.qe.qloud.domain.paas.EnvironmentTopology;
+import ru.yandex.qe.qloud.domain.repository.Db;
+import ru.yandex.qe.qloud.domain.repository.nearest.NearestDb;
+import ru.yandex.qe.qloud.domain.repository.readonly.ReadonlyDb;
+import ru.yandex.qe.telemetry.metrics.Gauges;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import javax.ws.rs.ProcessingException;
+import javax.ws.rs.WebApplicationException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
+import static ru.yandex.qe.qloud.application.deployment.IssConfigurer.NO_CONFIGURATION;
+import static ru.yandex.qe.qloud.domain.EnvironmentStatus.ACTIVATED;
+import static ru.yandex.qe.qloud.domain.EnvironmentStatus.CANCELED;
+import static ru.yandex.qe.qloud.domain.EnvironmentStatus.CREATED;
+import static ru.yandex.qe.qloud.domain.EnvironmentStatus.CREATING;
+import static ru.yandex.qe.qloud.domain.EnvironmentStatus.DEACTIVATING;
+import static ru.yandex.qe.qloud.domain.EnvironmentStatus.DEPLOYED;
+import static ru.yandex.qe.qloud.domain.EnvironmentStatus.DEPLOYING;
+import static ru.yandex.qe.qloud.domain.EnvironmentStatus.FAILED;
+import static ru.yandex.qe.qloud.domain.EnvironmentStatus.NEW;
+import static ru.yandex.qe.qloud.domain.EnvironmentStatus.PENDING_DEACTIVATE;
+import static ru.yandex.qe.qloud.domain.EnvironmentStatus.PENDING_REMOVE;
+import static ru.yandex.qe.qloud.domain.EnvironmentStatus.PREPARING;
+import static ru.yandex.qe.qloud.domain.EnvironmentStatus.REMOVED;
+import static ru.yandex.qe.qloud.domain.EnvironmentStatus.REMOVING;
+import static ru.yandex.qe.qloud.spring.SpringContext.getBeans;
+
+/**
+ * @author lvovich
+ */
+@Component("EnvironmentDeploymentService")
+public class EnvironmentDeploymentService implements ApplicationListener<ContextStartedEvent> {
+
+    private final static List<EnvironmentStatus> UNSTABLE_STATUSES = Arrays.asList(DEPLOYING, PREPARING, PENDING_REMOVE, REMOVING, DEACTIVATING, CREATING, CREATED);
+    private static final String QLOUD_MEMORY_LIMIT = "QLOUD_MEMORY_LIMIT";
+    private static final String QLOUD_MEMORY_GUARANTEE = "QLOUD_MEMORY_GUARANTEE";
+    private static final String QLOUD_CPU_CORES = "QLOUD_CPU_CORES";
+    private static final String QLOUD_CPU_LIMIT = "QLOUD_CPU_LIMIT";
+    private static final String QLOUD_CPU_GUARANTEE = "QLOUD_CPU_GUARANTEE";
+    private static final String QLOUD_BANDWIDTH_LIMIT = "QLOUD_BANDWIDTH_LIMIT";
+    private static final String QLOUD_BANDWIDTH_GUARANTEE = "QLOUD_BANDWIDTH_GUARANTEE";
+    private static final String QLOUD_IO_LIMIT = "QLOUD_IO_LIMIT";
+    private static final String QLOUD_DISK_SIZE = "QLOUD_DISK_SIZE";
+    public static int VERSION_HISTORY_LIMIT = 14;
+    private static long ISS_STATUS_LIGETIME = 10000l; // 10 seconds
+    private static int DEPLOY_ATTEMPTS_LIMIT = 10;
+    private static long PATIENCE_LIMIT_MUNITES = 30;
+    private final Logger logger = LoggerFactory.getLogger(getClass());
+    @Autowired
+    HttpAgent httpAgent;
+    @Autowired
+    private DistributedLockFactory lockFactory;
+    @Autowired
+    private EnvironmentOperationsService environmentOperations;
+
+    @Autowired
+    private EnvironmentManagement environmentManagement;
+
+    @Value("${remove.configuration.delay.seconds}")
+    private int removeDelay;
+    //    @Autowired
+//    private IssConfigurer issConfigurer;
+    @Autowired
+    private ComponentAllocationService allocationService;
+    @Autowired
+    private QloudComponentFactory componentFactory;
+    @Autowired
+    private ResourceBuilder resourceBuilder;
+    @Autowired
+    private AuthorizationService authorizationService;
+    @Autowired
+    private AuthService authService;
+    @Autowired
+    private MonitoringService monitoringService;
+    @Autowired
+    private JugglerOperations jugglerOperations;
+    @Value("${qe.server-environment}")
+    private String myEnvironment;
+    @Value("${deploy.status.skip.tcp.check}")
+    private boolean skipTcpCheckForDeployStatus;
+    private ExecutorService executorService;
+    @Autowired
+    private MetricRegistry metricRegistry;
+    @Autowired
+    private QloudManagementService qloudManagementService;
+    @Autowired
+    private DeploymentProcessor topologyProcessor;
+
+
+    @Value("${deploy.in.foreground}")
+    private boolean deployInForeground;
+
+    private ScheduledExecutorService scheduler;
+
+
+    @PostConstruct
+    public void init() {
+        ExecutorService executorDelegate = new ExecutorServiceBuilder()
+                .setMinThreads(30)
+                .setMaxThreads(30)
+                .setQueueSize(1000)
+                .setNamePrefix(getClass().getSimpleName())
+                .build();
+        executorService = new InstrumentedExecutorService(
+                executorDelegate, metricRegistry, getClass().getSimpleName() + ".threadPool");
+        scheduler = Executors.newScheduledThreadPool(1);
+    }
+
+    @PreDestroy
+    public void stop() {
+        scheduler.shutdownNow();
+        executorService.shutdownNow();
+    }
+
+    @Override
+    public void onApplicationEvent(ContextStartedEvent event) {
+        if (!deployInForeground) {
+            scheduler.scheduleAtFixedRate(this::updateGauges, 0, 1, TimeUnit.MINUTES);
+        }
+    }
+
+    private String name(Class className, EnvironmentStatus previousStatus, EnvironmentStatus status) {
+        return className.getSimpleName() + "_" + previousStatus + "-" + status;
+    }
+
+    public void updateAllIssConfigurations() {
+        if (deployInForeground) {
+            updateAllIssConfigurationsInForeground();
+        } else {
+            updateAllIssConfigurationsInBackground();
+        }
+    }
+
+    public void updateAllIssConfigurationsInForeground() {
+        final List<UnstableEnvironment> unstableEnvironments = Db.unstableEnvironments().findAll();
+        for (final UnstableEnvironment unstableEnvironment : unstableEnvironments) {
+            String environmentId = unstableEnvironment.getEnvironmentId();
+            try {
+                if (unstableEnvironment.getEngine().equals(AbstractQloudEnvironment.ENGINE)) {
+                    updateIssConfiguration(environmentId);
+                }
+            } catch (RuntimeException e) {
+                Db.unstableEnvironments().save(new UnstableEnvironment(environmentId, DateTime.now(), AbstractQloudEnvironment.ENGINE));
+                logger.debug("Saved UnstableEnvironment {} in updateAllIssConfigurations:1", environmentId);
+                logger.error("Deployment failed for {}", environmentId, e);
+            }
+        }
+        for (final UnstableEnvironment unstableEnvironment : unstableEnvironments) {
+            String environmentId = unstableEnvironment.getEnvironmentId();
+            LoggerFactory.getLogger(getClass()).debug("Unstable environment: {}", environmentId);
+            try {
+                if (unstableEnvironment.getEngine().equals(AbstractQloudEnvironment.ENGINE)) {
+                    LoggerFactory.getLogger(getClass()).debug("Process qloud environment: {}", environmentId);
+                    updateDeploymentStatus(environmentId);
+                } else if (unstableEnvironment.getEngine().equals(AbstractPaasEnvironment.ENGINE)) {
+//                    LoggerFactory.getLogger(getClass()).debug("Process platform environment: {}", environmentId);
+//                    topologyProcessor.onEnvironmentEvent(environmentId, MDC.get("X-qe-bus-request-id"));
+                } else {
+                    LoggerFactory.getLogger(getClass()).debug("Process unknown environment: {} - {}", environmentId, unstableEnvironment.getEngine());
+                }
+            } catch (RuntimeException e) {
+                Db.unstableEnvironments().save(new UnstableEnvironment(environmentId, DateTime.now(), AbstractQloudEnvironment.ENGINE));
+                logger.debug("Saved UnstableEnvironment {} in updateAllIssConfigurations:1", environmentId);
+                logger.error("Deployment status update failed for {}", environmentId, e);
+            }
+        }
+    }
+
+    public void updateAllIssConfigurationsInBackground() {
+        final List<UnstableEnvironment> unstableEnvironments = Db.unstableEnvironments().findAll();
+        LoggerFactory.getLogger(getClass()).debug("HANGUP_DEBUG: unstable environments: ", unstableEnvironments.size());
+        final List<Future<String>> futures = new ArrayList<>();
+        for (final UnstableEnvironment unstableEnvironment : unstableEnvironments) {
+            String environmentId = unstableEnvironment.getEnvironmentId();
+            LoggerFactory.getLogger(getClass()).debug("HANGUP_DEBUG: submitting callable for {}", environmentId);
+            Future<String> future = executorService.submit(() ->
+            {
+                if (unstableEnvironment.getEngine().equals(AbstractQloudEnvironment.ENGINE)) {
+                    LoggerFactory.getLogger(getClass()).debug("Process qloud environment: {}", environmentId);
+                    try {
+                        updateIssConfiguration(environmentId);
+                        LoggerFactory.getLogger(getClass()).debug("HANGUP_DEBUG: done updateIssConfiguration {}", environmentId);
+                    } catch (RuntimeException e) {
+                        Db.unstableEnvironments().save(new UnstableEnvironment(environmentId, DateTime.now(), AbstractQloudEnvironment.ENGINE));
+                        logger.debug("Saved UnstableEnvironment {} in updateAllIssConfigurations:1", environmentId);
+                        logger.warn("Deployment failed for {}", environmentId, e);
+                    }
+                    try {
+                        updateDeploymentStatus(environmentId);
+                        LoggerFactory.getLogger(getClass()).debug("HANGUP_DEBUG: done updateDeploymentStatus {}", environmentId);
+                    } catch (RuntimeException e) {
+                        Db.unstableEnvironments().save(new UnstableEnvironment(environmentId, DateTime.now(), AbstractQloudEnvironment.ENGINE));
+                        logger.debug("Saved UnstableEnvironment {} in updateAllIssConfigurations:1", environmentId);
+                        logger.warn("Deployment status update failed for {}", environmentId, e);
+                    }
+                }
+                return environmentId;
+            });
+            futures.add(future);
+        }
+        for (final Future future : futures) {
+            try {
+                Object environmentId = future.get();
+                LoggerFactory.getLogger(getClass()).debug("HANGUP_DEBUG: finished {}", environmentId);
+            } catch (InterruptedException e) {
+                // ignore
+            } catch (ExecutionException e) {
+                logger.error("Unexpected exception from future", e);
+            }
+        }
+    }
+
+    public void updateDeploymentStatus(final String environmentId) throws LockAcquireException {
+        logger.debug("Update deployment status {}", environmentId);
+        lockFactory.runWithLock(StableEnvironment.class, environmentId, 10, TimeUnit.SECONDS, new Runnable() {
+            @Override
+            public void run() {
+                final List<StableEnvironment> versions = environmentOperations.getVersions(environmentId);
+
+                cleanObsoleteDeployments(environmentId, versions);
+                // send everything to ISS in chronological order; QLOUD-256 - that's why reverse order
+                for (int i = versions.size() - 1; i >= 0; i--) {
+                    final StableEnvironment version = versions.get(i);
+                    if (!version.getEngine().equals(AbstractQloudEnvironment.ENGINE)) {
+                        // this code is for qloud verssions only; paas environments are handled by DeploymentProcessor
+                        continue;
+                    }
+                    final String configurationId = version.getConfigurationId();
+                    switch (version.getStatus()) {
+                        case CREATED:
+                            try {
+                                allocationService.prepareConfiguration(version.getCluster(), version.getObjectId(), version.getVersion(), version.getConfigurationId());
+                                commitStatusChange(version, PREPARING, "Submitted to ISS");
+                            } catch (TException e) {
+                                logger.error("Configuration creation attempt {} failed", version.getDeployAttempts() + 1, e);
+                                int deployAttempts = version.getDeployAttempts() + 1;
+                                version.setDeployAttempts(deployAttempts);
+                                final String rawMessage = String.valueOf(e);
+                                final String message = rawMessage.length() < 200 ? rawMessage : rawMessage.substring(0, 200) + "...";
+                                if (deployAttempts > 5) {
+                                    commitStatusChange(version, FAILED, message);
+                                } else {
+                                    Db.unstableEnvironments().save(new UnstableEnvironment(version.getObjectId(), DateTime.now(), AbstractQloudEnvironment.ENGINE));
+                                    Db.stableEnvironments().save(version);
+                                }
+                            }
+                            break;
+
+                        case REMOVING:
+                            logger.debug("Check REMOVING configuration {}", version.getConfigurationId());
+                            int notRemovedCount = 0;
+                            for (final AppComponent appComponent : version.getComponents().values()) {
+                                final List<SlotAttributes> slots = appComponent.getSlots().stream().filter(x -> x.isAlive()).collect(Collectors.toList());
+                                for (final SlotAttributes slot : slots) {
+                                    final String issSlot = slot.getIssSlot();
+                                    IssSlotStatus status = monitoringService.getRealtimeSlotStatus(issSlot, configurationId);
+                                    if (!status.getCurrentState().equals("REMOVED") && !status.getCurrentState().equals("FEEDBACK_FAILURE")) {
+                                        notRemovedCount += 1;
+                                    }
+                                }
+                            }
+                            if (notRemovedCount == 0) {
+                                logger.debug("No running instances for {}", version.getConfigurationId());
+                                allocationService.cleanUsages(version.getCluster(), version.getObjectId(), version.getVersion());
+                                commitStatusChange(version, REMOVED, "");
+                            } else {
+                                // completelyRemoved remains true
+                                LoggerFactory.getLogger(getClass()).debug("{} instances still not removed", notRemovedCount);
+                                Db.unstableEnvironments().save(new UnstableEnvironment(environmentId, DateTime.now(), AbstractQloudEnvironment.ENGINE));
+                            }
+                            break;
+                        case PREPARING:
+                            StringBuilder messageBuilder = new StringBuilder();
+                            boolean okToDeploy = true;
+                            for (final AppComponent appComponent : version.getComponents().values()) {
+                                int preparedCount = 0;
+                                int expectedCount = 0;
+                                final List<SlotAttributes> slots = appComponent.getSlots().stream().filter(x -> x.isAlive()).collect(Collectors.toList());
+                                for (final SlotAttributes slot : slots) {
+                                    final String issSlot = slot.getIssSlot();
+                                    IssSlotStatus status = monitoringService.getRealtimeSlotStatus(issSlot, configurationId);
+                                    expectedCount += 1;
+                                    if (status != null && status.getCurrentState().equals("PREPARED")) {
+                                        preparedCount += 1;
+                                    }
+                                    messageBuilder.append(slot.getComponentId()).append(":").append(slot.getHost()).append(":")
+                                            .append(status != null ? status.getCurrentState() : "NO_FEEDBACK").append("\n");
+                                }
+                                String minPreparedParam = appComponent.getParameters().get("minPrepared");
+                                int minPreparedPercent = minPreparedParam == null ? 50 : Integer.valueOf(minPreparedParam);
+                                // add 0.5 to round to ceiling but honor zero
+                                int minPreparedCount = minPreparedPercent == 0 ? 0 : (expectedCount * minPreparedPercent + 50) / 100;
+                                okToDeploy &= expectedCount == 0 || preparedCount >= minPreparedCount;
+                                okToDeploy &= version.getDeployAttempts() <= DEPLOY_ATTEMPTS_LIMIT;
+                            }
+                            if (okToDeploy) {
+                                LoggerFactory.getLogger(getClass()).debug("ACTIVATING: ", messageBuilder.toString());
+                                try {
+                                    final List<SlotAttributes> slotAttributesForDeploy = version.takeSlotsForDeploy();
+                                    if (slotAttributesForDeploy != null) {
+                                        final List<String> slots = slotAttributesForDeploy.stream().map(x -> x.getIssSlot()).collect(Collectors.toList());
+                                        allocationService.activate(version.getCluster(), version.getObjectId(), version.getVersion(), version.getConfigurationId(), slots);
+                                    }
+                                    logger.debug("Status change: {},{}  {} -> {}", version.getObjectId(), version.getConfigurationId(), version.getStatus(), DEPLOYING);
+                                    version.setDeployAttempts(0);
+                                    commitStatusChange(version, DEPLOYING, "");
+                                } catch (TException e) {
+                                    logger.warn("Activation of {} failed", configurationId, e);
+                                    // change backup; do not save version: its deploy schedule changed
+                                    final StableEnvironment backup = Db.stableEnvironments().find(version.getMongoId());
+                                    backup.setDeployAttempts(version.getDeployAttempts() + 1);
+                                    backup.setStatusMessage("Activation failed: " + e.toString());
+                                    Db.stableEnvironments().save(backup);
+                                }
+                            } else {
+                                if (version.getDeployAttempts() > DEPLOY_ATTEMPTS_LIMIT) {
+                                    allocationService.removeAll(version.getCluster(), version.getObjectId(), version.getVersion(), version.getConfigurationId());
+                                    commitStatusChange(version, FAILED, messageBuilder.toString());
+                                } else {
+                                    version.setStatusMessage(messageBuilder.toString());
+                                    Db.stableEnvironments().save(version);
+                                }
+                            }
+                            Db.unstableEnvironments().save(new UnstableEnvironment(environmentId, DateTime.now(), AbstractQloudEnvironment.ENGINE));
+                            break;
+                        case DEPLOYING: {
+                            final List<SlotAttributes> slots = version.takeSlotsForDeploy();
+                            if (slots != null) {
+
+                                try {
+                                    allocationService.activate(version.getCluster(), version.getObjectId(), version.getVersion(), version.getConfigurationId(), slots.stream().map(x -> x.getIssSlot()).collect(Collectors.toList()));
+                                    version.setStatusMessage("");
+                                    Db.stableEnvironments().save(version); // saves shortened deploySchedule
+                                } catch (TException e) {
+                                    version.setStatusMessage("Error activating instances: " + e);
+                                    Db.stableEnvironments().save(version); // saves shortened deploySchedule
+                                    logger.warn("Error activating instances", e);
+                                }
+                                //  QLOUDDEV-361 - do not switch to DEPLOYED until deploy schedule is empty
+                                break;
+                            }
+                        }
+                        StringBuilder statusMessageBuilder = new StringBuilder();
+                        boolean allComponentsReady = true;
+                        for (final AppComponent appComponent : version.getComponents().values()) {
+                            int activeCount = 0;
+                            int runningCount = 0;
+                            int expectedActiveCount = 0;
+                            final List<SlotAttributes> slots = appComponent.getSlots().stream().filter(x -> x.isAlive()).collect(Collectors.toList());
+                            for (final SlotAttributes slot : slots) {
+                                final IssSlotStatus status = monitoringService.getRealtimeSlotStatus(slot.getIssSlot(), configurationId);
+                                expectedActiveCount += 1;
+                                final String state;
+                                if (status != null && status.getCurrentState().equals("ACTIVE")) {
+                                    activeCount += 1;
+                                    runningCount += 1;
+                                }
+                                statusMessageBuilder.append(slot.getComponentId()).append(":").append(slot.getHost()).append(":").append(status != null ? status.getCurrentState() : "UNKNOWN")
+                                        .append("\n");
+                            }
+                            allComponentsReady &= (expectedActiveCount == 0 || runningCount * 2 >= expectedActiveCount);
+                        }
+                        // majority
+                        if (allComponentsReady) {
+                            logger.debug("Update deployment status - all components are ready ({})",
+                                    version.getObjectId());
+                            commitStatusChange(version, DEPLOYED, "");
+                        } else {
+                            version.setStatusMessage(statusMessageBuilder.toString());
+                            Db.stableEnvironments().save(version);
+                        }
+                        Db.unstableEnvironments().save(new UnstableEnvironment(environmentId, DateTime.now(), AbstractQloudEnvironment.ENGINE));
+                        break;
+                        case DEPLOYED: {
+                            // minority may be still not activated
+                            final List<SlotAttributes> slotAttributesForDeploy = version.takeSlotsForDeploy();
+                            if (slotAttributesForDeploy != null) {
+                                final List<String> slots = slotAttributesForDeploy.stream().map(x -> x.getIssSlot()).collect(Collectors.toList());
+                                try {
+                                    allocationService.activate(version.getCluster(), version.getObjectId(), version.getVersion(), version.getConfigurationId(), slots);
+                                    Db.stableEnvironments().save(version); // saves shortened deploySchedule
+                                } catch (TException e) {
+                                    logger.warn("Error activating instances", e);
+                                }
+                                Db.unstableEnvironments().save(new UnstableEnvironment(environmentId, DateTime.now(), AbstractQloudEnvironment.ENGINE));
+                            }
+                        }
+                        break;
+                        case NEW:
+                            Db.unstableEnvironments().save(new UnstableEnvironment(environmentId, DateTime.now(), AbstractQloudEnvironment.ENGINE));
+                        default:
+                            // do nothing
+                    }
+                    if (i == 0) {
+                        Db.environmentStatusCaches().save(new EnvironmentStatusCache(version.getObjectId(), version.getStatus()));
+                    }
+                }
+
+                // ensure that there is only one DEPLOYED version, all versions below should be removed
+                cleanObsoleteDeployments(environmentId, versions);
+
+                // remove UnstableEnvironment if possible
+                boolean canRemoveUnstableEnvironment = true;
+                for (int i = 0; i < versions.size(); i++) {
+                    // count paas environments as well : if there is deploying paas environment, keep qloud unstable environment
+                    EnvironmentStatus status = versions.get(i).getStatus();
+                    if (UNSTABLE_STATUSES.contains(status)) {
+                        canRemoveUnstableEnvironment = false;
+                        break;
+                    }
+                }
+                if (canRemoveUnstableEnvironment) {
+                    Db.unstableEnvironments().remove(new UnstableEnvironment(environmentId, DateTime.now(), AbstractQloudEnvironment.ENGINE));
+                }
+            }
+        });
+
+    }
+
+
+    /**
+     * Sets status and saves version, then calls hooks and listeners.
+     *
+     * @param version
+     * @param status
+     */
+    public void commitStatusChange(StableEnvironment version, EnvironmentStatus status, String statusMessage) {
+        commitStatusChange(version, status, null, statusMessage);
+    }
+
+    /**
+     * Sets status and saves version, then calls hooks and listeners.
+     *
+     * @param version
+     * @param status
+     */
+    public void commitStatusChange(StableEnvironment version, EnvironmentStatus status, Long topologyVersion, String statusMessage) {
+        EnvironmentStatus previousStatus = version.setStatus(status);
+        version.setStatusMessage(statusMessage);
+        Db.stableEnvironments().save(version);
+        ListeningEnvironment previousListening = Db.listeningEnvironments().find(version.getObjectId());
+        // in new orchestration version is DEPLOYING means all instances active, can send traffic
+        // in old orchestration DEPLOYING means not all instances active, do not send traffic
+        if (status == DEPLOYED || status == ACTIVATED || (status == DEPLOYING && version.getEngine().equals(AbstractPaasEnvironment.ENGINE))) {
+            ListeningEnvironment newListening;
+            if (version.getEngine().equals(AbstractQloudEnvironment.ENGINE)) {
+                // qloud environment
+                newListening = new ListeningEnvironment(version.getObjectId(), version.getVersion(), null, System.currentTimeMillis());
+                if (previousListening == null || newListening.getEnvironmentVersion() != previousListening.getEnvironmentVersion()) {
+                    new QloudRunningEnvironment(version).onDeploy();
+                }
+            } else {
+                newListening = new ListeningEnvironment(version.getObjectId(), version.getVersion(), topologyVersion, System.currentTimeMillis());
+            }
+            if (previousListening == null
+                    || !newListening.getEnvironmentId().equals(previousListening.getEnvironmentId())
+                    || newListening.getEnvironmentVersion() != previousListening.getEnvironmentVersion()
+                    || !Objects.equals(newListening.getTopologyVersion(), previousListening.getTopologyVersion())) {
+                Db.listeningEnvironments().save(newListening);
+                getBeans(EnvironmentLifecycleListener.class)
+                        .forEach(l -> l.notifyListeningEnvironmentChange(previousListening, newListening));
+            }
+        } else if (version.getEngine().equals(AbstractPaasEnvironment.ENGINE) && version.getStatus() != PENDING_DEACTIVATE) {
+            // version deactivated; check whether listeningEnvironment must be removed
+            // it is possible for platform environments only; for qloud environments there is not deactivation operation
+            // and listeningEnvironment must never be removed
+            if (previousListening != null
+                    && previousListening.getEnvironmentId().equals(version.getObjectId())
+                    && previousListening.getEnvironmentVersion() == version.getVersion()
+                    && Objects.equals(previousListening.getTopologyVersion(), topologyVersion)) {
+                getBeans(EnvironmentLifecycleListener.class)
+                        .forEach(l -> l.notifyListeningEnvironmentChange(previousListening, null));
+                Db.listeningEnvironments().remove(previousListening);
+            }
+        }
+        if (previousStatus != status) {
+            updateTimer(version, previousStatus, status);
+            getBeans(EnvironmentLifecycleListener.class)
+                    .forEach(l -> l.notifyEnvironmentStatusChange(status, version,
+                            topologyVersion == null ? null
+                                    : EnvironmentTopology.createTopologyId(version.getObjectId(), topologyVersion)));
+            final String comment;
+            if (topologyVersion != null) {
+                comment = Db.environmentTopologies().find(EnvironmentTopology.createTopologyId(version.getObjectId(), topologyVersion)).getComment();
+            } else {
+                comment = version.getComment();
+            }
+            environmentOperations.callWebHook(version, comment);
+        }
+    }
+
+    private void updateTimer(StableEnvironment environment, EnvironmentStatus previousStatus, EnvironmentStatus status) {
+        StatusHistory statusHistory = environment.getStatusHistory();
+        Timer timer = metricRegistry.timer(name(StableEnvironment.class, previousStatus, status));
+        timer.update(statusHistory.getLastTimeDiff(), TimeUnit.MILLISECONDS);
+    }
+
+    private void cleanObsoleteDeployments(final String environmentId, final List<StableEnvironment> versions) {
+        logger.debug("Clean obsolete deployments {}", environmentId);
+        String deployedConfigurationId = "NO_CONFIGURATION";
+        int cleanStart = 0;
+        StableEnvironment topmostDeployed = null;
+        ListeningEnvironment listeningEnvironment = NearestDb.listeningEnvironments().find(environmentId);
+        if (listeningEnvironment != null && listeningEnvironment.getTopologyVersion() != null) {
+            // PAAS environment is listening
+            cleanStart = 0; // all Qloud environments should be removed
+            topmostDeployed = Db.stableEnvironments().find(StableEnvironment.createMongoId(listeningEnvironment.getEnvironmentId(), listeningEnvironment.getEnvironmentVersion()));
+        } else {
+            for (int i = 0; i < versions.size(); i++) {
+                final StableEnvironment candidate = versions.get(i);
+                if (candidate.getStatus() == DEPLOYED || candidate.getStatus() == DEPLOYING) {
+                    cleanStart = i + 1;
+                    topmostDeployed = candidate;
+                    break;
+                }
+            }
+        }
+        if (topmostDeployed != null) {
+            deployedConfigurationId = topmostDeployed.getConfigurationId();
+            for (int j = cleanStart; j < versions.size(); j++) {
+                final StableEnvironment environment = versions.get(j);
+                // do not do anything with PAAS environments
+                if (environment.getEngine().equals(AbstractPaasEnvironment.ENGINE)) {
+                    continue;
+                }
+                final EnvironmentStatus status = environment.getStatus();
+                if (status == DEPLOYED || status == DEPLOYING || status == PREPARING || status == PENDING_REMOVE) {
+                    if (!environment.getConfigurationId().equals(deployedConfigurationId)) {
+                        final EnvironmentStatus newStatus;
+                        // give some time for router to switch to topmostDeployed before removing old configuration
+                        // remove previous configurations if current is deployed
+                        // if current configuration has no instances, remove previous configuration without delay - QLOUDDEV-381
+                        boolean canRemoveNow = topmostDeployed.getStatus() == DEPLOYED
+                                && (topmostDeployed.getStatusChangeTs() < System.currentTimeMillis() - TimeUnit.SECONDS.toMillis(removeDelay) || NO_CONFIGURATION.equals(topmostDeployed.getConfigurationId()));
+
+                        // if the version is not the immediate neighbour, remove if it has been never deployed,
+                        // even if current version is not deployed yet (to save resources).
+                        // versions, that have been deployed before, should be kept - QLOUDDEV-334
+                        //
+                        boolean hasDeployedVersion = false;
+                        List<StringStatusMessage> messages = environment.getStatusHistory().getMessages();
+                        for (final StringStatusMessage message : messages) {
+                            if (message.getStatus().equals(DEPLOYED.toString()) || message.getStatus().equals(DEPLOYING.toString())) {
+                                hasDeployedVersion = true;
+                                break;
+                            }
+                        }
+                        canRemoveNow |= !hasDeployedVersion;
+                        // QLOUDDEV-721
+                        if (environmentId.startsWith(BalancerOperations.BALANCER_APPLICATION + ".")) {
+                            String balancerName = environment.getName();
+                            Slb slb = Db.slbs().find(balancerName);
+                            if (slb != null && (slb.getStatus() == Slb.Status.WAIT_RECONFIGURE || slb.getStatus() == Slb.Status.PENDING_RECONFIGURE)) {
+                                canRemoveNow = false;
+                            }
+                        }
+                        LoggerFactory.getLogger(getClass()).debug("QLOUDDEV_334: topmost is {}; j={}; hasDeployedVersion={}, canRemoveNow={}",
+                                topmostDeployed.getStatus(),
+                                j,
+                                hasDeployedVersion,
+                                canRemoveNow);
+
+                        if (canRemoveNow) {
+                            allocationService.removeAll(environment.getCluster(), environment.getObjectId(), environment.getVersion(), environment.getConfigurationId());
+                            newStatus = REMOVING;
+                        } else {
+                            // switch status to PENDING_REMOVE now; will remove later when canRemoveNow is true
+                            newStatus = PENDING_REMOVE;
+                        }
+                        commitStatusChange(environment, newStatus, "");
+                        Db.unstableEnvironments().save(new UnstableEnvironment(environmentId, DateTime.now(), environment.getEngine()));
+                        logger.debug("Saved UnstableEnvironment {} in cleanObsoleteDeployments", environmentId);
+                    } else {
+                        commitStatusChange(environment, REMOVED, "");
+                    }
+                }
+            }
+        }
+
+        // remove all FAILED and CANCELED configurations
+        for (int i = 0; i < versions.size(); i++) {
+            final StableEnvironment environment = versions.get(i);
+            final EnvironmentStatus status = environment.getStatus();
+            if (status == FAILED || status == CANCELED) {
+                final String configurationId = environment.getConfigurationId();
+                if (configurationId != null && !configurationId.equals(NO_CONFIGURATION) && Db.issSlotStatuses().existsByConfigurationId(configurationId)) {
+                    allocationService.removeAll(environment.getCluster(), environment.getObjectId(), environment.getVersion(), configurationId);
+                }
+            }
+        }
+    }
+
+    public void onEnvironmentChange(final String environmentId, boolean foreground) {
+        if (foreground) {
+            handleEnvironmentChange(environmentId);
+        } else {
+            executorService.submit(new Runnable() {
+                @Override
+                public void run() {
+                    handleEnvironmentChange(environmentId);
+                }
+            });
+        }
+    }
+
+    private void handleEnvironmentChange(final String environmentId) {
+        try {
+            updateIssConfiguration(environmentId);
+            updateDeploymentStatus(environmentId);
+        } catch (LockAcquireException e) {
+            logger.warn("Can not acquire lock for update of {} configuration; will update later", environmentId);
+        } catch (WebApplicationException | ProcessingException | DataValidationException e) {
+            // wrong data / external call failure - not ERROR
+            logger.warn("Configuration update failed for " + environmentId, e);
+        } catch (RuntimeException e) {
+            // unexpected - ERROR
+            logger.error("Configuration update failed for " + environmentId, e);
+        }
+    }
+
+    private void updateIssConfiguration(final String environmentId) throws LockAcquireException {
+        logger.debug("Update iss configuration {}", environmentId);
+        lockFactory.runWithLock(StableEnvironment.class, environmentId, 10, TimeUnit.SECONDS, new Runnable() {
+            @Override
+            public void run() {
+                final List<StableEnvironment> versions = environmentOperations.getVersions(environmentId);
+                // find topmost NEW version
+                int topmostNewIndex = -1;
+                for (int i = 0; i < versions.size(); i++) {
+                    if (versions.get(i).getStatus() == NEW) {
+                        topmostNewIndex = i;
+                        break;
+                    }
+                }
+                if (topmostNewIndex >= 0) {
+                    if (!versions.get(topmostNewIndex).getEngine().equals(AbstractQloudEnvironment.ENGINE)) {
+                        // paas enviromnents are handled elsewhere
+                        return;
+                    }
+                    // cancel all versions below NEW
+                    for (int i = topmostNewIndex + 1; i < versions.size(); i++) {
+                        final StableEnvironment environment = versions.get(i);
+                        if (environment.getStatus() == NEW && environment.getEngine().equals(AbstractQloudEnvironment.ENGINE)) {
+                            logger.debug("Status change: {} {} -> {}", environment.getObjectId(), environment.getStatus(), CANCELED);
+                            commitStatusChange(environment, CANCELED, "Version " + versions.get(topmostNewIndex).getVersion() + " canceled this version");
+                        }
+                    }
+                    // and deploy new environment. All previous DEPLOYING/DEPLOYED environments go to PENDING_REMOVE
+                    if (canDeployNowCancelIfNot(versions.get(topmostNewIndex))) {
+                        deployTopmostNew(versions, topmostNewIndex);
+                    }
+                }
+            }
+        });
+
+    }
+
+    private boolean canDeployNowCancelIfNot(StableEnvironment version) {
+        // TODO hack; refactor
+        if (version.getObjectId().startsWith("qloud.balancer")) {
+            Slb slb = Db.slbs().find(version.getName());
+            if (slb == null) {
+                version.setStatus(CANCELED);
+                version.setStatusMessage("No associated SLB");
+                Db.stableEnvironments().save(version);
+                return false;
+            } else {
+                switch (slb.getStatus()) {
+                    case OK:
+                    case DELETED:
+                    case NOT_CREATED:
+                    case AUTOMATIC:
+                        return true;
+                    default:
+                        version.setStatus(CANCELED);
+                        version.setStatusMessage("Status is " + slb.getStatus() + ", complete or cancel pending tasks before deploy");
+                        Db.stableEnvironments().save(version);
+                        return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    private void deployTopmostNew(final List<StableEnvironment> versions, final int topmostNewIndex) {
+        final StableEnvironment topmostNew = versions.get(topmostNewIndex);
+        logger.debug("Deploy topmost new {}", topmostNew.getObjectId());
+        if (topmostNew.getDeployAttempts() > DEPLOY_ATTEMPTS_LIMIT) {
+            logger.debug("Status change: {} {} -> {}", topmostNew.getObjectId(), topmostNew.getStatus(), FAILED);
+            commitStatusChange(topmostNew, FAILED, topmostNew.getStatusMessage());
+        } else {
+            QloudRunningEnvironment runningEnvironment = new QloudRunningEnvironment(topmostNew);
+            try {
+                runningEnvironment.prepareInstances();
+            } catch (RuntimeException e) {
+                commitStatusChange(topmostNew, FAILED, e.toString());
+                throw e;
+            }
+            try {
+                ConfigurationCreationResult result = runningEnvironment.allocateAndSubmit(l -> createConfiguration(versions, topmostNewIndex, runningEnvironment, l));
+                StableEnvironment topmostNew1 = versions.get(topmostNewIndex);
+                if (result.getReusedStable().isPresent()) {
+                    setupReusedConfiguration(topmostNew1, result.getReusedStable().get());
+                } else {
+                    setupNewConfiguration(topmostNew1, result.getConfigurationId(), result.getConfigurationHash());
+                    allocationService.configurationCreated(topmostNew1.getCluster(), topmostNew1.getObjectId(), topmostNew1.getVersion(), topmostNew1.getConfigurationId());
+                }
+            } catch (LockAcquireException e) {
+                logger.error("Deploy attempt {} failed", topmostNew.getDeployAttempts() + 1, e);
+                topmostNew.setDeployAttempts(topmostNew.getDeployAttempts() + 1);
+                topmostNew.setStatusMessage(e.toString());
+                Db.stableEnvironments().save(topmostNew);
+            } catch (RuntimeException e) {
+                logger.error("Fatal configuration creation error for " + runningEnvironment.getObjectId(), e);
+                topmostNew.setStatusMessage(e.toString());
+                topmostNew.setStatus(FAILED);
+                Db.stableEnvironments().save(topmostNew);
+            }
+        }
+    }
+
+    private boolean isActiveStatus(EnvironmentStatus status) {
+        switch (status) {
+            case DEPLOYING:
+            case DEPLOYED:
+            case PENDING_REMOVE:
+            case PREPARING:
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    private void setupNewConfiguration(StableEnvironment topmostNew, String configurationId, String currentHash) {
+        topmostNew.setDeployAttempts(0);
+        topmostNew.setConfigurationId(configurationId);
+        final EnvironmentStatus newStatus = NO_CONFIGURATION.equals(configurationId) ? DEPLOYED : CREATED;
+        topmostNew.setIssConfigurationHash(currentHash);
+        QloudRunningEnvironment running = new QloudRunningEnvironment(topmostNew);
+        running.forEachComponent(qloudComponent ->
+                {
+                    final List<SlotAttributes> slots = new ArrayList<>(qloudComponent.getActiveSlots());
+                    int frame = 0;
+                    final int deployInterval = qloudComponent.getDeployInterval();
+                    final int deployIntervalTicks = deployInterval >= 0 ? deployInterval * 6 : 0;
+                    while (!slots.isEmpty()) {
+                        final List<SlotAttributes> batch = new ArrayList<>();
+                        final int deployBatchSize = qloudComponent.getDeployBatchSize();
+                        final int effectiveBatchSize = deployBatchSize > 0 ? deployBatchSize : 1;
+                        for (int batchNum = 0; batchNum < effectiveBatchSize; batchNum++) {
+                            if (slots.isEmpty()) {
+                                break;
+                            }
+                            batch.add(slots.remove(0));
+                        }
+                        topmostNew.schedule(batch, frame);
+                        for (int emptyFrame = frame + 1; emptyFrame < frame + deployIntervalTicks; emptyFrame++) {
+                            topmostNew.schedule(Collections.emptyList(), emptyFrame);
+                        }
+                        frame += deployIntervalTicks;
+                    }
+                }
+        );
+        commitStatusChange(topmostNew, newStatus, "");
+        Db.unstableEnvironments().save(new UnstableEnvironment(topmostNew.getObjectId(), DateTime.now(), AbstractQloudEnvironment.ENGINE));
+        logger.debug("Saved UnstableEnvironment {} in internalDeployTopmpstNew:3", topmostNew.getObjectId());
+
+
+    }
+
+    private void setupReusedConfiguration(StableEnvironment current, StableEnvironment previous) {
+        current.setConfigurationId(previous.getConfigurationId());
+        final EnvironmentStatus newStatus = previous.getStatus();
+        current.setStatusMessage("");
+        current.setIssConfigurationHash(previous.getIssConfigurationHash());
+        List<List<SlotAttributes>> deploymentScheduleCopy = new ArrayList<>();
+        for (List<SlotAttributes> batch = previous.takeSlotsForDeploy(); batch != null; batch = previous.takeSlotsForDeploy()) {
+            deploymentScheduleCopy.add(batch);
+        }
+        // TODO do not need intermediate copy
+        for (int frame = 0; frame < deploymentScheduleCopy.size(); frame++) {
+            current.schedule(deploymentScheduleCopy.get(frame), frame);
+        }
+
+        commitStatusChange(current, newStatus, previous.getStatusMessage());
+        LoggerFactory.getLogger(getClass()).debug("Copying statuses for {} from {} to {}", current.getObjectId(), previous.getVersion(), current.getVersion());
+        allocationService.copyUsageStatuses(current.getObjectId(), current.getVersion(), previous.getVersion());
+        allocationService.cleanUsages(previous.getCluster(), previous.getObjectId(), previous.getVersion());
+        logger.debug("Found same deployed {}", previous.getObjectId());
+        // all version attributes has been moved; set status to REMOVED immediately
+        commitStatusChange(previous, REMOVED, "Superceeded by version " + current.getVersion());
+        Db.unstableEnvironments().save(new UnstableEnvironment(current.getObjectId(), DateTime.now(), AbstractQloudEnvironment.ENGINE));
+
+    }
+
+    private ConfigurationCreationResult createConfiguration(final List<StableEnvironment> versions, final int topmostNewIndex, final QloudRunningEnvironment running, List<Instance> instances) {
+        StableEnvironment topmostNew = running.getData();
+        try {
+            final String currentHash = IssInstanceHasher.instanceListHash(instances);
+            List<StableEnvironment> sameHashEnvironments = new ArrayList<>();
+            List<List<SlotAttributes>> deploymentScheduleCopy = null;
+            // QLOUD-316 - can move only nearest neighbour
+            int i = topmostNewIndex + 1;
+            if (i < versions.size()) {
+                final StableEnvironment environment = versions.get(i);
+                final EnvironmentStatus previousStatus = environment.getStatus();
+                if ((previousStatus == DEPLOYED || previousStatus == DEPLOYING || previousStatus == PREPARING)
+                        && currentHash.equals(environment.getIssConfigurationHash())) {
+                    sameHashEnvironments.add(environment);
+                }
+            }
+            if (!sameHashEnvironments.isEmpty()) {
+                logger.debug("Hashed environments not empty {}", topmostNew.getObjectId());
+                // nothing changed; just set new statuses.
+                StableEnvironment previous = sameHashEnvironments.get(0);
+                return new ConfigurationCreationResult(previous.getConfigurationId(), Optional.of(previous), currentHash);
+            } else {
+                logger.debug("Hashed environments is empty {}", topmostNew.getObjectId());
+                final Cluster cluster = topmostNew.getCluster();
+                final String configurationId = allocationService.sendConfiguration(cluster, topmostNew.getObjectId(), instances);
+                return new ConfigurationCreationResult(configurationId, Optional.empty(), currentHash);
+            }
+        } catch (TException e) {
+            logger.error("Configuration creation attempt {} failed", topmostNew.getDeployAttempts() + 1, e);
+            topmostNew.setDeployAttempts(topmostNew.getDeployAttempts() + 1);
+            final String rawMessage = String.valueOf(e);
+            final String message = rawMessage.length() < 200 ? rawMessage : rawMessage.substring(0, 200) + "...";
+            topmostNew.setStatusMessage(message);
+            Db.stableEnvironments().save(topmostNew);
+            Db.unstableEnvironments().save(new UnstableEnvironment(topmostNew.getObjectId(), DateTime.now(), AbstractQloudEnvironment.ENGINE));
+            logger.debug("Saved UnstableEnvironment {} in internalDeployTopmpstNew:4", topmostNew.getObjectId());
+            throw new RuntimeException("Configuration submit failed: " + e.getMessage(), e);
+        } catch (RuntimeException e) {
+            logger.error("Configuration creation {} failed", topmostNew.getDeployAttempts() + 1, e);
+            topmostNew.setDeployAttempts(topmostNew.getDeployAttempts() + 1);
+            commitStatusChange(topmostNew, FAILED, e.toString());
+            throw e;
+        }
+
+    }
+
+
+    public void refreshUnstableEnvironments() {
+        for (UnstableEnvironment unstableEnvironment : Db.unstableEnvironments().findAll()) {
+            Db.unstableEnvironments().save(new UnstableEnvironment(unstableEnvironment.getEnvironmentId(), DateTime.now(), unstableEnvironment.getEngine()));
+            logger.debug("Saved UnstableEnvironment {} in refreshUnstableEnvironments", unstableEnvironment.getEnvironmentId());
+        }
+    }
+
+    public void refreshDeployQueue() {
+        final Set<String> inactiveHosts =
+                Db.boxes().findAll().stream().filter(b -> !b.isActive()).map(Box::getFqdn).collect(Collectors.toSet());
+
+        // do not count allocations with empty usages
+        final List<ReadonlyAllocation> allAllocations = NearestDb.allocations().findInBoxes(inactiveHosts).stream()
+                .filter(allocation -> allocation.getInstances().stream().anyMatch(instance -> instance.getStatus() != InstanceStatus.REMOVED))
+                .collect(Collectors.toList());
+        // redeploy environments from inactive hosts
+        final Map<String, Set<String>> affectedQloudEnvironments = new TreeMap<>();
+        final Map<Pair<String, Long>, Set<String>> affectedPaasEnvironments = new HashMap<>();
+        LoggerFactory.getLogger(getClass()).debug("refreshDeployQueue: allAllocation size {}", allAllocations.size());
+        for (final ReadonlyAllocation allocation : allAllocations) {
+            String box = allocation.getBox();
+            for (Allocation.Instance instance : allocation.getInstances()) {
+                if (instance.getStatus() != InstanceStatus.REMOVED) {
+                    // may be topology or QLOUD environment
+                    String topologyId = instance.getAllocationId();
+                    EnvironmentTopology topology = Db.environmentTopologies().find(topologyId);
+                    if (topology != null) {
+                        Pair<String, Long> key = Pair.of(topology.getEnvironmentId(), topology.getEnvironmentVersion());
+                        Set<String> boxes = affectedPaasEnvironments.getOrDefault(key, new HashSet<>());
+                        boxes.add(box);
+                        affectedPaasEnvironments.put(key, boxes);
+                    } else {
+                        // assume it is QLOUD environment
+                        String key = allocation.getEnvironmentId();
+                        Set<String> boxes = affectedQloudEnvironments.getOrDefault(key, new HashSet<>());
+                        boxes.add(box);
+                        affectedQloudEnvironments.put(key, boxes);
+                    }
+                }
+            }
+        }
+        LoggerFactory.getLogger(getClass()).debug("refreshDeployQueue: Affected qloud environments 1: {}", affectedQloudEnvironments.keySet());
+        // do not redeploy twice; if in UnstableEnvironment, then deployment is already in progress
+        for (final UnstableEnvironment unstableEnvironment : Db.unstableEnvironments().findAll()) {
+            // if UnstableEnvironment is hanging (10 min+), than do redeploy
+            // if in progress less than 10 min, skip
+            if (unstableEnvironment.getTimestamp().isAfter(DateTime.now().minusMinutes(10))) {
+                if (unstableEnvironment.getEngine().equals(AbstractQloudEnvironment.ENGINE)) {
+                    affectedQloudEnvironments.remove(unstableEnvironment.getEnvironmentId());
+                }
+            }
+
+        }
+        // do not automatically redeploy balancers
+        String balancerPrefix = BalancerOperations.BALANCER_APPLICATION + ".";
+        for (final String environmentId : new HashSet<>(affectedQloudEnvironments.keySet())) {
+            if (environmentId.startsWith(balancerPrefix)) {
+                affectedQloudEnvironments.remove(environmentId);
+            }
+        }
+        for (Iterator<Pair<String, Long>> it = affectedPaasEnvironments.keySet().iterator(); it.hasNext(); ) {
+            Pair<String, Long> key = it.next();
+            if (key.getLeft().startsWith(balancerPrefix)) {
+                it.remove();
+            }
+        }
+
+        LoggerFactory.getLogger(getClass()).debug("refreshDeployQueue: Affected qloud environments 2: {}", affectedQloudEnvironments.keySet());
+        for (final Map.Entry<String, Set<String>> entry : affectedQloudEnvironments.entrySet()) {
+            LoggerFactory.getLogger(getClass()).debug("refreshDeployQueue: Redeploy : {}", entry.getKey());
+            executorService.submit(() -> {
+                environmentManagement.redeploy(entry.getKey(), "Hosts deactivated: " + entry.getValue());
+            });
+        }
+        LoggerFactory.getLogger(getClass()).debug("refreshDeployQueue: Affected paas environments 2: {}", affectedPaasEnvironments.keySet());
+        affectedPaasEnvironments.keySet()
+                .stream().forEach(key -> {
+            StableEnvironment version = Db.stableEnvironments().find(StableEnvironment.createMongoId(key.getLeft(), key.getRight()));
+            LoggerFactory.getLogger(getClass()).debug("refreshDeployQueue: paas reallocate: {}", key);
+            executorService.submit(() -> {
+                environmentManagement.internalReallocate(version, "Hosts deactivated: " + affectedPaasEnvironments.get(key), affectedPaasEnvironments.get(key));
+            });
+        });
+
+        final Set<UnstableEnvironment> unstableEnvironments = new HashSet<>();
+        final List<StableEnvironmentInfo> environments = ReadonlyDb.stableEnvironmentInfos().findByStatusNotIn(REMOVED);
+        for (final StableEnvironmentInfo environment : environments) {
+            if (environment.getEngine().equals(AbstractQloudEnvironment.ENGINE)) {
+                UnstableEnvironment unstable = new UnstableEnvironment(environment.getObjectId(), DateTime.now(), environment.getEngine());
+                if (UNSTABLE_STATUSES.contains(environment.getStatus())) {
+                    unstableEnvironments.add(unstable);
+                } else if (environment.getStatus() == NEW
+                        && environment.getStatusChangeTs() < (System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(5))) {
+                    unstableEnvironments.add(unstable);
+                }
+            }
+        }
+
+        // TODO remove after migration to PAAS - only for removing qloud version after paas version has been deployed
+        Map<String, List<StableEnvironmentInfo>> deployedById = environments.stream().filter(env -> env.getStatus() == EnvironmentStatus.DEPLOYED).collect(Collectors.groupingBy(StableEnvironmentInfo::getObjectId));
+        for (String environmentId : deployedById.keySet()) {
+            if (deployedById.get(environmentId).size() > 1) {
+                unstableEnvironments.add(new UnstableEnvironment(environmentId, DateTime.now(), AbstractQloudEnvironment.ENGINE));
+            }
+        }
+
+        for (final EnvironmentTopology topology : Db.environmentTopologies().findAll()) {
+            environments.stream().filter(env -> env.getObjectId().equals(topology.getEnvironmentId()) && env.getVersion() == topology.getEnvironmentVersion())
+                    .forEach(env -> {
+                        if (topology.getProcessingState() == EnvironmentTopology.ProcessingState.IN_PROGRESS && topology.currentState().getEntered().isBefore(DateTime.now().minusMinutes(5))) {
+                            // may be hanging
+                            topologyProcessor.onEnvironmentEvent(env.getObjectId(), MDC.get("X-qe-bus-request-id"));
+                        }
+                    });
+        }
+        unstableEnvironments.addAll(Db.deletedEnvironments().findAll().stream().map(x -> new UnstableEnvironment(x.getEnvironmentId(), DateTime.now(), x.getEngine())).collect(Collectors.toSet()));
+        for (final UnstableEnvironment unstable : unstableEnvironments) {
+            Db.unstableEnvironments().save(unstable);
+            logger.debug("Saved UnstableEnvironment {} in refreshDeployQueue", unstable);
+        }
+
+    }
+
+    public void updateStats() {
+        final Set<String> knownSlotConfigurationKeys = new HashSet<>();
+        for (final ReadonlyAllocation allocation : NearestDb.allocations().findAll()) {
+            for (final Allocation.Instance usage : allocation.getInstances()) {
+                String configurationId = usage.getIssConfigurationId();
+                if (configurationId != null && usage.getStatus() != InstanceStatus.REMOVED) {
+                    knownSlotConfigurationKeys.add(IssSlotStatus.createId(allocation.getIssSlot(), configurationId));
+                }
+            }
+        }
+        final Map<String, Integer> counts = new HashMap<>();
+        int defunctCount = 0;
+        for (final ReadonlyIssSlotStatus issSlotStatus : NearestDb.issSlotStatuses().findAll()) {
+            String key = issSlotStatus.getCurrentState();
+            if (knownSlotConfigurationKeys.contains(issSlotStatus.getId())) {
+                counts.put(key, counts.getOrDefault(key, 0) + 1);
+                knownSlotConfigurationKeys.remove(issSlotStatus.getId());
+            } else {
+                defunctCount += 1;
+            }
+        }
+        counts.put("NO_DATA", knownSlotConfigurationKeys.size());
+        counts.put("ZOMBIE", defunctCount);
+        final Set<String> unreportedStatuses =
+                new HashSet<String>(Db.slotStats().findAll().stream().map(x -> x.getStatus()).collect(Collectors.toSet()));
+        for (final String key : counts.keySet()) {
+            unreportedStatuses.remove(key);
+            Db.slotStats().save(new SlotStats(key, counts.get(key)));
+        }
+        for (final String key : unreportedStatuses) {
+            Db.slotStats().save(new SlotStats(key, 0));
+        }
+    }
+
+    private void updateGauges() {
+        List<SlotStats> allStats = Db.slotStats().findAll();
+        Set<String> statuses = allStats.stream()
+                .map(SlotStats::getStatus).collect(Collectors.toSet());
+        for (final String key : statuses) {
+            Gauges.forSupplier(metricRegistry, "IssSlotStatus." + key, () -> Db.slotStats().find(key).getCount());
+        }
+    }
+
+
+}
