@@ -2,11 +2,11 @@ package org.symqle.epic.grammar;
 
 import junit.framework.Assert;
 import junit.framework.TestCase;
-import org.symqle.epic.analyser.grammar.GaGrammar;
-import org.symqle.epic.gparser.CompiledGrammar;
-import org.symqle.epic.gparser.GrammarException;
-import org.symqle.epic.gparser.Parser;
-import org.symqle.epic.gparser.SyntaxTree;
+import org.symqle.epic.compiler.grammar.GaGrammar;
+import org.symqle.epic.parser.CompiledGrammar;
+import org.symqle.epic.parser.GrammarException;
+import org.symqle.epic.parser.Parser;
+import org.symqle.epic.parser.SyntaxTree;
 
 import java.io.InputStreamReader;
 import java.io.StringReader;

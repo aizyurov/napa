@@ -1,8 +1,8 @@
 package org.symqle.epic.grammar;
 
 import junit.framework.TestCase;
-import org.symqle.epic.analyser.lexis.GaLexer;
-import org.symqle.epic.analyser.lexis.GaTokenType;
+import org.symqle.epic.compiler.lexis.GaLexer;
+import org.symqle.epic.compiler.lexis.GaTokenType;
 import org.symqle.epic.tokenizer.DfaTokenizer;
 import org.symqle.epic.tokenizer.PackedDfa;
 import org.symqle.epic.tokenizer.Token;

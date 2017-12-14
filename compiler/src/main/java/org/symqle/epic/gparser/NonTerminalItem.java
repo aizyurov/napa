@@ -1,5 +1,9 @@
 package org.symqle.epic.gparser;
 
+import org.symqle.epic.parser.NapaNonTerminalItem;
+import org.symqle.epic.parser.NapaRuleItem;
+import org.symqle.epic.parser.RuleItemType;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;

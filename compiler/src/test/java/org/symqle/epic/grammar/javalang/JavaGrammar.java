@@ -1,8 +1,7 @@
 package org.symqle.epic.grammar.javalang;
 
-import org.symqle.epic.analyser.grammar.GaGrammar;
-import org.symqle.epic.gparser.CompiledGrammar;
-import org.symqle.epic.gparser.Parser;
+import org.symqle.epic.compiler.grammar.GaGrammar;
+import org.symqle.epic.parser.Parser;
 
 import java.io.IOException;
 import java.io.InputStreamReader;

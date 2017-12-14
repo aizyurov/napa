@@ -1,5 +1,8 @@
 package org.symqle.epic.gparser;
 
+import org.symqle.epic.parser.NapaRuleItem;
+import org.symqle.epic.parser.RuleItemType;
+
 import java.util.List;
 
 /**

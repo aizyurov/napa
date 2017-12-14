@@ -1,5 +1,8 @@
 package org.symqle.epic.gparser;
 
+import org.symqle.epic.parser.NapaChartNode;
+import org.symqle.epic.parser.RawSyntaxNode;
+
 import java.util.List;
 
 /**

@@ -2,14 +2,12 @@ package org.symqle.epic.grammar.javalang;
 
 import junit.framework.Assert;
 import junit.framework.TestCase;
-import org.symqle.epic.gparser.Parser;
-import org.symqle.epic.gparser.SyntaxTree;
-import org.symqle.epic.gparser.SyntaxTree;
+import org.symqle.epic.parser.Parser;
+import org.symqle.epic.parser.SyntaxTree;
 
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.List;
-import java.util.Set;
 
 /**
  * @author lvovich

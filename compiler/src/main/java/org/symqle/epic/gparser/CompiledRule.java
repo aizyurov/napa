@@ -1,5 +1,7 @@
 package org.symqle.epic.gparser;
 
+import org.symqle.epic.parser.NapaRule;
+
 import java.util.List;
 import java.util.stream.Collectors;
 

@@ -1,5 +1,7 @@
 package org.symqle.epic.gparser;
 
+import org.symqle.epic.parser.RuleItemType;
+import org.symqle.epic.parser.TokenProperties;
 import org.symqle.epic.tokenizer.Token;
 
 import java.util.ArrayList;
