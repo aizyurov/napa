@@ -240,6 +240,16 @@ public class AnalyzerTest extends TestCase {
         Assert.assertEquals(source,tree.getSource());
     }
 
+    public void testPackratFailure() throws Exception {
+        CompiledGrammar g = new GaGrammar().parse(new StringReader("S = 'x' S 'x' | 'x' ;"));
+        String source = "xxx";
+        List<SyntaxTree> forest = new Parser(g).parse("S", new StringReader(source), 1000);
+        Assert.assertEquals(1, forest.size());
+        SyntaxTree tree = forest.iterator().next();
+        Assert.assertEquals(source,tree.getSource());
+        tree.print(System.out);
+    }
+
 }
 
 
