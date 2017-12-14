@@ -1,7 +1,7 @@
-package org.symqle.epic.grammar.javalang;
+package org.symqle.napa.grammar.javalang;
 
 import junit.framework.TestCase;
-import org.symqle.epic.gparser.Parser;
+import org.symqle.napa.gparser.Parser;
 
 import java.io.InputStreamReader;
 
