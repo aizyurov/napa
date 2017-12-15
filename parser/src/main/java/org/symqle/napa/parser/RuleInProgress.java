@@ -71,18 +71,13 @@ public class RuleInProgress {
     public List<RuleInProgress> acceptNonTerminal(RawSyntaxNode node, Token<TokenProperties> lookAhead) {
         int length = syntaxNodes.length;
         TokenProperties type = lookAhead.getType();
-        if (lookAhead.getText().equals("protected")) {
-            System.out.println("here");
-        }
-        if (type == null && offset + 1 != items.length) {
-            return Collections.emptyList();
-        }
+
         for (int i = offset + 1; i < items.length ; i++) {
             NapaRuleItem item = items[i];
-            if (type != null && !type.matches(item.first()) && !items[i].hasEmptyDerivation()) {
-                return Collections.emptyList();
-            } else if (!items[i].hasEmptyDerivation()){
+            if (type != null && type.matches(item.first())) {
                 break;
+            } else if (!items[i].hasEmptyDerivation()){
+                return Collections.emptyList();
             }
         }
         RawSyntaxNode[] nodes = new RawSyntaxNode[length + 1];

@@ -63,4 +63,9 @@ public class LeafNode extends SyntaxTree {
         writer.write(("]"));
         writer.write("\n");
     }
+
+    @Override
+    public int treeSize() {
+        return  1;
+    }
 }

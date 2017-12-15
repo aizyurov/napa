@@ -63,4 +63,13 @@ public class BranchNode extends SyntaxTree {
         }
         writer.write("\n");
     }
+
+    @Override
+    public int treeSize() {
+        int size = 1;
+        for (SyntaxTree child: children) {
+            size += child.treeSize();
+        }
+        return size;
+    }
 }

@@ -44,6 +44,7 @@ public class RealClassTest extends TestCase {
             List<SyntaxTree> forest = g.parse("CompilationUnit", new InputStreamReader(new BufferedInputStream(getClass().getClassLoader().getResourceAsStream("EnvironmentDeploymentService.txt"))), 1000);
             Assert.assertEquals(1, forest.size());
             SyntaxTree tree = forest.get(0);
+            System.out.println("Tree size: " + tree.treeSize());
             tree.print(new FileOutputStream("true2"));
 
         }
