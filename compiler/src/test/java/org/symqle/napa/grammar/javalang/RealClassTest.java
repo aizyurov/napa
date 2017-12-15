@@ -49,6 +49,30 @@ public class RealClassTest extends TestCase {
         }
     }
 
+    public void testManyStringsConcat() throws Exception {
+        System.out.println("=== Benchmark ===");
+        {
+            List<SyntaxTree> forest = g.parse("CompilationUnit", new InputStreamReader(new BufferedInputStream(getClass().getClassLoader().getResourceAsStream("ManyStringsConcat.txt"))), 1000);
+            Assert.assertEquals(1, forest.size());
+        }
+        {
+            List<SyntaxTree> forest = g.parse("CompilationUnit", new InputStreamReader(new BufferedInputStream(getClass().getClassLoader().getResourceAsStream("ManyStringsConcat.txt"))), 1000);
+            Assert.assertEquals(1, forest.size());
+        }
+        {
+            List<SyntaxTree> forest = g.parse("CompilationUnit", new InputStreamReader(new BufferedInputStream(getClass().getClassLoader().getResourceAsStream("ManyStringsConcat.txt"))), 1000);
+            Assert.assertEquals(1, forest.size());
+        }
+        {
+            List<SyntaxTree> forest = g.parse("CompilationUnit", new InputStreamReader(new BufferedInputStream(getClass().getClassLoader().getResourceAsStream("ManyStringsConcat.txt"))), 1000);
+            Assert.assertEquals(1, forest.size());
+            SyntaxTree tree = forest.get(0);
+            tree.print(new FileOutputStream("true2"));
+
+        }
+    }
+
+
     private BufferedReader reader() {
         return new BufferedReader(new InputStreamReader(getClass().getClassLoader().getResourceAsStream("EnvironmentDeploymentService.txt")));
     }

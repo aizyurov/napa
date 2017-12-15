@@ -68,8 +68,23 @@ public class RuleInProgress {
         }
     }
 
-    public List<RuleInProgress> acceptNonTerminal(RawSyntaxNode node) {
+    public List<RuleInProgress> acceptNonTerminal(RawSyntaxNode node, Token<TokenProperties> lookAhead) {
         int length = syntaxNodes.length;
+        TokenProperties type = lookAhead.getType();
+        if (lookAhead.getText().equals("protected")) {
+            System.out.println("here");
+        }
+        if (type == null && offset + 1 != items.length) {
+            return Collections.emptyList();
+        }
+        for (int i = offset + 1; i < items.length ; i++) {
+            NapaRuleItem item = items[i];
+            if (type != null && !type.matches(item.first()) && !items[i].hasEmptyDerivation()) {
+                return Collections.emptyList();
+            } else if (!items[i].hasEmptyDerivation()){
+                break;
+            }
+        }
         RawSyntaxNode[] nodes = new RawSyntaxNode[length + 1];
         System.arraycopy(syntaxNodes, 0, nodes, 0, length);
         nodes[length] = node;
@@ -126,9 +141,24 @@ public class RuleInProgress {
 
     public String toString(CompiledGrammar grammar) {
         StringBuilder stringBuilder = new StringBuilder();
-        if (target >= 0) {
-            stringBuilder.append(grammar.nonTerminalName(target)).append(" =");
+        stringBuilder.append(grammar.nonTerminalName(target)).append(" =");
+        for (int i = 0; i<items.length; i++) {
+            if (offset == i) {
+                stringBuilder.append(" ^");
+            }
+            final NapaRuleItem item = items[i];
+            stringBuilder.append(" ").append(item.toString());
         }
+        if (offset == items.length) {
+            stringBuilder.append(" ^");
+        }
+        return stringBuilder.toString();
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append(target).append(" =");
         for (int i = 0; i<items.length; i++) {
             if (offset == i) {
                 stringBuilder.append(" ^");

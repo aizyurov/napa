@@ -496,7 +496,7 @@ MarkerAnnotation = '@' TypeName ;
 
 # 9.7.3 Single-Element Annotations
 
-SingleElementAnnotation = '@' TypeName ( ElementValue ) ;
+SingleElementAnnotation = '@' TypeName '(' ElementValue ')' ;
 
 # 10.6. Array Initializers
 

@@ -54,15 +54,15 @@ public class NapaChartNode {
             List<NapaChartNode> result = new ArrayList<>();
             ruleInProgress.reduce(lookAhead, grammar).stream().forEach(s -> {
                 for (NapaChartNode parent: new LinkedHashSet<NapaChartNode>(enclosing)) {
-                    result.addAll(parent.acceptNonTerminal(s));
+                    result.addAll(parent.acceptNonTerminal(s, lookAhead));
                 }
             });
             return result;
         }
     }
 
-    private List<NapaChartNode> acceptNonTerminal(RawSyntaxNode node) {
-        List<RuleInProgress> newRules = ruleInProgress.acceptNonTerminal(node);
+    private List<NapaChartNode> acceptNonTerminal(RawSyntaxNode node, Token<TokenProperties> lookAhead) {
+        List<RuleInProgress> newRules = ruleInProgress.acceptNonTerminal(node, lookAhead);
         List<NapaChartNode> newNodes = new ArrayList<>(newRules.size());
         for (RuleInProgress rule: newRules) {
             newNodes.add(new NapaChartNode(rule, enclosing));
