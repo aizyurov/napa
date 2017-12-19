@@ -35,7 +35,7 @@ public class IgnorableTest extends TestCase {
             runTest("/*a/*nested*/bc*/", "1996");
             fail("Nested comments not supported");
         } catch (GrammarException e) {
-            Assert.assertTrue(e.getMessage().contains("Unrecognized input bc"));
+            Assert.assertTrue(e.getMessage().contains("Unexpected input \"bc\""));
         }
 
     }
@@ -51,7 +51,7 @@ public class IgnorableTest extends TestCase {
 
     private void runTest(final String preface, String source) throws IOException {
 
-        List<SyntaxTree> forest = g.parse("Literal", new StringReader(preface + source), 100);
+        List<SyntaxTree> forest = g.parse("Literal", new StringReader(preface + source));
         Assert.assertEquals(1, forest.size());
         SyntaxTree tree = forest.iterator().next();
         Assert.assertEquals(source, tree.getValue());

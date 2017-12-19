@@ -24,7 +24,7 @@ public class ImportTest extends TestCase {
 
     public void testSingleClass() throws Exception {
         final String source = "import java.util.stream.Collectors;";
-        List<SyntaxTree> forest = g.parse("ImportDeclaration", new StringReader(source), 100);
+        List<SyntaxTree> forest = g.parse("ImportDeclaration", new StringReader(source));
         Assert.assertEquals(1, forest.size());
         SyntaxTree tree = forest.iterator().next();
         Assert.assertEquals(source, tree.getSource());
@@ -41,7 +41,7 @@ public class ImportTest extends TestCase {
     public void testOnDemandType() throws Exception {
         final String source = "import java.util.stream.*;";
         System.out.println("Before parse");
-        List<SyntaxTree> forest = g.parse("ImportDeclaration", new StringReader(source), 100);
+        List<SyntaxTree> forest = g.parse("ImportDeclaration", new StringReader(source));
         System.out.println("After parse");
         Assert.assertEquals(1, forest.size());
         SyntaxTree tree = forest.iterator().next();
@@ -58,7 +58,7 @@ public class ImportTest extends TestCase {
 
     public void testSingleStatic() throws Exception {
         final String source = "import static java.util.stream.Collectors.toMap;";
-        List<SyntaxTree> forest = g.parse("ImportDeclaration", new StringReader(source), 100);
+        List<SyntaxTree> forest = g.parse("ImportDeclaration", new StringReader(source));
         Assert.assertEquals(1, forest.size());
         SyntaxTree tree = forest.iterator().next();
         Assert.assertEquals(source, tree.getSource());
@@ -77,7 +77,7 @@ public class ImportTest extends TestCase {
 
     public void testStaticOnDemand() throws Exception {
         final String source = "import static java.util.stream.Collectors.*;";
-        List<SyntaxTree> forest = g.parse("ImportDeclaration", new StringReader(source), 100);
+        List<SyntaxTree> forest = g.parse("ImportDeclaration", new StringReader(source));
         Assert.assertEquals(1, forest.size());
         SyntaxTree tree = forest.iterator().next();
         Assert.assertEquals(source, tree.getSource());

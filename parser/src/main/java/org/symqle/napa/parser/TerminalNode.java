@@ -56,4 +56,9 @@ public class TerminalNode implements RawSyntaxNode {
         result = 31 * result + token.hashCode();
         return result;
     }
+
+    @Override
+    public int treeSize() {
+        return 1;
+    }
 }

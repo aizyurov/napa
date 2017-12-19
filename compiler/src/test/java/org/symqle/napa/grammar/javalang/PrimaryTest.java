@@ -21,7 +21,7 @@ public class PrimaryTest extends TestCase {
 
     public void testThis() throws Exception {
 
-        List<SyntaxTree> forest = g.parse("Primary", new StringReader("this.a"), 1000);
+        List<SyntaxTree> forest = g.parse("Primary", new StringReader("this.a"));
         Assert.assertEquals(1, forest.size());
         SyntaxTree tree1 = forest.iterator().next();
         Assert.assertEquals("this.a", tree1.getSource());
@@ -31,7 +31,7 @@ public class PrimaryTest extends TestCase {
 
     public void testThisAsExpression() throws Exception {
 
-        List<SyntaxTree> forest = g.parse("Expression", new StringReader("a.b[i++] = z.c(d(x), y+z+w(3))"), 1000);
+        List<SyntaxTree> forest = g.parse("Expression", new StringReader("a.b[i++] = z.c(d(x), y+z+w(3))"));
         Assert.assertEquals(1, forest.size());
         SyntaxTree tree = forest.iterator().next();
 //        tree.print(System.out);
@@ -39,7 +39,7 @@ public class PrimaryTest extends TestCase {
     }
 
     public void testLambda() throws Exception {
-        List<SyntaxTree> forest = g.parse("Expression", new StringReader("() -> {}"), 1000);
+        List<SyntaxTree> forest = g.parse("Expression", new StringReader("() -> {}"));
         Assert.assertEquals(1, forest.size());
         SyntaxTree tree = forest.iterator().next();
         tree.print(System.out);

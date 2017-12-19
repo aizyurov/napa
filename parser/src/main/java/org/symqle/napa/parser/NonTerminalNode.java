@@ -60,4 +60,9 @@ public class NonTerminalNode implements RawSyntaxNode {
     }
 
     private int hash;
+
+    @Override
+    public int treeSize() {
+        return 1 + children.stream().mapToInt(RawSyntaxNode::treeSize).sum();
+    }
 }
