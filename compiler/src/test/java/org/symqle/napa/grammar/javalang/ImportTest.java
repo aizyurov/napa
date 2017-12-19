@@ -74,7 +74,6 @@ public class ImportTest extends TestCase {
         Assert.assertEquals("toMap", identifier.getValue());
     }
 
-
     public void testStaticOnDemand() throws Exception {
         final String source = "import static java.util.stream.Collectors.*;";
         List<SyntaxTree> forest = g.parse("ImportDeclaration", new StringReader(source));
