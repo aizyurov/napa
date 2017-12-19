@@ -23,7 +23,7 @@ public class Parser {
 
     public List<SyntaxTree> parse(final String target, final Reader reader, final int complexityLimit) throws IOException {
         final CompiledGrammar grammar = this.compiledGrammar;
-        final Tokenizer<TokenProperties> tokenizer = new AsyncTokenizer<>(new DfaTokenizer<>(grammar.getTokenizerDfa(), reader));
+        final Tokenizer<TokenProperties> tokenizer = new AsyncTokenizer<>(new DfaTokenizer<>(grammar.getTokenizerDfa(), reader, new TokenProperties(false, false, Collections.emptySet())));
 //        final Tokenizer<TokenProperties> tokenizer = new DfaTokenizer<>(grammar.getTokenizerDfa(), reader);
         final Map<RuleInProgress, NapaChartNode> workSet = new LinkedHashMap<>();
         final Map<RuleInProgress, NapaChartNode> shiftCandidates = new HashMap<>();

@@ -22,7 +22,7 @@ public class GaLexerTest extends TestCase {
         final PackedDfa<GaTokenType> dfa = new GaLexer().compile();
         String sample = "! \"[ \\n\\r]+\";\n" +
                 "unit = { class_definition | interface_definition };";
-        final Tokenizer<GaTokenType> tokenizer = new DfaTokenizer<GaTokenType>(dfa, new StringReader(sample));
+        final Tokenizer<GaTokenType> tokenizer = new DfaTokenizer<GaTokenType>(dfa, new StringReader(sample), GaTokenType.ERROR);
         for (Token<GaTokenType> token = tokenizer.nextToken(); token.getType() != null; token = tokenizer.nextToken()) {
             System.out.println(token);
         }

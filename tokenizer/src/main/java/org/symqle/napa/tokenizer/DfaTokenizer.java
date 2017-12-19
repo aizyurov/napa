@@ -19,10 +19,12 @@ public class DfaTokenizer<T> implements Tokenizer<T> {
     private Position position = Position.REGULAR;
     private List<AttributedCharacter> buffer = new ArrayList<>();
     private List<QueuedCharacter> queue = new ArrayList<>();
+    private final T errorTokenType;
 
-    public DfaTokenizer(final PackedDfa<T> dfa, final Reader reader) throws IOException {
+    public DfaTokenizer(final PackedDfa<T> dfa, final Reader reader, final T errorTokenType) throws IOException {
         this.dfa = dfa;
         this.reader = reader;
+        this.errorTokenType = errorTokenType;
     }
 
     private AttributedCharacter readChar() throws IOException {
@@ -85,7 +87,7 @@ public class DfaTokenizer<T> implements Tokenizer<T> {
                 if (state == 0) {
                     return new Token<>(null, line, pos, null);
                 } else {
-                    return constructToken(nextChar);
+                    return constructToken();
                 }
             }
             char currentChar = (char) nextChar;
@@ -95,14 +97,20 @@ public class DfaTokenizer<T> implements Tokenizer<T> {
                 attributedCharacter = readChar();
                 state = nextState;
             } else {
-                final Token<T> token = constructToken(nextChar);
-                buffer.add(attributedCharacter);
-                return token;
+                if (state == 0) {
+                    // the next character is inacceptable; consume it as error token
+                    queue.add(new QueuedCharacter(attributedCharacter, errorTokenType));
+                    return constructToken();
+                } else {
+                    final Token<T> token = constructToken();
+                    buffer.add(attributedCharacter);
+                    return token;
+                }
             }
         }
     }
 
-    private Token<T> constructToken(int nextChar) {
+    private Token<T> constructToken() {
         int acceptedIndex = -1;
         for (int i = queue.size() - 1; i >= 0; i--) {
             if (queue.get(i).getTag() != null) {
@@ -110,18 +118,20 @@ public class DfaTokenizer<T> implements Tokenizer<T> {
                 break;
             }
         }
+        final T tag;
+        final int endIndex;
         if (acceptedIndex < 0) {
-            if (nextChar == -1) {
-                throw new TokenizerException("Unexpected EOF at " + line + ":" + pos);
-            }
-            String wrong = Character.isISOControl(nextChar) ? "(" + nextChar + ")" : "'" + (char)nextChar + "'" + "(" + nextChar + ")";
-            throw new TokenizerException("Unexpected character " + wrong + " at " + line + ":" + pos);
+            tag = errorTokenType;
+            // eat all the queue
+            endIndex = queue.size() - 1;
+        } else {
+            tag = queue.get(acceptedIndex).getTag();
+            endIndex = acceptedIndex;
         }
-        StringBuilder stringBuilder = new StringBuilder(acceptedIndex + 1);
-        final T tag = queue.get(acceptedIndex).getTag();
+        StringBuilder stringBuilder = new StringBuilder(endIndex + 1);
         final int tokenLine = queue.get(0).getCharacter().getLine();
         final int tokenPos = queue.get(0).getCharacter().getPos();
-        for (int i =0; i<= acceptedIndex; i++) {
+        for (int i =0; i<= endIndex; i++) {
             stringBuilder.append((char) queue.get(0).getCharacter().getCharacter());
             queue.remove(0);
         }
