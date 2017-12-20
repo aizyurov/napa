@@ -276,6 +276,16 @@ public class AnalyzerTest extends TestCase {
 
     }
 
+    public void testManyAmbuguities() throws Exception {
+        CompiledGrammar g = new GaGrammar().parse(new StringReader("S = {A|B} ;\n" +
+                " A = 'a' ; B = 'a' ; "));
+        String source = "aaaaaaa";
+        Parser parser = new Parser(g);
+        List<SyntaxTree> forest = parser.parse("S", new StringReader(source));
+        Assert.assertEquals(128, forest.size());
+        System.out.println(parser.stats());
+
+    }
 
 }
 
