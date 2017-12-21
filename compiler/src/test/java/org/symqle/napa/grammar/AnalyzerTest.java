@@ -230,6 +230,18 @@ public class AnalyzerTest extends TestCase {
 
     }
 
+    public void testTheVeryEndDecides() throws Exception {
+        String grammar = "T = {A} 'x' | {B} 'y'; A = 'a'; B = 'a' ;";
+        String source = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaay";
+        CompiledGrammar g = new GaGrammar().parse(new StringReader(grammar));
+        List<SyntaxTree> forest = new Parser(g).parse("T", new StringReader(source), 100);
+        Assert.assertEquals(1, forest.size());
+        SyntaxTree tree = forest.iterator().next();
+        Assert.assertEquals("B", tree.getChildren().get(0).getName());
+        System.out.println("Tree size: " + tree.treeSize());
+
+    }
+
     public void testIgnoreConflict() throws Exception {
         CompiledGrammar g = null;
         g = new GaGrammar().parse(new InputStreamReader(getClass().getClassLoader().getResourceAsStream("ignorable.napa"), "UTF-8"));
