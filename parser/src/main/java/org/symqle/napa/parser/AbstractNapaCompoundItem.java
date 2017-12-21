@@ -2,10 +2,7 @@ package org.symqle.napa.parser;
 
 import org.symqle.napa.tokenizer.Token;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -13,13 +10,16 @@ import java.util.stream.Collectors;
  */
 public abstract class AbstractNapaCompoundItem implements NapaRuleItem {
     private final List<RuleItemSequence> options;
-    private final Set<Integer> first;
+    private final BitSet first;
     private final boolean canBeEmpty;
 
     public AbstractNapaCompoundItem(final List<List<NapaRuleItem>> options, boolean canBeEmpty, Set<Integer> first) {
         this.options = options.stream().map(RuleItemSequence::new).collect(Collectors.toList());
         this.canBeEmpty = canBeEmpty;
-        this.first = first;
+        this.first = new BitSet();
+        for (int i: first) {
+            this.first.set(i);
+        }
     }
 
     @Override
@@ -62,7 +62,7 @@ public abstract class AbstractNapaCompoundItem implements NapaRuleItem {
     }
 
     @Override
-    public Set<Integer> first() {
+    public BitSet first() {
         return first;
     }
 

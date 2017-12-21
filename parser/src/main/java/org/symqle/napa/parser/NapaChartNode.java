@@ -53,7 +53,7 @@ public class NapaChartNode {
         } else {
             List<NapaChartNode> result = new ArrayList<>();
             ruleInProgress.reduce(lookAhead, grammar).stream().forEach(s -> {
-                for (NapaChartNode parent: new LinkedHashSet<NapaChartNode>(enclosing)) {
+                for (NapaChartNode parent: enclosing) {
                     result.addAll(parent.acceptNonTerminal(s, lookAhead));
                 }
             });

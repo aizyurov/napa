@@ -1,5 +1,6 @@
 package org.symqle.napa.parser;
 
+import java.util.BitSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -35,13 +36,13 @@ public class RuleItemSequence {
         }
     }
 
-    public Set<Integer> firstSet() {
+    public BitSet firstSet() {
         if (firstSet != null) {
             return firstSet;
         }
-        Set<Integer> result = new HashSet<>();
+        BitSet result = new BitSet();
         for (NapaRuleItem item: sequence) {
-            result.addAll(item.first());
+            result.or(item.first());
             if (!item.hasEmptyDerivation()) {
                 break;
             }
@@ -52,7 +53,7 @@ public class RuleItemSequence {
 
     private Boolean canBeEmpty;
 
-    private Set<Integer> firstSet;
+    private BitSet firstSet;
 
     @Override
     public boolean equals(Object o) {

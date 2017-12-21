@@ -22,13 +22,8 @@ public class TokenProperties {
         }
     }
 
-    public boolean matches(Set<Integer> expectedTags) {
-        for (int i: expectedTags) {
-            if (bitSet.get(i)) {
-                return true;
-            }
-        }
-        return false;
+    public boolean matches(BitSet expectedTags) {
+        return bitSet.intersects(expectedTags);
     }
 
 
