@@ -1,6 +1,6 @@
 # epic grammar in its own notation
 
-grammar = { ignore | definition } ;
+grammar = { ignore | rule | patternDef } ;
 
 ignore_statement = "~" ignored ";" ;
 
@@ -14,12 +14,11 @@ regexp = "\"[^\"\n\r]+\"" ;
 
 literal = "'[^'\n\r]'";
 
-definition = identifier { patternDef | ruleDef } ;
 # each identifier may appear only once with patternDef or multiple times with ruleDef, but not both
 
-patternDef = '=' expression ;
+patternDef = identifier '=' expression ;
 
-ruleDef = ':' choice ';' ;
+rule = identifier ':' choice ';' ;
 
 ~ "#[^\n\r]*(\r|\n)" ; # comment
 ~ "[ \n\r\t]+" ; #whitespace
