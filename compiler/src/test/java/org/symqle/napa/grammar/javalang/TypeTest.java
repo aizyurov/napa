@@ -32,7 +32,7 @@ public class TypeTest extends TestCase {
 
     public void testAnnotatedPrimitive() throws Exception {
         String source = "@Transient int";
-        List<SyntaxTree> forest = g.parse("PrimitiveType", new StringReader(source), 100);
+        List<SyntaxTree> forest = g.parse("PrimitiveType", new StringReader(source));
         Assert.assertEquals(1, forest.size());
         SyntaxTree tree = forest.iterator().next();
         Assert.assertEquals("PrimitiveType", tree.getName());
@@ -83,7 +83,7 @@ public class TypeTest extends TestCase {
 
 
     private void runTest(final String source, final String expected) throws IOException {
-        List<SyntaxTree> forest = g.parse(expected, new StringReader(source), 1000);
+        List<SyntaxTree> forest = g.parse(expected, new StringReader(source));
         Assert.assertEquals(1, forest.size());
         SyntaxTree tree = forest.iterator().next();
         Assert.assertEquals(source, tree.getSource());

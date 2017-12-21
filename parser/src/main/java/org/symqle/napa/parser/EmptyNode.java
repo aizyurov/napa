@@ -35,6 +35,11 @@ public class EmptyNode implements RawSyntaxNode {
     }
 
     @Override
+    public int treeSize() {
+        return 1;
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;

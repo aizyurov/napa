@@ -60,7 +60,7 @@ public class UnannTypeTest extends TestCase {
 
 
     private void runTest(final String source, final String expected) throws IOException {
-        List<SyntaxTree> forest = g.parse(expected, new StringReader(source), 1000);
+        List<SyntaxTree> forest = g.parse(expected, new StringReader(source));
         Assert.assertEquals(1, forest.size());
         SyntaxTree tree = forest.iterator().next();
         Assert.assertEquals(source, tree.getSource());

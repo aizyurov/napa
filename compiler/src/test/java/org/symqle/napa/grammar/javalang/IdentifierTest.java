@@ -2,6 +2,7 @@ package org.symqle.napa.grammar.javalang;
 
 import junit.framework.Assert;
 import junit.framework.TestCase;
+import org.symqle.napa.parser.CollectingSyntaxErrorListener;
 import org.symqle.napa.parser.GrammarException;
 import org.symqle.napa.parser.Parser;
 import org.symqle.napa.parser.SyntaxTree;
@@ -31,13 +32,23 @@ public class IdentifierTest extends TestCase {
             runTest("1a");
             fail("1a is not an identifier");
         } catch (GrammarException e) {
-            Assert.assertTrue(e.getMessage().contains("Unrecognized input"));
+            Assert.assertTrue(e.getMessage().contains("Unexpected input"));
         }
+    }
+
+    public void testRecover() throws Exception {
+        String source = "1a";
+        CollectingSyntaxErrorListener errorListener = new CollectingSyntaxErrorListener();
+        List<SyntaxTree> forest = g.parse("Identifier", new StringReader(source), null, errorListener);
+        Assert.assertEquals(1, forest.size());
+        SyntaxTree tree = forest.iterator().next();
+        Assert.assertEquals(source, tree.getSource());
+        Assert.assertEquals(1, errorListener.getErrors().size());
     }
 
 
     private void runTest(final String source) throws IOException {
-        List<SyntaxTree> forest = g.parse("Identifier", new StringReader(source), 100);
+        List<SyntaxTree> forest = g.parse("Identifier", new StringReader(source));
         Assert.assertEquals(1, forest.size());
         SyntaxTree tree = forest.iterator().next();
         Assert.assertEquals(source, tree.getValue());

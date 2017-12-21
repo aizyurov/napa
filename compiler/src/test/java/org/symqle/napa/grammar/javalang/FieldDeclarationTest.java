@@ -3,6 +3,7 @@ package org.symqle.napa.grammar.javalang;
 import junit.framework.Assert;
 import junit.framework.TestCase;
 import org.symqle.napa.parser.Parser;
+import org.symqle.napa.parser.PrintingSyntaxErrorListener;
 import org.symqle.napa.parser.SyntaxTree;
 
 import java.io.IOException;
@@ -67,6 +68,21 @@ public class FieldDeclarationTest extends TestCase {
 
     }
 
+    public void testMissingComma() throws Exception {
+        List<SyntaxTree> forest = g.parse("FieldDeclaration", new StringReader("private static final String s1 s2;"), null, new PrintingSyntaxErrorListener(System.err));
+        Assert.assertEquals(1, forest.size());
+        SyntaxTree tree = forest.iterator().next();
+        Assert.assertEquals("private static final String s1 s2;", tree.getSource());
+        Assert.assertEquals(Arrays.asList("private", "static", "final"),
+                tree.find("FieldModifier").stream().map(SyntaxTree::getValue).collect(Collectors.toList()));
+        Assert.assertEquals(Collections.singletonList("String"),
+                tree.find("UnannType.UnannReferenceType.UnannClassOrInterfaceType.Identifier").stream().map(SyntaxTree::getValue).collect(Collectors.toList()));
+        // everything from s1 to semicolon is skipped
+        Assert.assertEquals(Arrays.asList("s1"),
+                tree.find("VariableDeclaratorList.VariableDeclarator.VariableDeclaratorId.Identifier").stream().map(SyntaxTree::getValue).collect(Collectors.toList()));
+
+    }
+
     public void testArray() throws Exception {
         SyntaxTree tree = parse("private static final int[][] s1, s2;");
         Assert.assertEquals(Arrays.asList("private", "static", "final"),
@@ -81,7 +97,7 @@ public class FieldDeclarationTest extends TestCase {
     }
 
     private SyntaxTree parse(final String source) throws IOException {
-        List<SyntaxTree> forest = g.parse("FieldDeclaration", new StringReader(source), 100);
+        List<SyntaxTree> forest = g.parse("FieldDeclaration", new StringReader(source));
         Assert.assertEquals(1, forest.size());
         SyntaxTree tree = forest.iterator().next();
         Assert.assertEquals(source, tree.getSource());

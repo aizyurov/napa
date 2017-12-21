@@ -8,13 +8,13 @@ import org.symqle.napa.tokenizer.DfaTokenizer;
 import org.symqle.napa.tokenizer.PackedDfa;
 import org.symqle.napa.tokenizer.Token;
 import org.symqle.napa.tokenizer.Tokenizer;
-import org.symqle.napa.tokenizer.TokenizerException;
 
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -34,7 +34,7 @@ public class RegexpParsingTest extends TestCase {
         tokenDefinitions.add(new TokenDefinition<>(quote(comment), quote(comment)));
         PackedDfa<Set<String>> packedDfa = new Lexer<>(tokenDefinitions).compile();
         Reader reader = new StringReader("/** comment */");
-        Tokenizer<Set<String>> tokenizer = new DfaTokenizer<>(packedDfa, reader);
+        Tokenizer<Set<String>> tokenizer = new DfaTokenizer<>(packedDfa, reader, Collections.emptySet());
         System.out.println(tokenizer.nextToken());
     }
 
@@ -56,7 +56,7 @@ public class RegexpParsingTest extends TestCase {
         tokenDefinitions.add(new TokenDefinition<>(quote(any), any));
         PackedDfa<Set<String>> packedDfa = new Lexer<>(tokenDefinitions).compile();
         Reader reader = new StringReader("defa");
-        Tokenizer<Set<String>> tokenizer = new DfaTokenizer<>(packedDfa, reader);
+        Tokenizer<Set<String>> tokenizer = new DfaTokenizer<>(packedDfa, reader, Collections.emptySet());
         System.out.println(tokenizer.nextToken());
     }
 
@@ -70,7 +70,7 @@ public class RegexpParsingTest extends TestCase {
         tokenDefinitions.add(new TokenDefinition<>(identifier, identifier, false));
         PackedDfa<Set<String>> packedDfa = new Lexer<>(tokenDefinitions).compile();
         Reader reader = new StringReader(">>>=a");
-        Tokenizer<Set<String>> tokenizer = new DfaTokenizer<>(packedDfa, reader);
+        Tokenizer<Set<String>> tokenizer = new DfaTokenizer<>(packedDfa, reader, Collections.emptySet());
         System.out.println(tokenizer.nextToken());
         System.out.println(tokenizer.nextToken());
         System.out.println(tokenizer.nextToken());
@@ -100,7 +100,7 @@ public class RegexpParsingTest extends TestCase {
         System.out.println("==================");
 //        Reader reader = new StringReader("public  class  Lexer {}");
         Reader reader = new StringReader("/** comment */ public class Abc implements Def {\n   int i;\r   long j;\r\n}\n\r\nhaha");
-        Tokenizer<Set<String>> tokenizer = new DfaTokenizer<>(packedDfa, reader);
+        Tokenizer<Set<String>> tokenizer = new DfaTokenizer<>(packedDfa, reader, Collections.emptySet());
         for (Token<Set<String>> token = tokenizer.nextToken(); token.getType() != null; token = tokenizer.nextToken()) {
             System.out.println(token);
         }
@@ -113,7 +113,7 @@ public class RegexpParsingTest extends TestCase {
         List<String> ignored = Arrays.asList(whitespace, comment);
         String identifier = "[a-zA-Z_][a-zA-Z0-9_]*";
         String number = "[0-9]+";
-        List<String> separators = Arrays.asList("[.]", ",", ";", "[+]", "-", "[*]", "/", "<", ">", "=", "==", "<=", ">=", "!=", "!", "{", "}");
+        List<String> separators = Arrays.asList("[.]", ",", ";", "[+]", "-", "<", ">", "=", "==", "<=", ">=", "!=", "!", "{", "}");
         List<String> keywords = Arrays.asList("class", "interface", "package", "extends", "implements", "private", "public", "final", "void", "int", "long", "boolean", "char", "import", "volatile", "transient", "default");
 
         final List<String> meaningful = new ArrayList<>();
@@ -126,19 +126,45 @@ public class RegexpParsingTest extends TestCase {
         tokenDefinitions.addAll(ignored.stream().map(x -> new TokenDefinition<>(quote(x), quote(x))).collect(Collectors.toList()));
         PackedDfa<Set<String>> packedDfa = new Lexer<>(tokenDefinitions).compile();
         packedDfa.printStats();
-        System.out.println("==================");
-//        Reader reader = new StringReader("public  class  Lexer {}");
-        Reader reader = new StringReader("/** comment */ public class @Abc implements Def {\n   int i;\r   long j;\r\n}\n\r\nhaha");
-        Tokenizer<Set<String>> tokenizer = new DfaTokenizer<>(packedDfa, reader);
-        try {
+        // illegal character
+        {
+            Reader reader = new StringReader("@ abc");
+            Tokenizer<Set<String>> tokenizer = new DfaTokenizer<>(packedDfa, reader, Collections.emptySet());
+            int i = 0;
             for (Token<Set<String>> token = tokenizer.nextToken(); token.getType() != null; token = tokenizer.nextToken()) {
+                switch (i++) {
+                    case 0:
+                        Assert.assertEquals(token.getType(), Collections.emptySet());
+                        break;
+                    case 1:
+                        Assert.assertEquals(token.getType(), Collections.singleton(whitespace));
+                        break;
+                    case 2:
+                        Assert.assertEquals(token.getType(), Collections.singleton(identifier));
+                        break;
+                    default:
+                        Assert.fail("Too many tokens");
+                }
+            }
+        }
+        // unclosed comment
+        {
+            Reader reader = new StringReader("/* abc");
+            Tokenizer<Set<String>> tokenizer = new DfaTokenizer<>(packedDfa, reader, Collections.emptySet());
+            int i = 0;
+            for (Token<Set<String>> token = tokenizer.nextToken(); token.getType() != null; token = tokenizer.nextToken()) {
+                switch (i++) {
+                    case 0:
+                        Assert.assertEquals(token.getType(), Collections.emptySet());
+                        break;
+                    default:
+                        Assert.fail("Too many tokens");
+                }
                 System.out.println(token);
             }
-            fail("Exception expected");
-        } catch (TokenizerException e) {
-            Assert.assertTrue(e.getMessage().contains("'@'"));
         }
-        System.out.println("================");
+
+
     }
 
     public void testItself() throws Exception {
@@ -164,7 +190,7 @@ public class RegexpParsingTest extends TestCase {
 //        Reader reader = new StringReader("public  class  Lexer {}");
         Reader reader = new InputStreamReader(getClass().getClassLoader().getResourceAsStream("sample.txt"), "UTF-8");
         final long startTokens = System.currentTimeMillis();
-        Tokenizer<Set<String>> tokenizer = new DfaTokenizer<>(packedDfa, reader);
+        Tokenizer<Set<String>> tokenizer = new DfaTokenizer<>(packedDfa, reader, Collections.emptySet());
         for (Token<Set<String>> token = tokenizer.nextToken(); token.getType() != null; token = tokenizer.nextToken()) {
             System.out.println(token);
         }

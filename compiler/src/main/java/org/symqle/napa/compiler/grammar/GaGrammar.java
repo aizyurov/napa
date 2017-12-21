@@ -44,7 +44,7 @@ public class GaGrammar {
         try {
             long startTs = System.currentTimeMillis();
             PackedDfa<GaTokenType> dfa = new GaLexer().compile();
-            tokenizer = new GaTokenizer(new DfaTokenizer<>(dfa, source));
+            tokenizer = new GaTokenizer(new DfaTokenizer<>(dfa, source, GaTokenType.ERROR));
             nextToken = tokenizer.nextToken();
             while(nextToken.getType() != null) {
                 switch(nextToken.getType()) {

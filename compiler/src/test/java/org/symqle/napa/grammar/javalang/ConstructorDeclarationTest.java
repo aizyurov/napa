@@ -56,7 +56,7 @@ public class ConstructorDeclarationTest extends TestCase {
     }
 
     private SyntaxTree parse(final String source) throws IOException {
-        List<SyntaxTree> forest = g.parse("ConstructorDeclaration", new StringReader(source), 300);
+        List<SyntaxTree> forest = g.parse("ConstructorDeclaration", new StringReader(source));
         Assert.assertEquals(1, forest.size());
         SyntaxTree tree = forest.iterator().next();
         Assert.assertEquals(source, tree.getSource());

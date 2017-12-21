@@ -25,7 +25,7 @@ public class AnalyzerTest extends TestCase {
                 "! \" +\" ;";
         CompiledGrammar g = new GaGrammar().parse(new StringReader(grammar));
         String source = "class wow ;";
-        List<SyntaxTree> tree = new Parser(g).parse("class_declaration", new StringReader(source), 100);
+        List<SyntaxTree> tree = new Parser(g).parse("class_declaration", new StringReader(source));
         Assert.assertEquals(1, tree.size());
         System.out.println(tree.iterator().next().getSource());
 
@@ -47,7 +47,7 @@ public class AnalyzerTest extends TestCase {
     public void testExpression() throws Exception {
         CompiledGrammar g = new GaGrammar().parse(new InputStreamReader(getClass().getClassLoader().getResourceAsStream("expression.napa"), "UTF-8"));
         String source = "a + 2 * b + c/3/4";
-        List<SyntaxTree> expressions = new Parser(g).parse("expression", new StringReader(source), 100);
+        List<SyntaxTree> expressions = new Parser(g).parse("expression", new StringReader(source));
         Assert.assertEquals(1, expressions.size());
         SyntaxTree expression = expressions.iterator().next();
         Assert.assertEquals("expression", expression.getName());
@@ -66,7 +66,7 @@ public class AnalyzerTest extends TestCase {
     public void testEmpty1() throws Exception {
         CompiledGrammar g = new GaGrammar().parse(new InputStreamReader(getClass().getClassLoader().getResourceAsStream("empty1.napa"), "UTF-8"));
         String source = "class a;";
-        List<SyntaxTree> forest = new Parser(g).parse("declaration", new StringReader(source), 100);
+        List<SyntaxTree> forest = new Parser(g).parse("declaration", new StringReader(source));
         Assert.assertEquals(1, forest.size());
         SyntaxTree tree = forest.iterator().next();
         Assert.assertEquals(3, tree.getChildren().size());
@@ -76,7 +76,7 @@ public class AnalyzerTest extends TestCase {
     public void testEmpty2() throws Exception {
         CompiledGrammar g = new GaGrammar().parse(new InputStreamReader(getClass().getClassLoader().getResourceAsStream("empty2.napa"), "UTF-8"));
         String source = "class a;";
-        List<SyntaxTree> forest = new Parser(g).parse("declaration", new StringReader(source), 100);
+        List<SyntaxTree> forest = new Parser(g).parse("declaration", new StringReader(source));
         Assert.assertEquals(1, forest.size());
         SyntaxTree tree = forest.iterator().next();
         Assert.assertEquals(4, tree.getChildren().size());
@@ -87,7 +87,7 @@ public class AnalyzerTest extends TestCase {
     public void testLeftZeroOrMore() throws Exception {
         CompiledGrammar g = new GaGrammar().parse(new InputStreamReader(getClass().getClassLoader().getResourceAsStream("leftZeroOrMore.napa"), "UTF-8"));
         String source = "java.lang.String s;";
-        List<SyntaxTree> forest = new Parser(g).parse("field_definition", new StringReader(source), 100);
+        List<SyntaxTree> forest = new Parser(g).parse("field_definition", new StringReader(source));
         Assert.assertEquals(1, forest.size());
         SyntaxTree tree = forest.iterator().next();
         Assert.assertEquals(3, tree.getChildren().size());
@@ -102,7 +102,7 @@ public class AnalyzerTest extends TestCase {
         String grammar = "B = A A ; A = \"x\" | \"x\" \"x\" ;";
         String source = "xxx";
         CompiledGrammar g = new GaGrammar().parse(new StringReader(grammar));
-        List<SyntaxTree> forest = new Parser(g).parse("B", new StringReader(source), 100);
+        List<SyntaxTree> forest = new Parser(g).parse("B", new StringReader(source));
         Assert.assertEquals(2, forest.size());
         for (SyntaxTree tree : forest) {
             Assert.assertEquals(source, tree.getSource());
@@ -148,7 +148,7 @@ public class AnalyzerTest extends TestCase {
         String grammar = "A = 'a' () 'b' ;";
         String source = "ab";
         CompiledGrammar g = new GaGrammar().parse(new StringReader(grammar));
-        List<SyntaxTree> forest = new Parser(g).parse("A", new StringReader(source), 20);
+        List<SyntaxTree> forest = new Parser(g).parse("A", new StringReader(source));
         Assert.assertEquals(1, forest.size());
         SyntaxTree tree = forest.get(0);
         tree.print(System.out);
@@ -170,7 +170,7 @@ public class AnalyzerTest extends TestCase {
         String grammar = "A = 'a' [] 'b' ;";
         String source = "ab";
         CompiledGrammar g = new GaGrammar().parse(new StringReader(grammar));
-        List<SyntaxTree> forest = new Parser(g).parse("A", new StringReader(source), 20);
+        List<SyntaxTree> forest = new Parser(g).parse("A", new StringReader(source));
         Assert.assertEquals(1, forest.size());
         SyntaxTree tree = forest.get(0);
         tree.print(System.out);
@@ -193,7 +193,7 @@ public class AnalyzerTest extends TestCase {
         String grammar = "T = 'a' B; B = 'b' | ;";
         String source = "a";
         CompiledGrammar g = new GaGrammar().parse(new StringReader(grammar));
-        List<SyntaxTree> forest = new Parser(g).parse("T", new StringReader(source), 20);
+        List<SyntaxTree> forest = new Parser(g).parse("T", new StringReader(source));
         Assert.assertEquals(1, forest.size());
         SyntaxTree tree = forest.get(0);
         tree.print(System.out);
@@ -203,7 +203,7 @@ public class AnalyzerTest extends TestCase {
         String grammar = "T = 'a' ['b']; ";
         String source = "a";
         CompiledGrammar g = new GaGrammar().parse(new StringReader(grammar));
-        List<SyntaxTree> forest = new Parser(g).parse("T", new StringReader(source), 20);
+        List<SyntaxTree> forest = new Parser(g).parse("T", new StringReader(source));
         Assert.assertEquals(1, forest.size());
         SyntaxTree tree = forest.get(0);
         tree.print(System.out);
@@ -213,7 +213,7 @@ public class AnalyzerTest extends TestCase {
         String grammar = "T = 'a' B; B = ['b']; ";
         String source = "a";
         CompiledGrammar g = new GaGrammar().parse(new StringReader(grammar));
-        List<SyntaxTree> forest = new Parser(g).parse("T", new StringReader(source), 20);
+        List<SyntaxTree> forest = new Parser(g).parse("T", new StringReader(source));
         Assert.assertEquals(1, forest.size());
         SyntaxTree tree = forest.get(0);
         tree.print(System.out);
@@ -222,7 +222,7 @@ public class AnalyzerTest extends TestCase {
     public void testLalrFail() throws Exception {
         CompiledGrammar g = new GaGrammar().parse(new InputStreamReader(getClass().getClassLoader().getResourceAsStream("lalr_fail.napa")));
         String source = "bed";
-        List<SyntaxTree> forest = new Parser(g).parse("S", new StringReader(source), 100);
+        List<SyntaxTree> forest = new Parser(g).parse("S", new StringReader(source));
         Assert.assertEquals(1, forest.size());
         SyntaxTree tree = forest.iterator().next();
         Assert.assertEquals(3, tree.getChildren().size());
@@ -246,7 +246,7 @@ public class AnalyzerTest extends TestCase {
         CompiledGrammar g = null;
         g = new GaGrammar().parse(new InputStreamReader(getClass().getClassLoader().getResourceAsStream("ignorable.napa"), "UTF-8"));
         String source = "/*abc*/ class class";
-        List<SyntaxTree> forest = new Parser(g).parse("class_definition", new StringReader(source), 1000);
+        List<SyntaxTree> forest = new Parser(g).parse("class_definition", new StringReader(source));
         Assert.assertEquals(1, forest.size());
         SyntaxTree tree = forest.iterator().next();
         Assert.assertEquals(source,tree.getSource());
@@ -255,7 +255,7 @@ public class AnalyzerTest extends TestCase {
     public void testPackratFailure() throws Exception {
         CompiledGrammar g = new GaGrammar().parse(new StringReader("S = 'x' S 'x' | 'x' ;"));
         String source = "xxx";
-        List<SyntaxTree> forest = new Parser(g).parse("S", new StringReader(source), 1000);
+        List<SyntaxTree> forest = new Parser(g).parse("S", new StringReader(source));
         Assert.assertEquals(1, forest.size());
         SyntaxTree tree = forest.iterator().next();
         Assert.assertEquals(source,tree.getSource());
@@ -266,7 +266,7 @@ public class AnalyzerTest extends TestCase {
         CompiledGrammar g = new GaGrammar().parse(new StringReader("S = E | E 'a' ;\n" +
                 " E = 'b' | ;"));
         for (String source : Arrays.asList("a", "b", "ba")) {
-            List<SyntaxTree> forest = new Parser(g).parse("S", new StringReader(source), 1000);
+            List<SyntaxTree> forest = new Parser(g).parse("S", new StringReader(source));
             Assert.assertEquals(1, forest.size());
             SyntaxTree tree = forest.iterator().next();
             Assert.assertEquals(source, tree.getSource());
@@ -279,7 +279,7 @@ public class AnalyzerTest extends TestCase {
         CompiledGrammar g = new GaGrammar().parse(new StringReader("S = A 'a' 'b' ;\n" +
                 " A = 'a' | ;"));
         for (String source : Arrays.asList("ab", "aab")) {
-            List<SyntaxTree> forest = new Parser(g).parse("S", new StringReader(source), 1000);
+            List<SyntaxTree> forest = new Parser(g).parse("S", new StringReader(source));
             Assert.assertEquals(1, forest.size());
             SyntaxTree tree = forest.iterator().next();
             Assert.assertEquals(source, tree.getSource());
@@ -288,6 +288,16 @@ public class AnalyzerTest extends TestCase {
 
     }
 
+    public void testManyAmbuguities() throws Exception {
+        CompiledGrammar g = new GaGrammar().parse(new StringReader("S = {A|B} ;\n" +
+                " A = 'a' ; B = 'a' ; "));
+        String source = "aaaaaaa";
+        Parser parser = new Parser(g);
+        List<SyntaxTree> forest = parser.parse("S", new StringReader(source));
+        Assert.assertEquals(128, forest.size());
+        System.out.println(parser.stats());
+
+    }
 
 }
 

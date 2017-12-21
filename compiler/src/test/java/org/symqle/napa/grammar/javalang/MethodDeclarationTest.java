@@ -47,7 +47,7 @@ public class MethodDeclarationTest extends TestCase {
     }
 
     private SyntaxTree parse(final String source) throws IOException {
-        List<SyntaxTree> forest = g.parse("MethodDeclaration", new StringReader(source), 100);
+        List<SyntaxTree> forest = g.parse("MethodDeclaration", new StringReader(source));
         Assert.assertEquals(1, forest.size());
         SyntaxTree tree = forest.iterator().next();
         Assert.assertEquals(source, tree.getSource());
