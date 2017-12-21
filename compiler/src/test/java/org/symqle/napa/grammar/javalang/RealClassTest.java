@@ -27,10 +27,12 @@ public class RealClassTest extends TestCase {
 
     public void testEDS() throws Exception {
         System.out.println("=== Benchmark ===");
-//        for (int i=0; i< 50; i++)
+        for (int i=0; i< 50; i++)
         {
+            final long startTs = System.currentTimeMillis();
             List<SyntaxTree> forest = g.parse("CompilationUnit", new InputStreamReader(new BufferedInputStream(getClass().getClassLoader().getResourceAsStream("EnvironmentDeploymentService.txt"))));
             Assert.assertEquals(1, forest.size());
+            System.out.println((System.currentTimeMillis() - startTs));
         }
         System.out.println(g.stats());
         System.out.println("=== Benchmark end ===");

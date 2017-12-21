@@ -5,13 +5,13 @@
 
 # 3.6 White space
 
-! "[ \t\f\n\r]+" ;
+~ "[ \t\f\n\r]+" ;
 
 # 3.7 Comments
 
-! "/\*([^*]|\*[^/])*\*/" ;
+~ "/\*([^*]|\*[^/])*\*/" ;
 
-! "//[^\n\r]*([\r\n]|\r\n)" ;
+~ "//[^\n\r]*([\r\n]|\r\n)" ;
 
 # 3.8 Identifiers
 
@@ -22,7 +22,7 @@ Identifier = "[a-zA-Z_$][a-zA-Z_$0-9]*" ;
 
 # 3.10 Literals
 
-Literal =
+Literal :
   IntegerLiteral
 |  FloatingPointLiteral
 |  BooleanLiteral
@@ -32,13 +32,13 @@ Literal =
 
 # 3.10.1 Integer Literals
 
-IntegerLiteral =
+IntegerLiteral :
   DecimalIntegerLiteral
 | HexIntegerLiteral
 | OctalIntegerLiteral
 | BinaryIntegerLiteral ;
 
-DecimalIntegerLiteral = "0[lL]?" | "[1-9]([_0-9]*[0-9])*[lL]?" ;
+DecimalIntegerLiteral : "0[lL]?" | "[1-9]([_0-9]*[0-9])*[lL]?" ;
 
 HexIntegerLiteral = "0[xX][0-9a-fA-F]([_0-9a-fA-F]*[0-9a-fA-F])*[lL]?" ;
 
@@ -48,27 +48,27 @@ BinaryIntegerLiteral = "0[bB][0-1]([_0-1]*[0-1])*[lL]?" ;
 
 # 3.10.2 Floating-Point Literals
 
-FloatingPointLiteral =
+FloatingPointLiteral :
   DecimalFloatingPointLiteral
 | HexadecimalFloatingPointLiteral ;
 
-DecimalFloatingPointLiteral =
+DecimalFloatingPointLiteral :
   "[0-9]([_0-9]*[0-9])*[.]([0-9]([_0-9]*[0-9])*)?([eE]?[+\-]?[0-9]([_0-9]*[0-9])*)?[fFdD]?"
 | "[.][0-9]([_0-9]*[0-9])*([eE][+\-]?[0-9]([_0-9]*[0-9])*)?[fFdD]?"
 | "[0-9]([_0-9]*[0-9])*([eE][+\-]?[0-9]([_0-9]*[0-9])*)[fFdD]?"
 | "[0-9]([_0-9]*[0-9])*[fFdD]" ;
 
-HexadecimalFloatingPointLiteral =
+HexadecimalFloatingPointLiteral :
   "0[xX][0-9a-fA-F]([_0-9a-fA-F]*[0-9a-fA-F])*[.]?[pP][+\-]?[0-9]([_0-9]*[0-9])*[fFdD]?"
 | "0[xX][0-9a-fA-F]([_0-9a-fA-F]*[0-9a-fA-F])*[.][0-9a-fA-F]([_0-9a-fA-F]*[0-9a-fA-F])*[pP][+\-]?[0-9]([_0-9]*[0-9])*[fFdD]?" ;
 
 # 3.10.3 Boolean Literals
 
-BooleanLiteral = 'true' | 'false' ;
+BooleanLiteral : 'true' | 'false' ;
 
 # 3.10.4 Character Literals
 
-CharacterLiteral = "'[^\n\r\f\\\']'"
+CharacterLiteral : "'[^\n\r\f\\\']'"
 | "'\\([nrtbf\"'\\]|[0-7]|[0-7][0-7]|[0-3][0-7][0-7])'" ;
 
 # 3.10.5 String Literals
@@ -77,110 +77,110 @@ StringLiteral = "\"([^\n\r\f\\\"]|\\([nrtbf\"'\\]|[0-7]|[0-7][0-7]|[0-3][0-7][0-
 
 # 3.10.7 The Null Literal
 
-NullLiteral = 'null' ;
+NullLiteral : 'null' ;
 
 # 4.1 The Kinds of Types and Values
 
-Type =
+Type :
   PrimitiveType
 | ReferenceType ;
 
 # 4.2 Primitive Types and Values
 
-PrimitiveType =
+PrimitiveType :
   { Annotation } NumericType
 | { Annotation } 'boolean' ;
 
-NumericType =
+NumericType :
   IntegralType
 | FloatingPointType ;
 
-IntegralType = 'byte' | 'short' | 'int' | 'long' | 'char' ;
+IntegralType : 'byte' | 'short' | 'int' | 'long' | 'char' ;
 
-FloatingPointType = 'float' | 'double' ;
+FloatingPointType : 'float' | 'double' ;
 
 # 4.3 Reference Types and Values
 
 # changes: TypeVariable excluded; cannot distinguish from ClassOrInterfaceType
 # ClassType and InterfaceType excluded
 
-ReferenceType =
+ReferenceType :
   ClassOrInterfaceType
 | ArrayType ;
 
-ClassType = ClassOrInterfaceType ;
+ClassType : ClassOrInterfaceType ;
 
-InterfaceType = ClassOrInterfaceType;
+InterfaceType : ClassOrInterfaceType;
 
-TypeVariable = ClassOrInterfaceType ;
+TypeVariable : ClassOrInterfaceType ;
 
-ClassOrInterfaceType =
+ClassOrInterfaceType :
     AnnotatedIdentifierWithTypeArguments { '.'  AnnotatedIdentifierWithTypeArguments } ;
 
-AnnotatedIdentifierWithTypeArguments = { Annotation } Identifier [TypeArguments] ;
+AnnotatedIdentifierWithTypeArguments : { Annotation } Identifier [TypeArguments] ;
 
-ArrayType =
+ArrayType :
   PrimitiveType Dims
 | ClassOrInterfaceType Dims ;
 
-Dims =
+Dims :
   Dim {Dim} ;
 
-Dim =  {Annotation} '[' ']';
+Dim :  {Annotation} '[' ']';
 
 # 4.4 Type Variables
 
-TypeParameter = {TypeParameterModifier} Identifier [TypeBound] ;
+TypeParameter : {TypeParameterModifier} Identifier [TypeBound] ;
 
-TypeParameterModifier = Annotation ;
+TypeParameterModifier : Annotation ;
 
-TypeBound = 'extends' ClassOrInterfaceType {AdditionalBound} ;
+TypeBound : 'extends' ClassOrInterfaceType {AdditionalBound} ;
 
-AdditionalBound= '&' InterfaceType ;
+AdditionalBound : '&' InterfaceType ;
 
 # 4.5.1 Type Arguments of Parameterized Types
 
-TypeArguments = '<' TypeArgumentList '>' ;
+TypeArguments : '<' TypeArgumentList '>' ;
 
-TypeArgumentList = TypeArgument { ',' TypeArgument } ;
+TypeArgumentList : TypeArgument { ',' TypeArgument } ;
 
-TypeArgument =
+TypeArgument :
   ReferenceType
 | Wildcard ;
 
-Wildcard = {Annotation} '?'  [WildcardBounds] ;
+Wildcard : {Annotation} '?'  [WildcardBounds] ;
 
-WildcardBounds =
+WildcardBounds :
   'extends' ReferenceType
 | 'super' ReferenceType ;
 
 # 6.5. Determining the Meaning of a Name
 
-PackageName = AmbiguousName ;
+PackageName : AmbiguousName ;
 
-PackageOrTypeName = AmbiguousName ;
+PackageOrTypeName : AmbiguousName ;
 
-TypeName = AmbiguousName ;
+TypeName : AmbiguousName ;
 
-ExpressionName = AmbiguousName ;
+ExpressionName : AmbiguousName ;
 
-MethodName = Identifier ;
+MethodName : Identifier ;
 
-AmbiguousName = Identifier {'.' Identifier} ;
+AmbiguousName : Identifier {'.' Identifier} ;
 
 # 7.3 Compilation Units
 
-CompilationUnit = [PackageDeclaration] {ImportDeclaration} {TypeDeclaration} ;
+CompilationUnit : [PackageDeclaration] {ImportDeclaration} {TypeDeclaration} ;
 
 # 7.4.1 Named Packages
 
-PackageDeclaration = {PackageModifier} 'package' Identifier {'.' Identifier} ';' ;
+PackageDeclaration : {PackageModifier} 'package' Identifier {'.' Identifier} ';' ;
 
-PackageModifier = Annotation ;
+PackageModifier : Annotation ;
 
 # 7.5 Import  Declarations
 
-ImportDeclaration =
+ImportDeclaration :
     SingleTypeImportDeclaration
 |   TypeImportOnDemandDeclaration
 |   SingleStaticImportDeclaration
@@ -188,68 +188,68 @@ ImportDeclaration =
 
 # 7.5.1. Single-Type-Import Declarations
 
-SingleTypeImportDeclaration = 'import' TypeName ';' ;
+SingleTypeImportDeclaration : 'import' TypeName ';' ;
 
 # 7.5.2. Type-Import-on-Demand Declarations
 
-TypeImportOnDemandDeclaration = 'import' PackageOrTypeName '.' '*' ';' ;
+TypeImportOnDemandDeclaration : 'import' PackageOrTypeName '.' '*' ';' ;
 
 # 7.5.3. Single-Static-Import Declarations
 
-SingleStaticImportDeclaration = 'import' 'static' TypeName '.' Identifier ';' ;
+SingleStaticImportDeclaration : 'import' 'static' TypeName '.' Identifier ';' ;
 
 # 7.5.4. Static-Import-on-Demand Declarations
 
-StaticImportOnDemandDeclaration = 'import' 'static' TypeName '.' '*' ';' ;
+StaticImportOnDemandDeclaration : 'import' 'static' TypeName '.' '*' ';' ;
 
 
 
 # 7.6. Top Level Type Declarations
 
-TypeDeclaration =
+TypeDeclaration :
   ClassDeclaration
 | InterfaceDeclaration
 | ';' ;
 
 # 8.1 Class Declarations
 
-ClassDeclaration =
+ClassDeclaration :
   NormalClassDeclaration
 | EnumDeclaration ;
 
-NormalClassDeclaration = {ClassModifier} 'class' Identifier [TypeParameters] [Superclass] [Superinterfaces] ClassBody ;
+NormalClassDeclaration : {ClassModifier} 'class' Identifier [TypeParameters] [Superclass] [Superinterfaces] ClassBody ;
 
 # 8.1.1 Class Modifiers
 
-ClassModifier = Annotation | 'public' | 'protected' | 'private' | 'abstract' | 'static' | 'final' | 'strictfp' ;
+ClassModifier : Annotation | 'public' | 'protected' | 'private' | 'abstract' | 'static' | 'final' | 'strictfp' ;
 
 # 8.1.2 Generic Classes and Type Parameters
 
-TypeParameters = '<' TypeParameterList '>' ;
+TypeParameters : '<' TypeParameterList '>' ;
 
-TypeParameterList = TypeParameter {',' TypeParameter} ;
+TypeParameterList : TypeParameter {',' TypeParameter} ;
 
 # 8.1.4 Superclasses and Subclasses
 
-Superclass = 'extends' ClassType ;
+Superclass : 'extends' ClassType ;
 
 # 8.1.5 Superinterfaces
 
-Superinterfaces = 'implements' InterfaceTypeList ;
+Superinterfaces : 'implements' InterfaceTypeList ;
 
-InterfaceTypeList = InterfaceType {',' InterfaceType} ;
+InterfaceTypeList : InterfaceType {',' InterfaceType} ;
 
 # 8.1.6 Class Body and Member Declarations
 
-ClassBody = '{' {ClassBodyDeclaration} '}' ;
+ClassBody : '{' {ClassBodyDeclaration} '}' ;
 
-ClassBodyDeclaration =
+ClassBodyDeclaration :
     ClassMemberDeclaration
 |   InstanceInitializer
 |   StaticInitializer
 |   ConstructorDeclaration ;
 
-ClassMemberDeclaration =
+ClassMemberDeclaration :
     FieldDeclaration
 |   MethodDeclaration
 |   ClassDeclaration
@@ -258,123 +258,123 @@ ClassMemberDeclaration =
 
 # 8.3 Field Declarations
 
-FieldDeclaration = {FieldModifier} UnannType VariableDeclaratorList ';' ;
+FieldDeclaration : {FieldModifier} UnannType VariableDeclaratorList ';' ;
 
-VariableDeclaratorList = VariableDeclarator {',' VariableDeclarator} ;
+VariableDeclaratorList : VariableDeclarator {',' VariableDeclarator} ;
 
-VariableDeclarator = VariableDeclaratorId ['=' VariableInitializer] ;
+VariableDeclarator : VariableDeclaratorId ['=' VariableInitializer] ;
 
-VariableDeclaratorId = Identifier [Dims] ;
+VariableDeclaratorId : Identifier [Dims] ;
 
-VariableInitializer =
+VariableInitializer :
   Expression
 | ArrayInitializer ;
 
-UnannType =
+UnannType :
   UnannPrimitiveType
 | UnannReferenceType ;
 
-UnannPrimitiveType =
+UnannPrimitiveType :
   NumericType
 | 'boolean' ;
 
-UnannReferenceType =
+UnannReferenceType :
   UnannClassOrInterfaceType
 | UnannArrayType ;
 
-UnannClassOrInterfaceType = Identifier [TypeArguments] { '.' AnnotatedIdentifierWithTypeArguments} ;
+UnannClassOrInterfaceType : Identifier [TypeArguments] { '.' AnnotatedIdentifierWithTypeArguments} ;
 
-UnannClassType = UnannClassOrInterfaceType ;
+UnannClassType : UnannClassOrInterfaceType ;
 
-UnannArrayType =
+UnannArrayType :
   UnannPrimitiveType Dims
 | UnannClassOrInterfaceType Dims ;
 
 
 # 8.3.1. Field Modifiers
 
-FieldModifier =
+FieldModifier :
   Annotation | 'public' | 'protected' | 'private'
 | 'static' | 'final' | 'transient' | 'volatile' ;
 
 # 8.4 Method Declarations
 
-MethodDeclaration =  {MethodModifier} MethodHeader MethodBody ;
+MethodDeclaration :  {MethodModifier} MethodHeader MethodBody ;
 
-MethodHeader =
+MethodHeader :
   Result MethodDeclarator [Throws]
 | TypeParameters {Annotation} Result MethodDeclarator [Throws] ;
 
-MethodDeclarator = Identifier '(' [FormalParameterList] ')' [Dims] ;
+MethodDeclarator : Identifier '(' [FormalParameterList] ')' [Dims] ;
 
 # 8.4.1. Formal Parameters
 
-FormalParameterList =
+FormalParameterList :
   ReceiverParameter {',' FormalParameter} ['.' LastFormalParameter]
 | FormalParameter {',' FormalParameter} ['.' LastFormalParameter]
 | LastFormalParameter ;
 
-FormalParameter = {VariableModifier} UnannType VariableDeclaratorId ;
+FormalParameter : {VariableModifier} UnannType VariableDeclaratorId ;
 
-VariableModifier = Annotation | 'final' ;
+VariableModifier : Annotation | 'final' ;
 
-ReceiverParameter = {Annotation} UnannType [Identifier '.'] 'this' ;
+ReceiverParameter : {Annotation} UnannType [Identifier '.'] 'this' ;
 
-LastFormalParameter = {VariableModifier} UnannType {Annotation} '...' VariableDeclaratorId ;
+LastFormalParameter : {VariableModifier} UnannType {Annotation} '...' VariableDeclaratorId ;
 
 # 8.4.3. Method Modifiers
 
-MethodModifier =
+MethodModifier :
   Annotation | 'public' | 'protected' | 'private'
 | 'abstract' | 'static' | 'final' | 'synchronized' | 'native' | 'strictfp' ;
 
 # 8.4.5. Method Result
 
-Result =
+Result :
   UnannType
 | 'void' ;
 
 # 8.4.6. Method Throws
 
-Throws = 'throws' ExceptionTypeList ;
+Throws : 'throws' ExceptionTypeList ;
 
-ExceptionTypeList = ExceptionType {',' ExceptionType} ;
+ExceptionTypeList : ExceptionType {',' ExceptionType} ;
 
-ExceptionType = ClassOrInterfaceType ;
+ExceptionType : ClassOrInterfaceType ;
 
 # 8.4.7. Method Body
 
-MethodBody =
+MethodBody :
   Block
 | ';' ;
 
 # 8.6 Instance Initializers
 
-InstanceInitializer = Block ;
+InstanceInitializer : Block ;
 
 # 8.7 Static Initializers
 
-StaticInitializer = 'static' Block ;
+StaticInitializer : 'static' Block ;
 
 # 8.8 Constructor Declarations
 
-ConstructorDeclaration = {ConstructorModifier} ConstructorDeclarator [Throws] ConstructorBody ;
+ConstructorDeclaration : {ConstructorModifier} ConstructorDeclarator [Throws] ConstructorBody ;
 
-ConstructorDeclarator = [TypeParameters] SimpleTypeName '(' [FormalParameterList] ')' ;
+ConstructorDeclarator : [TypeParameters] SimpleTypeName '(' [FormalParameterList] ')' ;
 
-SimpleTypeName = Identifier ;
+SimpleTypeName : Identifier ;
 
 # 8.8.3. Constructor Modifier
 
-ConstructorModifier = Annotation | 'public' | 'protected' | 'private' ;
+ConstructorModifier : Annotation | 'public' | 'protected' | 'private' ;
 
 # 8.8.7. Constructor Body
 
-ConstructorBody = '{' [ExplicitConstructorInvocation] [BlockStatements] '}' ;
+ConstructorBody : '{' [ExplicitConstructorInvocation] [BlockStatements] '}' ;
 
 # 8.8.7.1. Explicit Constructor Invocations
 
-ExplicitConstructorInvocation =
+ExplicitConstructorInvocation :
   [TypeArguments] 'this' '(' [ArgumentList] ')' ';'
 | [TypeArguments] 'super' '(' [ArgumentList] ')' ';'
 | ExpressionName '.' [TypeArguments] 'super' '(' [ArgumentList] ')' ';'
@@ -382,45 +382,45 @@ ExplicitConstructorInvocation =
 
 # 8.9 Enum Types
 
-EnumDeclaration = {ClassModifier} 'enum' Identifier [Superinterfaces] EnumBody ;
+EnumDeclaration : {ClassModifier} 'enum' Identifier [Superinterfaces] EnumBody ;
 
 # 8.9.1. Enum Constants
 
-EnumBody = '{' [EnumConstantList] [','] [EnumBodyDeclarations] '}' ;
+EnumBody : '{' [EnumConstantList] [','] [EnumBodyDeclarations] '}' ;
 
-EnumConstantList = EnumConstant {',' EnumConstant} ;
+EnumConstantList : EnumConstant {',' EnumConstant} ;
 
-EnumConstant = {EnumConstantModifier} Identifier ['(' [ArgumentList] ')'] [ClassBody] ;
+EnumConstant : {EnumConstantModifier} Identifier ['(' [ArgumentList] ')'] [ClassBody] ;
 
-EnumConstantModifier = Annotation ;
+EnumConstantModifier : Annotation ;
 
 # 8.9.2. Enum Body Declarations
 
-EnumBodyDeclarations = ';' {ClassBodyDeclaration} ;
+EnumBodyDeclarations : ';' {ClassBodyDeclaration} ;
 
 
 # 9.1 Interface Declarations
 
-InterfaceDeclaration =
+InterfaceDeclaration :
     NormalInterfaceDeclaration
 |   AnnotationTypeDeclaration ;
 
-NormalInterfaceDeclaration = {InterfaceModifier} 'interface' Identifier [TypeParameters] [ExtendsInterfaces] InterfaceBody ;
+NormalInterfaceDeclaration : {InterfaceModifier} 'interface' Identifier [TypeParameters] [ExtendsInterfaces] InterfaceBody ;
 
 # 9.1.1. Interface Modifiers
 
-InterfaceModifier = Annotation | 'public' | 'protected' | 'private'
+InterfaceModifier : Annotation | 'public' | 'protected' | 'private'
 |   'abstract' | 'static' | 'strictfp' ;
 
 # 9.1.3. Superinterfaces and Subinterfaces
 
-ExtendsInterfaces = 'extends' InterfaceTypeList ;
+ExtendsInterfaces : 'extends' InterfaceTypeList ;
 
 # 9.1.4. Interface Body and Member Declarations
 
-InterfaceBody = '{' {InterfaceMemberDeclaration} '}' ;
+InterfaceBody : '{' {InterfaceMemberDeclaration} '}' ;
 
-InterfaceMemberDeclaration =
+InterfaceMemberDeclaration :
     ConstantDeclaration
 |   InterfaceMethodDeclaration
 |   ClassDeclaration
@@ -429,26 +429,26 @@ InterfaceMemberDeclaration =
 
 # 9.3. Field (Constant) Declarations
 
-ConstantDeclaration = {ConstantModifier} UnannType VariableDeclaratorList ';' ;
+ConstantDeclaration : {ConstantModifier} UnannType VariableDeclaratorList ';' ;
 
-ConstantModifier = Annotation | 'public' | 'static' | 'final' ;
+ConstantModifier : Annotation | 'public' | 'static' | 'final' ;
 
 # 9.4. Method Declarations
 
-InterfaceMethodDeclaration = {InterfaceMethodModifier} MethodHeader MethodBody ;
+InterfaceMethodDeclaration : {InterfaceMethodModifier} MethodHeader MethodBody ;
 
-InterfaceMethodModifier = Annotation | 'public'
+InterfaceMethodModifier : Annotation | 'public'
 |   'abstract' | 'default' | 'static' | 'strictfp' ;
 
 # 9.6. Annotation Types
 
-AnnotationTypeDeclaration = {InterfaceModifier} '@' 'interface' Identifier AnnotationTypeBody ;
+AnnotationTypeDeclaration : {InterfaceModifier} '@' 'interface' Identifier AnnotationTypeBody ;
 
 # 9.6.1. Annotation Type Elements
 
-AnnotationTypeBody = '{' {AnnotationTypeMemberDeclaration} '}' ;
+AnnotationTypeBody : '{' {AnnotationTypeMemberDeclaration} '}' ;
 
-AnnotationTypeMemberDeclaration =
+AnnotationTypeMemberDeclaration :
     AnnotationTypeElementDeclaration
 |   ConstantDeclaration
 |   ClassDeclaration
@@ -456,75 +456,75 @@ AnnotationTypeMemberDeclaration =
 |   ';' ;
 
 
-AnnotationTypeElementDeclaration = {AnnotationTypeElementModifier} UnannType Identifier '(' ')' [Dims] [DefaultValue] ';' ;
+AnnotationTypeElementDeclaration : {AnnotationTypeElementModifier} UnannType Identifier '(' ')' [Dims] [DefaultValue] ';' ;
 
-AnnotationTypeElementModifier = Annotation | 'public' | 'abstract' ;
+AnnotationTypeElementModifier : Annotation | 'public' | 'abstract' ;
 
 # 9.6.2. Defaults for Annotation Type Elements
 
-DefaultValue = 'default' ElementValue ;
+DefaultValue : 'default' ElementValue ;
 
 # 9.7 Annotations
 
-Annotation =
+Annotation :
     NormalAnnotation
 |   MarkerAnnotation
 |   SingleElementAnnotation ;
 
 # 9.7.1. Normal Annotations
 
-NormalAnnotation = '@' TypeName '(' [ElementValuePairList] ')' ;
+NormalAnnotation : '@' TypeName '(' [ElementValuePairList] ')' ;
 
-ElementValuePairList = ElementValuePair {',' ElementValuePair} ;
+ElementValuePairList : ElementValuePair {',' ElementValuePair} ;
 
-ElementValuePair = Identifier '=' ElementValue ;
+ElementValuePair : Identifier '=' ElementValue ;
 
-ElementValue =
+ElementValue :
     ConditionalExpression
 |   ElementValueArrayInitializer
 |   Annotation ;
 
-# Originally ElementValueArrayInitializer = '{' [ElementValueList] [','] '}' - ambiguous
+# Originally ElementValueArrayInitializer : '{' [ElementValueList] [','] '}' - ambiguous
 
-ElementValueArrayInitializer = '{' [ElementValueList] [','] '}' ;
+ElementValueArrayInitializer : '{' [ElementValueList] [','] '}' ;
 
-ElementValueList = ElementValue {',' ElementValue} ;
+ElementValueList : ElementValue {',' ElementValue} ;
 
 # 9.7.2 Marker Annotations
 
-MarkerAnnotation = '@' TypeName ;
+MarkerAnnotation : '@' TypeName ;
 
 # 9.7.3 Single-Element Annotations
 
-SingleElementAnnotation = '@' TypeName '(' ElementValue ')' ;
+SingleElementAnnotation : '@' TypeName '(' ElementValue ')' ;
 
 # 10.6. Array Initializers
 
-ArrayInitializer = '{' [VariableInitializerList] [','] '}' ;
+ArrayInitializer : '{' [VariableInitializerList] [','] '}' ;
 
-VariableInitializerList = VariableInitializer {',' VariableInitializer} ;
+VariableInitializerList : VariableInitializer {',' VariableInitializer} ;
 
 
 # 14.2  Blocks
 
-Block = '{' [BlockStatements] '}' ;
+Block : '{' [BlockStatements] '}' ;
 
-BlockStatements = BlockStatement {BlockStatement} ;
+BlockStatements : BlockStatement {BlockStatement} ;
 
-BlockStatement =
+BlockStatement :
     LocalVariableDeclarationStatement
 |   ClassDeclaration
 |   Statement ;
 
 # 14.4. Local Variable Declaration Statements
 
-LocalVariableDeclarationStatement = LocalVariableDeclaration ';' ;
+LocalVariableDeclarationStatement : LocalVariableDeclaration ';' ;
 
-LocalVariableDeclaration = {VariableModifier} UnannType VariableDeclaratorList ;
+LocalVariableDeclaration : {VariableModifier} UnannType VariableDeclaratorList ;
 
 # 14.5 Statements
 
-Statement =
+Statement :
     StatementWithoutTrailingSubstatement
 |   LabeledStatement
 |   IfThenStatement
@@ -532,14 +532,14 @@ Statement =
 |   WhileStatement
 |    ForStatement ;
 
-StatementNoShortIf =
+StatementNoShortIf :
     StatementWithoutTrailingSubstatement
 |   LabeledStatementNoShortIf
 |   IfThenElseStatementNoShortIf
 |   WhileStatementNoShortIf
 |   ForStatementNoShortIf ;
 
-StatementWithoutTrailingSubstatement =
+StatementWithoutTrailingSubstatement :
     Block
 |   EmptyStatement
 |   ExpressionStatement
@@ -555,19 +555,19 @@ StatementWithoutTrailingSubstatement =
 
 # 14.6. The Empty Statement
 
-EmptyStatement = ';' ;
+EmptyStatement : ';' ;
 
 # 14.7. Labeled Statements
 
-LabeledStatement = Identifier ':' Statement ;
+LabeledStatement : Identifier ':' Statement ;
 
-LabeledStatementNoShortIf = Identifier ':' StatementNoShortIf ;
+LabeledStatementNoShortIf : Identifier ':' StatementNoShortIf ;
 
 # 14.8. Expression Statements
 
-ExpressionStatement = StatementExpression ';' ;
+ExpressionStatement : StatementExpression ';' ;
 
-StatementExpression =
+StatementExpression :
     Assignment
 |   PreIncrementExpression
 |   PreDecrementExpression
@@ -578,121 +578,121 @@ StatementExpression =
 
 # 14.9. The if Statement
 
-IfThenStatement = 'if' '(' Expression ')' Statement ;
+IfThenStatement : 'if' '(' Expression ')' Statement ;
 
-IfThenElseStatement = 'if' '(' Expression ')' StatementNoShortIf 'else' Statement ;
+IfThenElseStatement : 'if' '(' Expression ')' StatementNoShortIf 'else' Statement ;
 
-IfThenElseStatementNoShortIf = 'if' '(' Expression ')' StatementNoShortIf 'else' StatementNoShortIf ;
+IfThenElseStatementNoShortIf : 'if' '(' Expression ')' StatementNoShortIf 'else' StatementNoShortIf ;
 
 # 14.10. The assert Statement
 
-AssertStatement =
+AssertStatement :
     'assert' Expression ';'
 |   'assert' Expression ':' Expression ';' ;
 
 # 14.11. The switch Statement
 
-SwitchStatement = 'switch' '(' Expression ')' SwitchBlock ;
+SwitchStatement : 'switch' '(' Expression ')' SwitchBlock ;
 
-SwitchBlock = '{' {SwitchBlockStatementGroup} {SwitchLabel} '}' ;
+SwitchBlock : '{' {SwitchBlockStatementGroup} {SwitchLabel} '}' ;
 
-SwitchBlockStatementGroup = SwitchLabels BlockStatements ;
+SwitchBlockStatementGroup : SwitchLabels BlockStatements ;
 
-SwitchLabels = SwitchLabel {SwitchLabel} ;
+SwitchLabels : SwitchLabel {SwitchLabel} ;
 
-SwitchLabel =
+SwitchLabel :
   'case' ConstantExpression ':'
 |  'default' ':' ;
 
-EnumConstantName = Identifier ;
+EnumConstantName : Identifier ;
 
 # 14.12. The while Statement
 
-WhileStatement = 'while' '(' Expression ')' Statement ;
+WhileStatement : 'while' '(' Expression ')' Statement ;
 
-WhileStatementNoShortIf = 'while' '(' Expression ')' StatementNoShortIf ;
+WhileStatementNoShortIf : 'while' '(' Expression ')' StatementNoShortIf ;
 
 # 14.13. The do Statement
 
-DoStatement = 'do' Statement 'while' ( Expression ) ';' ;
+DoStatement : 'do' Statement 'while' ( Expression ) ';' ;
 
 # 14.14. The for Statement
 
-ForStatement =
+ForStatement :
   BasicForStatement
 |  EnhancedForStatement ;
 
-ForStatementNoShortIf =
+ForStatementNoShortIf :
   BasicForStatementNoShortIf
 |  EnhancedForStatementNoShortIf ;
 
 # 14.14.1. The basic for Statement
 
-BasicForStatement = 'for' '(' [ForInit] ';' [Expression] ';' [ForUpdate] ')' Statement ;
+BasicForStatement : 'for' '(' [ForInit] ';' [Expression] ';' [ForUpdate] ')' Statement ;
 
-BasicForStatementNoShortIf = 'for' '(' [ForInit] ';' [Expression] ';' [ForUpdate] ')' StatementNoShortIf ;
+BasicForStatementNoShortIf : 'for' '(' [ForInit] ';' [Expression] ';' [ForUpdate] ')' StatementNoShortIf ;
 
-ForInit =
+ForInit :
   StatementExpressionList
 |  LocalVariableDeclaration ;
 
-ForUpdate = StatementExpressionList ;
+ForUpdate : StatementExpressionList ;
 
-StatementExpressionList = StatementExpression {',' StatementExpression} ;
+StatementExpressionList : StatementExpression {',' StatementExpression} ;
 
 # 14.14.2. The enhanced for statement
 
-EnhancedForStatement = 'for' '(' {VariableModifier} UnannType VariableDeclaratorId ':' Expression ')' Statement ;
+EnhancedForStatement : 'for' '(' {VariableModifier} UnannType VariableDeclaratorId ':' Expression ')' Statement ;
 
-EnhancedForStatementNoShortIf = 'for' '(' {VariableModifier} UnannType VariableDeclaratorId ':' Expression ')' StatementNoShortIf ;
+EnhancedForStatementNoShortIf : 'for' '(' {VariableModifier} UnannType VariableDeclaratorId ':' Expression ')' StatementNoShortIf ;
 
 # 14.15. The break Statement
 
-BreakStatement = 'break' [Identifier] ';' ;
+BreakStatement : 'break' [Identifier] ';' ;
 
 # 14.16. The continue Statement
 
-ContinueStatement = 'continue' [Identifier] ';' ;
+ContinueStatement : 'continue' [Identifier] ';' ;
 
 # 14.17. The return Statement
 
-ReturnStatement = 'return' [Expression] ';' ;
+ReturnStatement : 'return' [Expression] ';' ;
 
 # 14.18. The throw Statement
 
-ThrowStatement = 'throw' Expression ';' ;
+ThrowStatement : 'throw' Expression ';' ;
 
 
 # 15.2. Forms of Expressions
 
-Expression =
+Expression :
     LambdaExpression
 |   AssignmentExpression ;
 
 # 15.8. Primary Expressions
 
-Primary =
+Primary :
   PrimaryNoNewArray
 |  ArrayCreationExpression ;
 
 
-PrimaryNoNewArrayPrefix =
+PrimaryNoNewArrayPrefix :
   PrimaryNoNewArray0 {AccessField | InvokeMethod | AccessArray | CreateClassInstance}
 | ArrayCreationExpression (AccessField | InvokeMethod | CreateClassInstance) {AccessField | InvokeMethod | AccessArray | CreateClassInstance} ;
 
-PrimaryPrefix =
+PrimaryPrefix :
   PrimaryNoNewArray0 {AccessField | InvokeMethod | AccessArray | CreateClassInstance}
 | ArrayCreationExpression
 | ArrayCreationExpression (AccessField | InvokeMethod | CreateClassInstance) {AccessField | InvokeMethod | AccessArray | CreateClassInstance} ;
 
 
 
-AccessField = '.' Identifier ;
-AccessArray = '[' Expression ']' ;
-InvokeMethod = '.' [TypeArguments] Identifier '(' [ArgumentList] ')' ;
-CreateClassInstance = '.' UnqualifiedClassInstanceCreationExpression ;
+AccessField : '.' Identifier ;
+AccessArray : '[' Expression ']' ;
+InvokeMethod : '.' [TypeArguments] Identifier '(' [ArgumentList] ')' ;
+CreateClassInstance : '.' UnqualifiedClassInstanceCreationExpression ;
 
-PrimaryNoNewArray =
+PrimaryNoNewArray :
   Literal
 |  ClassLiteral
 |  'this'
@@ -704,7 +704,7 @@ PrimaryNoNewArray =
 |  MethodReference
 |  ClassInstanceCreationExpression ;
 
-PrimaryNoNewArray0 =
+PrimaryNoNewArray0 :
   Literal
 |  ClassLiteral
 |  'this'
@@ -720,7 +720,7 @@ PrimaryNoNewArray0 =
 
 # 15.8.2. Class Literals
 
-ClassLiteral =
+ClassLiteral :
   TypeName {'[' ']'} '.' 'class'
 |  NumericType {'[' ']'} '.' 'class'
 |  'boolean' {'[' ']'} '.' 'class'
@@ -728,78 +728,78 @@ ClassLiteral =
 
 # 15.9. Class Instance Creation Expressions
 
-ClassInstanceCreationExpression =
+ClassInstanceCreationExpression :
   ClassInstanceCreationExpression0
 |   PrimaryPrefix '.' UnqualifiedClassInstanceCreationExpression ;
 
-ClassInstanceCreationExpression0 =
+ClassInstanceCreationExpression0 :
     UnqualifiedClassInstanceCreationExpression
 |   ExpressionName '.' UnqualifiedClassInstanceCreationExpression ;
 
 
-UnqualifiedClassInstanceCreationExpression =
+UnqualifiedClassInstanceCreationExpression :
     'new' [TypeArguments] ClassOrInterfaceTypeToInstantiate '(' [ArgumentList] ')' [ClassBody] ;
 
-ClassOrInterfaceTypeToInstantiate =
+ClassOrInterfaceTypeToInstantiate :
     {Annotation} Identifier {'.' {Annotation} Identifier} [TypeArgumentsOrDiamond] ;
 
-TypeArgumentsOrDiamond =
+TypeArgumentsOrDiamond :
     TypeArguments
 |    '<>' ;
 
 
 # 15.10.1. Array Creation Expressions
 
-ArrayCreationExpression =
+ArrayCreationExpression :
     'new' PrimitiveType DimExprs [Dims]
 |   'new' ClassOrInterfaceType DimExprs [Dims]
 |   'new' PrimitiveType Dims ArrayInitializer
 |   'new' ClassOrInterfaceType Dims ArrayInitializer ;
 
-DimExprs = DimExpr {DimExpr} ;
+DimExprs : DimExpr {DimExpr} ;
 
-DimExpr = {Annotation} '[' Expression ']' ;
+DimExpr : {Annotation} '[' Expression ']' ;
 
 # 15.10.3. Array Access Expressions
 
-ArrayAccess =
+ArrayAccess :
   ArrayAccess0
 | PrimaryNoNewArrayPrefix '[' Expression ']' ;
 
-ArrayAccess0 = ExpressionName '[' Expression ']' ;
+ArrayAccess0 : ExpressionName '[' Expression ']' ;
 
 
 # 15.11. Field Access Expressions
 
-FieldAccess =
+FieldAccess :
   PrimaryPrefix AccessField
 | FieldAccess0 ;
 
-FieldAccess0 =
+FieldAccess0 :
    'super' '.' Identifier
 |  TypeName '.' 'super' '.' Identifier ;
 
 # 15.12. Method Invocation Expressions
 
-MethodInvocation =
+MethodInvocation :
   PrimaryPrefix InvokeMethod
 | MethodInvocation0 ;
 
-MethodInvocation0 =
+MethodInvocation0 :
    MethodName '(' [ArgumentList] ')'
 |   AmbiguousName '.' [TypeArguments] Identifier '(' [ArgumentList] ')'
 |   'super' '.' [TypeArguments] Identifier '(' [ArgumentList] ')'
 |   TypeName '.' 'super' '.' [TypeArguments] Identifier '(' [ArgumentList] ')' ;
 
-ArgumentList = Expression {',' Expression} ;
+ArgumentList : Expression {',' Expression} ;
 
 # 15.13. Method Reference Expressions
 
-MethodReference =
+MethodReference :
     PrimaryPrefix '::' [TypeArguments] Identifier
 |   MethodReference0 ;
 
-MethodReference0 =
+MethodReference0 :
     ArrayType '::' [TypeArguments] Identifier
 |    ExpressionNameOrClassOrInterfaceType '::' [TypeArguments] Identifier
 |   'super' '::' [TypeArguments] Identifier
@@ -808,11 +808,11 @@ MethodReference0 =
 |   ArrayType '::' 'new' ;
 
 
-ExpressionNameOrClassOrInterfaceType = AnnotatedIdentifierWithTypeArguments { '.'  AnnotatedIdentifierWithTypeArguments } ;
+ExpressionNameOrClassOrInterfaceType : AnnotatedIdentifierWithTypeArguments { '.'  AnnotatedIdentifierWithTypeArguments } ;
 
 #  15.14. Postfix Expressions
 
-PostfixExpression =
+PostfixExpression :
   Primary
 | ExpressionName
 | PostIncrementExpression
@@ -821,27 +821,27 @@ PostfixExpression =
 # 15.14.2. Postfix Increment Operator ++
 # left recursion eliminated
 
-PostIncrementExpression = (Primary | ExpressionName) {'++'|'--'} '++';
+PostIncrementExpression : (Primary | ExpressionName) {'++'|'--'} '++';
 
 # 15.14.3. Postfix Decrement Operator ++
 # left recursion eliminated
 
-PostDecrementExpression = (Primary | ExpressionName) {'++'|'--'} '--';
+PostDecrementExpression : (Primary | ExpressionName) {'++'|'--'} '--';
 
 
 # 15.15. Unary Operators
 
-UnaryExpression =
+UnaryExpression :
     PreIncrementExpression
 |   PreDecrementExpression
 |   '+' UnaryExpression
 |   '-' UnaryExpression
 |   UnaryExpressionNotPlusMinus ;
 
-PreIncrementExpression = '++' UnaryExpression ;
-PreDecrementExpression = '--' UnaryExpression ;
+PreIncrementExpression : '++' UnaryExpression ;
+PreDecrementExpression : '--' UnaryExpression ;
 
-UnaryExpressionNotPlusMinus =
+UnaryExpressionNotPlusMinus :
     PostfixExpression
 |   '~' UnaryExpression
 |   '!' UnaryExpression
@@ -849,7 +849,7 @@ UnaryExpressionNotPlusMinus =
 
 # 15.16. Cast Expressions
 
-CastExpression =
+CastExpression :
 '(' PrimitiveType ')' UnaryExpression
 '(' ReferenceType {AdditionalBound} ')' UnaryExpressionNotPlusMinus
 '(' ReferenceType {AdditionalBound} ')' LambdaExpression ;
@@ -857,123 +857,123 @@ CastExpression =
 
 # 15.17. Multiplicative Operators
 
-MultiplicativeExpression = UnaryExpression {MultDivide} ;
+MultiplicativeExpression : UnaryExpression {MultDivide} ;
 
-MultDivide = ('*'|'/'|'%') UnaryExpression ;
+MultDivide : ('*'|'/'|'%') UnaryExpression ;
 
 # 15.18. Additive Operators
 
-AdditiveExpression = MultiplicativeExpression {AddSubtract} ;
+AdditiveExpression : MultiplicativeExpression {AddSubtract} ;
 
-AddSubtract = ('+'|'-') MultiplicativeExpression ;
+AddSubtract : ('+'|'-') MultiplicativeExpression ;
 
 # 15.19. Shift Operators
 
-ShiftExpression = AdditiveExpression {Shift} ;
+ShiftExpression : AdditiveExpression {Shift} ;
 
-Shift = ('<<' | '>' '>'|'>' '>' '>') AdditiveExpression ;
+Shift : ('<<' | '>' '>'|'>' '>' '>') AdditiveExpression ;
 
 # 15.20. Relational Operators
 
-RelationalExpression = ShiftExpression {Compare} ;
+RelationalExpression : ShiftExpression {Compare} ;
 
-Compare = ('<'|'>'|'<='|'>=') ShiftExpression | 'instanceof' ReferenceType ;
+Compare : ('<'|'>'|'<='|'>=') ShiftExpression | 'instanceof' ReferenceType ;
 
 #15.21. Equality Operators
 
-EqualityExpression = RelationalExpression {('=='|'!=') RelationalExpression} ;
+EqualityExpression : RelationalExpression {('=='|'!=') RelationalExpression} ;
 
 # 15.22. Bitwise and Logical Operators
 
-AndExpression = EqualityExpression {'&' EqualityExpression} ;
+AndExpression : EqualityExpression {'&' EqualityExpression} ;
 
-ExclusiveOrExpression = AndExpression {'^' AndExpression} ;
+ExclusiveOrExpression : AndExpression {'^' AndExpression} ;
 
-InclusiveOrExpression = ExclusiveOrExpression {'|' ExclusiveOrExpression} ;
+InclusiveOrExpression : ExclusiveOrExpression {'|' ExclusiveOrExpression} ;
 
 # 15.23. Conditional-And Operator &&
 
-ConditionalAndExpression = InclusiveOrExpression {'&&' InclusiveOrExpression} ;
+ConditionalAndExpression : InclusiveOrExpression {'&&' InclusiveOrExpression} ;
 
 
 # 15.24. Conditional-Or Operator ||
 
-ConditionalOrExpression =  ConditionalAndExpression {'||' ConditionalAndExpression} ;
+ConditionalOrExpression :  ConditionalAndExpression {'||' ConditionalAndExpression} ;
 
 # 15.25. Conditional Operator ? :
 
-ConditionalExpression =
+ConditionalExpression :
   ConditionalOrExpression
 |  ConditionalOrExpression '?' Expression ':' ConditionalExpression
 |  ConditionalOrExpression '?' Expression ':' LambdaExpression ;
 
 # 15.26. Assignment Operators
 
-AssignmentExpression =
+AssignmentExpression :
   ConditionalExpression
 |  Assignment ;
 
-Assignment = LeftHandSide AssignmentOperator Expression ;
+Assignment : LeftHandSide AssignmentOperator Expression ;
 
-LeftHandSide =
+LeftHandSide :
   ExpressionName
 |  FieldAccess
 |  ArrayAccess ;
 
-AssignmentOperator = '=' | '*=' | '/=' | '%=' | '+=' | '-=' | '<<=' | '>>=' | '>>>=' | '&=' | '^=' | '|=' ;
+AssignmentOperator : '=' | '*=' | '/=' | '%=' | '+=' | '-=' | '<<=' | '>>=' | '>>>=' | '&=' | '^=' | '|=' ;
 
 # 15.27. Lambda Expressions
 
-LambdaExpression = LambdaParameters '->' LambdaBody ;
+LambdaExpression : LambdaParameters '->' LambdaBody ;
 
 # 15.27.1. Lambda Parameters
 
-LambdaParameters =
+LambdaParameters :
     Identifier
 |    '(' [FormalParameterList] ')'
 |   '(' InferredFormalParameterList ')' ;
 
-InferredFormalParameterList = Identifier {',' Identifier} ;
+InferredFormalParameterList : Identifier {',' Identifier} ;
 
 # 15.27.2. Lambda Body
 
-LambdaBody =
+LambdaBody :
   Expression
 | Block ;
 
 
 # 15.28. Constant Expressions
 
-ConstantExpression = Expression ;
+ConstantExpression : Expression ;
 
 # 14.19. The synchronized Statement
 
-SynchronizedStatement = 'synchronized' '(' Expression ')' Block ;
+SynchronizedStatement : 'synchronized' '(' Expression ')' Block ;
 
 # 14.20. The try statement
 
-TryStatement =
+TryStatement :
   'try' Block Catches
 |  'try' Block [Catches] Finally
 |  TryWithResourcesStatement ;
 
-Catches = CatchClause {CatchClause} ;
+Catches : CatchClause {CatchClause} ;
 
-CatchClause = 'catch' '(' CatchFormalParameter ')' Block ;
+CatchClause : 'catch' '(' CatchFormalParameter ')' Block ;
 
-CatchFormalParameter = {VariableModifier} CatchType VariableDeclaratorId ;
+CatchFormalParameter : {VariableModifier} CatchType VariableDeclaratorId ;
 
-CatchType = UnannClassType {'|' ClassType} ;
+CatchType : UnannClassType {'|' ClassType} ;
 
-Finally = 'finally' Block ;
+Finally : 'finally' Block ;
 
 # 14.20.3. try-with-resources
 
-TryWithResourcesStatement = 'try' ResourceSpecification Block [Catches] [Finally] ;
+TryWithResourcesStatement : 'try' ResourceSpecification Block [Catches] [Finally] ;
 
-ResourceSpecification = '(' ResourceList [';'] ')' ;
+ResourceSpecification : '(' ResourceList [';'] ')' ;
 
-ResourceList = Resource {';' Resource} ;
+ResourceList : Resource {';' Resource} ;
 
-Resource = {VariableModifier} UnannType VariableDeclaratorId '=' Expression ;
+Resource : {VariableModifier} UnannType VariableDeclaratorId '=' Expression ;
 
