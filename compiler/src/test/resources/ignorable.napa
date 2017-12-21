@@ -1,5 +1,6 @@
-! " +" "/\*([^\*]|\*[^/])*\*/";
+~ " +" ;
+~ "/\*([^\*]|\*[^/])*\*/";
 comment = "/\*([^\*]|\*[^/])*\*/";
 
-class_definition = [comment] "class" name ;
+class_definition : [comment] "class" name ;
 name = "[a-z]+" ;

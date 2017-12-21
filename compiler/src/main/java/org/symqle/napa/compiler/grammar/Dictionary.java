@@ -24,6 +24,11 @@ public class Dictionary {
         return index;
     }
 
+    public Integer getNonTerminal(String name) {
+        return nonTerminals.get(name);
+    }
+
+
     public String registerPattern(String name, String value) {
         return patterns.put(name, value);
     }

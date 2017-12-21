@@ -14,8 +14,11 @@ public class TerminalItem implements RuleItem {
 
     private final int value;
 
-    public TerminalItem(final int value) {
+    private final String name;
+
+    public TerminalItem(final int value, String name) {
         this.value = value;
+        this.name = name;
     }
 
     @Override
@@ -33,13 +36,13 @@ public class TerminalItem implements RuleItem {
     }
 
     public String toString(Vocabulary grammar) {
-        return grammar.getTerminalName(value);
+        return name;
     }
 
 
     @Override
     public NapaRuleItem toNapaRuleItem(final Vocabulary grammar) {
-        return new NapaTerminalItem(value, grammar.getTerminalName(value));
+        return new NapaTerminalItem(value, name);
     }
 
     @Override

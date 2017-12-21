@@ -25,9 +25,7 @@ rule = identifier ':' choice ';' ;
 
 choice = chain { "|" chain } ";" ;
 
-chain = element { element } ;
-
-element = identifier | regexp | literal | zero_or_more | zero_or_one | parenthezised ;
+chain = { identifier | regexp | literal | zero_or_more | zero_or_one | parenthezised } ;
 # identifier may be pattern id or nonTerminal.
 
 nonTerminal = "[a-zA-Z][a-zA-Z0-9_]*" ;
