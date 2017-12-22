@@ -52,6 +52,11 @@ public class LeafNode extends SyntaxTree {
     }
 
     @Override
+    public String toString() {
+        return value;
+    }
+
+    @Override
     protected void print(final Writer writer) throws IOException {
         writer.write("'");
         writer.write(value);

@@ -77,6 +77,7 @@ public class GaGrammar {
             List<SyntaxTree> ruleTrees = tree.find("rule");
             // first register all nonTerminals
             for (SyntaxTree rule: ruleTrees) {
+                System.out.println("Parsing: " + rule);
                 SyntaxTree targetNode = rule.getChildren().get(0);
                 int target = dictionary.registerNonTerminal(targetNode.getValue());
             }

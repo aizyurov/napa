@@ -50,6 +50,19 @@ public class BranchNode extends SyntaxTree {
     }
 
     @Override
+    public String toString() {
+        StringBuilder stringBuilder = new StringBuilder();
+        for (int i = 0; i < children.size(); i++) {
+            SyntaxTree child = children.get(i);
+            if (i > 0) {
+                stringBuilder.append(" ");
+            }
+            stringBuilder.append(child);
+        }
+        return stringBuilder.toString();
+    }
+
+    @Override
     protected void print(final Writer writer) throws IOException {
         writer.write(getName());
         writer.write("[");
