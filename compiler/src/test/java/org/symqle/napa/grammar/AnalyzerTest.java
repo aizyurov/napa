@@ -232,7 +232,7 @@ public class AnalyzerTest extends TestCase {
     }
 
     public void testTheVeryEndDecides() throws Exception {
-        String grammar = "T = {A} 'x' | {B} 'y'; A = 'a'; B = 'a' ;";
+        String grammar = "T : {A} 'x' | {B} 'y'; A : 'a'; B : 'a' ;";
         String source = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaay";
         CompiledGrammar g = new GaGrammar().compile(new StringReader(grammar));
         List<SyntaxTree> forest = new Parser(g).parse("T", new StringReader(source));
