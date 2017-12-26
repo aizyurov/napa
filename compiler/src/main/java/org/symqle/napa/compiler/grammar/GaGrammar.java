@@ -3,13 +3,10 @@ package org.symqle.napa.compiler.grammar;
 import org.symqle.napa.compiler.lexis.GaLexer;
 import org.symqle.napa.compiler.lexis.GaTokenType;
 import org.symqle.napa.compiler.lexis.GaTokenizer;
-import org.symqle.napa.gparser.Assembler;
-import org.symqle.napa.parser.CompiledGrammar;
-import org.symqle.napa.gparser.CompiledRule;
-import org.symqle.napa.parser.GrammarException;
-import org.symqle.napa.parser.TokenProperties;
+import org.symqle.napa.gparser.*;
 import org.symqle.napa.lexer.TokenDefinition;
 import org.symqle.napa.lexer.build.Lexer;
+import org.symqle.napa.parser.*;
 import org.symqle.napa.tokenizer.DfaTokenizer;
 import org.symqle.napa.tokenizer.PackedDfa;
 import org.symqle.napa.tokenizer.Token;
@@ -17,7 +14,13 @@ import org.symqle.napa.tokenizer.Tokenizer;
 
 import java.io.IOException;
 import java.io.Reader;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -25,91 +28,238 @@ import java.util.stream.Collectors;
  */
 public class GaGrammar {
 
-    private final List<IgnoreStatement> ignored = new ArrayList<>();
-    private final List<Rule> rules = new ArrayList<>();
-
     private Token<GaTokenType> nextToken;
     private Tokenizer<GaTokenType> tokenizer;
 
-    private void addIgnore(IgnoreStatement ignoreStatement) {
-        ignored.add(ignoreStatement);
-    }
-
-    private void addRule(Rule rule) {
-        rules.add(rule);
-    }
-
-    public CompiledGrammar parse(Reader source) throws IOException {
+    public CompiledGrammar compile(Reader source) throws IOException {
         final long beforeStart = System.currentTimeMillis();
         try {
-            long startTs = System.currentTimeMillis();
-            PackedDfa<GaTokenType> dfa = new GaLexer().compile();
-            tokenizer = new GaTokenizer(new DfaTokenizer<>(dfa, source, GaTokenType.ERROR));
-            nextToken = tokenizer.nextToken();
-            while(nextToken.getType() != null) {
-                switch(nextToken.getType()) {
-                    case IDENTIFIER:
-                        addRule(rule());
-                        break;
-                    case EXCLAMATION:
-                        addIgnore(ignoreStatement());
-                        break;
-                    default:
-                        throw unexpectedTokenException();
-                }
-            }
-            System.err.println("Parse time: " + (System.currentTimeMillis() - startTs));
-            startTs = System.currentTimeMillis();
-            // everything collected
+            RawSyntaxNode rawSyntaxNode = parse(source);
+            SyntaxTree tree = rawSyntaxNode.toSyntaxTreeNode(null);
             final Dictionary dictionary = new Dictionary();
-            List<CompiledRule> compiledRules = rules.stream()
-                    .flatMap(r -> r.toCompiledRules(dictionary).stream()).collect(Collectors.toList());
-            Set<String> ignoredPatterns = ignored.stream().flatMap(s -> s.getIgnoredList().stream()).collect(Collectors.toSet());
-            String[] nonTerminals = dictionary.nonTerminals();
-            String[] terminals = dictionary.terminals();
-            Set<String> terminalSet = Arrays.stream(terminals).collect(Collectors.toSet());
-            System.err.println("Pack time: " + (System.currentTimeMillis() - startTs));
-            startTs = System.currentTimeMillis();
+
+            List<SyntaxTree> patterns = tree.find("patternDef");
+            Map<String, List<String>> dependencies = new HashMap<>();
+            Map<String, SyntaxTree> patternMap = new HashMap<>();
+            for (SyntaxTree pattern: patterns) {
+                String name = pattern.getChildren().get(0).getValue();
+                SyntaxTree existing = patternMap.put(name, pattern);
+                if (existing != null) {
+                    throw new GrammarException("Duplicate definition of " + name + " at " + pattern.getLine() + ":" + pattern.getPos() + ", defined at " + existing.getLine() + existing.getPos());
+                }
+                dependencies.put(name, pattern.find("expression.IDENFIFIER").stream().map(SyntaxTree::getValue).collect(Collectors.toList()));
+            }
+            TSort<String> tsort = new TSort<>();
+            for (String dependent: dependencies.keySet()) {
+                tsort.add(dependent, dependencies.get(dependent));
+            }
+            List<String> sortedPatterns = tsort.sort();
+            for (String name: sortedPatterns) {
+                SyntaxTree pattern = patternMap.get(name);
+                if (pattern == null) {
+                    // skip undefined patterns here; will detect later
+                    continue;
+                }
+                SyntaxTree expression = pattern.find("expression").get(0);
+                String expressionValue = calculateExpression(expression, dictionary);
+                dictionary.registerPattern(name, expressionValue);
+            }
 
             Set<Integer> ignorableTags = new HashSet<>();
+            for (SyntaxTree ignored: tree.find("ignore.expression")) {
+                String regexp = calculateExpression(ignored, dictionary);
+                ignorableTags.add(dictionary.registerRegexp(regexp));
+            }
+
+            List<CompiledRule> compiledRules = new ArrayList<>();
+
+            Set<Integer> usedTags = new HashSet<>();
+            List<SyntaxTree> ruleTrees = tree.find("rule");
+            // first register all nonTerminals
+            for (SyntaxTree rule: ruleTrees) {
+                System.out.println("Parsing: " + rule);
+                SyntaxTree targetNode = rule.getChildren().get(0);
+                int target = dictionary.registerNonTerminal(targetNode.getValue());
+            }
+            for (SyntaxTree rule: ruleTrees) {
+                List<SyntaxTree> chains = rule.find("choice.chain");
+                for (SyntaxTree chain: chains) {
+                    SyntaxTree targetNode = rule.getChildren().get(0);
+                    int target = dictionary.getNonTerminal(targetNode.getValue()); // should never be null
+                    List<RuleItem> items = chainToItems(chain, dictionary, usedTags);
+                    CompiledRule compiledRule = new CompiledRule(target, items);
+                    compiledRules.add(compiledRule);
+                }
+            }
+
             List<TokenDefinition<Integer>> tokenDefinitions = new ArrayList<>();
-            for (int i = 0;i < terminals.length; i++) {
-                String terminal = terminals[i];
-                String regexp = normalize(terminal);
-                tokenDefinitions.add(new TokenDefinition<>(regexp, i, terminal.charAt(0) == '\''));
-                if (ignoredPatterns.contains(terminal)) {
-                    ignorableTags.add(i);
-                }
-            }
-            int ignoredTag = terminals.length;
-            for (String ignored: ignoredPatterns) {
-                if (!terminalSet.contains(ignored)) {
-                    String regexp = normalize(ignored);
-                    tokenDefinitions.add(new TokenDefinition<>(regexp, ignoredTag));
-                }
+
+            String[] terminals = dictionary.terminals();
+            for (int i = 0; i < terminals.length; i++) {
+                String regexp = terminals[i];
+                tokenDefinitions.add(new TokenDefinition<Integer>(normalize(regexp), i, regexp.startsWith("'")));
             }
 
-            ignorableTags.add(ignoredTag);
-
-            Set<Integer> ignoredTagSet = Collections.singleton(ignoredTag);
             PackedDfa<Set<Integer>> packedDfa= new Lexer<Integer>(tokenDefinitions).compile();
             PackedDfa<TokenProperties> napaDfa = packedDfa.transform(s -> {
-                boolean ignoreOnly = s.equals(ignoredTagSet);
+                Set<Integer> usedDiff = new HashSet<Integer>(usedTags);
+                usedDiff.retainAll(s);
+                boolean ignoreOnly = usedDiff.isEmpty();
                 Set<Integer> difference = new HashSet<Integer>(s);
                 difference.retainAll(ignorableTags);
                 boolean ignorable = !difference.isEmpty();
                 return new TokenProperties(ignoreOnly, ignorable, s);
             });
-            System.err.println("Lexer time: " + (System.currentTimeMillis() - startTs));
             napaDfa.printStats();
-
-            System.err.println("NonTerminals: " + nonTerminals.length);
-            System.err.println("Terminals: " + tokenDefinitions.size());
-
-            return new Assembler(nonTerminals, terminals, compiledRules, napaDfa).assemble();
+            return new Assembler(dictionary.nonTerminals(), terminals, compiledRules, napaDfa).assemble();
         } finally {
             System.err.println("Grammar compiled in " + (System.currentTimeMillis() - beforeStart));
         }
+    }
+
+    private List<RuleItem> chainToItems(final SyntaxTree chain, Dictionary dictionary, final Set<Integer> usedTags) {
+        List<RuleItem> items = chain.getChildren().stream().map(e -> elementToRuleItem(e, dictionary, usedTags)).collect(Collectors.toList());
+        for (RuleItem item: items) {
+            if (item.getType() == RuleItemType.TERMINAL) {
+                usedTags.add(item.getValue());
+            }
+        }
+        return items;
+    }
+
+    private RuleItem elementToRuleItem(SyntaxTree element, Dictionary dictionary, Set<Integer> usedTags) {
+        String value = element.getValue();
+        String name = element.getName();
+        switch (name) {
+            case "IDENTIFIER":
+                String pattern = dictionary.pattern(value);
+                if (pattern != null) {
+                    return new TerminalItem(dictionary.registerRegexp(pattern), value);
+                }
+                Integer nonTerminal = dictionary.getNonTerminal(value);
+                if (nonTerminal == null) {
+                    throw new GrammarException("Undefined symbol " + value + " at " + element.getLine() + ":" + element.getPos());
+                }
+                return new NonTerminalItem(nonTerminal);
+            case "STRING": case "LITERAL_STRING":
+                return new TerminalItem(dictionary.registerRegexp(value), value);
+            case "zeroOrMore":
+                SyntaxTree zeroOrMore = element.find("choice").get(0);
+                return new ZeroOrMoreItem(choiceToRuleItemLists(zeroOrMore, dictionary, usedTags));
+            case "zeroOrOne":
+                SyntaxTree zeroOrOne = element.find("choice").get(0);
+                return new ZeroOrOneItem(choiceToRuleItemLists(zeroOrOne, dictionary, usedTags));
+            case "exactlyOne":
+                SyntaxTree exactlyOne = element.find("choice").get(0);
+                return new ChoiceItem(choiceToRuleItemLists(exactlyOne, dictionary, usedTags));
+            default:
+                throw new IllegalStateException("Unexpected element: " + name + " at " + element.getLine() + ":" + element.getPos());
+        }
+    }
+
+    List<List<RuleItem>> choiceToRuleItemLists(SyntaxTree choice, Dictionary dictionary, Set<Integer> usedTags) {
+        return choice.find("chain").stream().map(c -> chainToItems(c, dictionary, usedTags)).collect(Collectors.toList());
+    }
+
+    private String calculateExpression(final SyntaxTree expression, final Dictionary dictionary) {
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("\"");
+        for (SyntaxTree fragment: expression.getChildren()) {
+            SyntaxTree child = fragment.getChildren().get(0);
+            if (child.getName().equals("STRING")) {
+                stringBuilder.append(normalize(child.getValue()));
+            } else {
+                String value = dictionary.pattern(child.getValue());
+                if (value == null) {
+                    throw new GrammarException("Undefined symbol " + fragment.getValue() + " at " + fragment.getLine() + ":" + fragment.getPos());
+                }
+                stringBuilder.append(normalize(value));
+            }
+        }
+        stringBuilder.append("\"");
+        return stringBuilder.toString();
+    }
+
+    private RawSyntaxNode parse(Reader source) throws IOException {
+        PackedDfa<GaTokenType> dfa = new GaLexer().compile();
+        tokenizer = new GaTokenizer(new DfaTokenizer<>(dfa, source, GaTokenType.ERROR));
+        nextToken = tokenizer.nextToken();
+        return grammar();
+    }
+
+    private RawSyntaxNode grammar() throws IOException {
+        List<RawSyntaxNode> children = new ArrayList<>();
+        while (nextToken.getType() != null) {
+            if (nextToken.getType() == GaTokenType.TILDE) {
+                children.add(ignore());
+            } else {
+                children.add(definition());
+            }
+        }
+        return createNonTerminalNode("grammar", children);
+    }
+
+    private RawSyntaxNode ignore() throws IOException {
+        List<RawSyntaxNode> children = new ArrayList<>();
+        children.add(takeToken(GaTokenType.TILDE));
+        children.add(expression());
+        children.add(takeToken(GaTokenType.SEMICOLON));
+        return createNonTerminalNode("ignore", children);
+    }
+
+    private TerminalNode<GaTokenType> takeToken(GaTokenType expected, GaTokenType... other) throws IOException {
+        Token<GaTokenType> token = take(expected, other);
+        return new TerminalNode<>(0, token.getType().toString(), Collections.emptyList(), token);
+    }
+
+    private RawSyntaxNode expression() throws IOException {
+        List<RawSyntaxNode> children = new ArrayList<>();
+        children.add(fragment());
+        while (nextToken.getType() == GaTokenType.PLUS) {
+            children.add(takeToken(GaTokenType.PLUS));
+            children.add(fragment());
+        }
+        return createNonTerminalNode("expression", children);
+    }
+
+    private RawSyntaxNode fragment() throws IOException {
+        List<RawSyntaxNode> children = new ArrayList<>();
+        children.add(takeToken(GaTokenType.IDENTIFIER, GaTokenType.STRING));
+        return createNonTerminalNode("fragment", children);
+    }
+
+    private RawSyntaxNode definition() throws IOException {
+        List<RawSyntaxNode> children = new ArrayList<>();
+        children.add(takeToken(GaTokenType.IDENTIFIER));
+        switch (nextToken.getType()) {
+            case EQUALS:
+                children.add(takeToken(GaTokenType.EQUALS));
+                children.add(expression());
+                children.add(takeToken(GaTokenType.SEMICOLON));
+                return createNonTerminalNode("patternDef", children);
+            case COLON:
+                children.add(takeToken(GaTokenType.COLON));
+                children.add(choice());
+                children.add(takeToken(GaTokenType.SEMICOLON));
+                return createNonTerminalNode("rule", children);
+            default:
+                throw unexpectedTokenException();
+        }
+    }
+
+    private Token<GaTokenType> take(GaTokenType expected, GaTokenType... other) throws IOException {
+        Token<GaTokenType> token = this.nextToken;
+        if (token.getType() == expected) {
+            nextToken = tokenizer.nextToken();
+            return token;
+        }
+        for (GaTokenType tokenType: other) {
+            if (token.getType() == tokenType) {
+                nextToken = tokenizer.nextToken();
+                return token;
+            }
+        }
+        throw unexpectedTokenException();
     }
 
     private String normalize(final String terminal) {
@@ -136,25 +286,6 @@ public class GaGrammar {
 //        return builder.toString();
     }
 
-    private Rule rule() throws IOException {
-        Token<GaTokenType> target = this.nextToken;
-
-        nextToken = tokenizer.nextToken();
-
-        if (nextToken == null || nextToken.getType() != GaTokenType.EQUALS) {
-            throw unexpectedTokenException();
-        }
-        nextToken = tokenizer.nextToken();
-        Choice choice = choice();
-        if (nextToken == null || nextToken.getType() != GaTokenType.SEMICOLON) {
-            throw unexpectedTokenException();
-        }
-        nextToken = tokenizer.nextToken();
-        return new Rule(target.getText(), choice);
-    }
-
-
-
     private GrammarException unexpectedTokenException() {
         return  nextToken == null
                 ?  new GrammarException("Unexpected end of input")
@@ -179,81 +310,69 @@ public class GaGrammar {
         return new IgnoreStatement(ignoredPatterns);
     }
 
-    private Choice choice() throws IOException {
-        List<Chain> chains = new ArrayList<>();
+    private RawSyntaxNode choice() throws IOException {
+        List<RawSyntaxNode> children = new ArrayList<>();
         while (true) {
-            chains.add(chain());
-            if (nextToken == null) {
-                throw unexpectedTokenException();
-            }
+            children.add(chain());
             if (nextToken.getType() != GaTokenType.BAR) {
                 break;
             }
-            nextToken = tokenizer.nextToken();
+            children.add(takeToken(GaTokenType.BAR));
         }
-        return new Choice(chains);
+        return createNonTerminalNode("choice", children);
     }
 
-    private Chain chain() throws IOException {
-        List<RuleItemsSupplier> items = new ArrayList<>();
-        while(true) {
-            if (nextToken == null) {
-                break;
-            }
+    private RawSyntaxNode chain() throws IOException {
+        List<RawSyntaxNode> children = new ArrayList<>();
+        String chain = "chain";
+        while(nextToken.getType() != null) {
             switch (nextToken.getType()) {
-                case IDENTIFIER:
-                    items.add(new NonTerminal(nextToken.getText()));
-                    nextToken = tokenizer.nextToken();
-                    break;
-                case STRING:
-                    items.add(new Terminal(nextToken.getText()));
-                    nextToken = tokenizer.nextToken();
+                case IDENTIFIER: case STRING: case LITERAL_STRING:
+                    children.add(takeToken(nextToken.getType()));
                     break;
                 case LEFT_BRACE:
-                    items.add(zeroOrMore());
+                    children.add(zeroOrMore());
                     break;
                 case LEFT_BRACKET:
-                    items.add(zeroOrOne());
+                    children.add(zeroOrOne());
                     break;
                 case LPAREN:
-                    items.add(exactlyOne());
+                    children.add(exactlyOne());
                     break;
                 default:
-                    return new Chain(items);
+                    return createNonTerminalNode(chain, children);
 
             }
         }
-        return new Chain(items);
+        return createNonTerminalNode(chain, children);
     }
 
-    private ZeroOrMore zeroOrMore() throws IOException {
-        nextToken = tokenizer.nextToken();
-        Choice choice = choice();
-        if (nextToken == null || nextToken.getType() != GaTokenType.RIGHT_BRACE) {
-            throw unexpectedTokenException();
-        }
-        nextToken = tokenizer.nextToken();
-        return new ZeroOrMore(choice);
+    private RawSyntaxNode createNonTerminalNode(final String name, final List<RawSyntaxNode> children) {
+        return children.isEmpty() ? new EmptyNode(0, name, 0, 0) : new NonTerminalNode(0, name, children);
     }
 
-    private ZeroOrOne zeroOrOne() throws IOException {
-        nextToken = tokenizer.nextToken();
-        Choice choice = choice();
-        if (nextToken == null || nextToken.getType() != GaTokenType.RIGHT_BRACKET) {
-            throw unexpectedTokenException();
-        }
-        nextToken = tokenizer.nextToken();
-        return new ZeroOrOne(choice);
+    private RawSyntaxNode zeroOrMore() throws IOException {
+        List<RawSyntaxNode> children = new ArrayList<>();
+        children.add(takeToken(GaTokenType.LEFT_BRACE));
+        children.add(choice());
+        children.add(takeToken(GaTokenType.RIGHT_BRACE));
+        return createNonTerminalNode("zeroOrMore", children);
     }
 
-    private ExactlyOne exactlyOne() throws IOException {
-        nextToken = tokenizer.nextToken();
-        Choice choice = choice();
-        if (nextToken == null || nextToken.getType() != GaTokenType.RPAREN) {
-            throw unexpectedTokenException();
-        }
-        nextToken = tokenizer.nextToken();
-        return new ExactlyOne(choice);
+    private RawSyntaxNode zeroOrOne() throws IOException {
+        List<RawSyntaxNode> children = new ArrayList<>();
+        children.add(takeToken(GaTokenType.LEFT_BRACKET));
+        children.add(choice());
+        children.add(takeToken(GaTokenType.RIGHT_BRACKET));
+        return createNonTerminalNode("zeroOrOne", children);
+    }
+
+    private RawSyntaxNode exactlyOne() throws IOException {
+        List<RawSyntaxNode> children = new ArrayList<>();
+        children.add(takeToken(GaTokenType.LPAREN));
+        children.add(choice());
+        children.add(takeToken(GaTokenType.RPAREN));
+        return createNonTerminalNode("exactlyOne", children);
     }
 
 

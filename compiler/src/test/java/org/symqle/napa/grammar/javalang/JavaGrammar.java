@@ -15,7 +15,7 @@ public class JavaGrammar {
 
     private static Parser createParser() {
         try {
-            return new Parser(new GaGrammar().parse(new InputStreamReader(JavaGrammar.class.getClassLoader().getResourceAsStream("java.napa"), "UTF-8")));
+            return new Parser(new GaGrammar().compile(new InputStreamReader(JavaGrammar.class.getClassLoader().getResourceAsStream("java.napa"), "UTF-8")));
         } catch (IOException e) {
             e.printStackTrace();
             throw new IllegalArgumentException("Invalid java grammar");

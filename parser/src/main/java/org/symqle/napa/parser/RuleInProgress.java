@@ -45,7 +45,8 @@ public class RuleInProgress {
             } else {
                 List<RuleInProgress>  result = new ArrayList<>(predict.size());
                 for (List<NapaRuleItem> items : predict) {
-                    result.add(new RuleInProgress(currentItem.getValue(), items.toArray(new NapaRuleItem[items.size()]), 0, NO_NODES));
+                    final RuleInProgress ruleInProgress = new RuleInProgress(currentItem.getValue(), items.toArray(new NapaRuleItem[items.size()]), 0, NO_NODES);
+                    result.add(ruleInProgress);
                 }
                 return result;
             }
@@ -113,7 +114,7 @@ public class RuleInProgress {
         }
         RawSyntaxNode[] newSyntaxNodes = new RawSyntaxNode[syntaxNodes.length + 1];
         System.arraycopy(syntaxNodes, 0, newSyntaxNodes, 0, syntaxNodes.length);
-        newSyntaxNodes[syntaxNodes.length] = new TerminalNode(currentItem.getValue(), currentItem.getName(), preface, token);
+        newSyntaxNodes[syntaxNodes.length] = new TerminalNode<TokenProperties>(currentItem.getValue(), currentItem.getName(), preface, token);
         return Collections.singletonList(new RuleInProgress(target, items, offset + 1, newSyntaxNodes));
     }
 

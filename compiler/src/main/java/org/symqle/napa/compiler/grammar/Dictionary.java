@@ -10,6 +10,7 @@ public class Dictionary {
 
     private Map<String, Integer> regexpList = new HashMap<>();
     private Map<String, Integer> nonTerminals = new HashMap<>();
+    private Map<String, String> patterns = new HashMap<>();
 
     public Integer registerRegexp(String regexp) {
         Integer index = regexpList.getOrDefault(regexp, regexpList.size());
@@ -21,6 +22,15 @@ public class Dictionary {
         Integer index = nonTerminals.getOrDefault(name, nonTerminals.size());
         nonTerminals.put(name, index);
         return index;
+    }
+
+    public Integer getNonTerminal(String name) {
+        return nonTerminals.get(name);
+    }
+
+
+    public String registerPattern(String name, String value) {
+        return patterns.put(name, value);
     }
 
     public String[] nonTerminals() {
@@ -37,5 +47,9 @@ public class Dictionary {
             patterns[entry.getValue()] = entry.getKey();
         }
         return patterns;
+    }
+
+    public String pattern(String name) {
+        return patterns.get(name);
     }
 }

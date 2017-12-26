@@ -21,9 +21,9 @@ public class AnalyzerTest extends TestCase {
 
     public void testTrivial() throws Exception {
         String grammar = "identifier = \"[a-zA-Z][a-zA-Z0-9]*\";\n" +
-                "class_declaration = \"class\" identifier \";\" ;\n" +
-                "! \" +\" ;";
-        CompiledGrammar g = new GaGrammar().parse(new StringReader(grammar));
+                "class_declaration : \"class\" identifier \";\" ;\n" +
+                "~ \" +\" ;";
+        CompiledGrammar g = new GaGrammar().compile(new StringReader(grammar));
         String source = "class wow ;";
         List<SyntaxTree> tree = new Parser(g).parse("class_declaration", new StringReader(source));
         Assert.assertEquals(1, tree.size());
@@ -34,18 +34,19 @@ public class AnalyzerTest extends TestCase {
     public void testUndefinedNonTerminal() throws Exception {
         String grammar = "identifier = \"[a-zA-Z][a-zA-Z0-9]*\";\n" +
                 // mistype below
-                "class_declaration = \"class\" identifeir \";\" ;\n" +
-                "! \" +\" ;";
+                "class_declaration : \"class\" identifeir \";\" ;\n" +
+                "~ \" +\" ;";
         try {
-            CompiledGrammar g = new GaGrammar().parse(new StringReader(grammar));
+            CompiledGrammar g = new GaGrammar().compile(new StringReader(grammar));
             fail("GrammarException expected");
         } catch (GrammarException e) {
+            System.out.printf(e.getMessage());
             Assert.assertTrue(e.getMessage().contains("identifeir"));
         }
     }
 
     public void testExpression() throws Exception {
-        CompiledGrammar g = new GaGrammar().parse(new InputStreamReader(getClass().getClassLoader().getResourceAsStream("expression.napa"), "UTF-8"));
+        CompiledGrammar g = new GaGrammar().compile(new InputStreamReader(getClass().getClassLoader().getResourceAsStream("expression.napa"), "UTF-8"));
         String source = "a + 2 * b + c/3/4";
         List<SyntaxTree> expressions = new Parser(g).parse("expression", new StringReader(source));
         Assert.assertEquals(1, expressions.size());
@@ -64,7 +65,7 @@ public class AnalyzerTest extends TestCase {
     }
 
     public void testEmpty1() throws Exception {
-        CompiledGrammar g = new GaGrammar().parse(new InputStreamReader(getClass().getClassLoader().getResourceAsStream("empty1.napa"), "UTF-8"));
+        CompiledGrammar g = new GaGrammar().compile(new InputStreamReader(getClass().getClassLoader().getResourceAsStream("empty1.napa"), "UTF-8"));
         String source = "class a;";
         List<SyntaxTree> forest = new Parser(g).parse("declaration", new StringReader(source));
         Assert.assertEquals(1, forest.size());
@@ -74,7 +75,7 @@ public class AnalyzerTest extends TestCase {
     }
 
     public void testEmpty2() throws Exception {
-        CompiledGrammar g = new GaGrammar().parse(new InputStreamReader(getClass().getClassLoader().getResourceAsStream("empty2.napa"), "UTF-8"));
+        CompiledGrammar g = new GaGrammar().compile(new InputStreamReader(getClass().getClassLoader().getResourceAsStream("empty2.napa"), "UTF-8"));
         String source = "class a;";
         List<SyntaxTree> forest = new Parser(g).parse("declaration", new StringReader(source));
         Assert.assertEquals(1, forest.size());
@@ -85,7 +86,7 @@ public class AnalyzerTest extends TestCase {
     }
 
     public void testLeftZeroOrMore() throws Exception {
-        CompiledGrammar g = new GaGrammar().parse(new InputStreamReader(getClass().getClassLoader().getResourceAsStream("leftZeroOrMore.napa"), "UTF-8"));
+        CompiledGrammar g = new GaGrammar().compile(new InputStreamReader(getClass().getClassLoader().getResourceAsStream("leftZeroOrMore.napa"), "UTF-8"));
         String source = "java.lang.String s;";
         List<SyntaxTree> forest = new Parser(g).parse("field_definition", new StringReader(source));
         Assert.assertEquals(1, forest.size());
@@ -99,9 +100,9 @@ public class AnalyzerTest extends TestCase {
     }
 
     public void testEarlyExample() throws Exception {
-        String grammar = "B = A A ; A = \"x\" | \"x\" \"x\" ;";
+        String grammar = "B : A A ; A : \"x\" | \"x\" \"x\" ;";
         String source = "xxx";
-        CompiledGrammar g = new GaGrammar().parse(new StringReader(grammar));
+        CompiledGrammar g = new GaGrammar().compile(new StringReader(grammar));
         List<SyntaxTree> forest = new Parser(g).parse("B", new StringReader(source));
         Assert.assertEquals(2, forest.size());
         for (SyntaxTree tree : forest) {
@@ -110,10 +111,10 @@ public class AnalyzerTest extends TestCase {
     }
 
     public void testNestedZeroOrMore() throws Exception {
-        String grammar = "A = {{'a'}};";
+        String grammar = "A : {{'a'}};";
         String source = "a";
         try {
-            CompiledGrammar g = new GaGrammar().parse(new StringReader(grammar));
+            CompiledGrammar g = new GaGrammar().compile(new StringReader(grammar));
             fail("GrammarException expected");
         } catch (GrammarException expected) {
             Assert.assertTrue(expected.getMessage().startsWith("Infinite recursion"));
@@ -121,10 +122,10 @@ public class AnalyzerTest extends TestCase {
     }
 
     public void testLeftRecursion() throws Exception {
-        String grammar = "T = A | 'a'; A = 'b' | A 'b' ;";
+        String grammar = "T : A | 'a'; A : 'b' | A 'b' ;";
         String source = "a";
         try {
-            CompiledGrammar g = new GaGrammar().parse(new StringReader(grammar));
+            CompiledGrammar g = new GaGrammar().compile(new StringReader(grammar));
             fail("GrammarException expected");
         } catch (GrammarException expected) {
             Assert.assertTrue(expected.getMessage().startsWith("Infinite recursion"));
@@ -133,10 +134,10 @@ public class AnalyzerTest extends TestCase {
     }
 
     public void testHiddenRecursion() throws Exception {
-        String grammar = "T = A | 'a'; A = 'b' | {'x'} B ; B = ['c'] A 'd'; ";
+        String grammar = "T : A | 'a'; A : 'b' | {'x'} B ; B : ['c'] A 'd'; ";
         String source = "a";
         try {
-            CompiledGrammar g = new GaGrammar().parse(new StringReader(grammar));
+            CompiledGrammar g = new GaGrammar().compile(new StringReader(grammar));
             fail("GrammarException expected");
         } catch (GrammarException expected) {
             Assert.assertTrue(expected.getMessage().startsWith("Infinite recursion"));
@@ -145,9 +146,9 @@ public class AnalyzerTest extends TestCase {
     }
 
     public void testEmptyParentheses() throws Exception {
-        String grammar = "A = 'a' () 'b' ;";
+        String grammar = "A : 'a' () 'b' ;";
         String source = "ab";
-        CompiledGrammar g = new GaGrammar().parse(new StringReader(grammar));
+        CompiledGrammar g = new GaGrammar().compile(new StringReader(grammar));
         List<SyntaxTree> forest = new Parser(g).parse("A", new StringReader(source));
         Assert.assertEquals(1, forest.size());
         SyntaxTree tree = forest.get(0);
@@ -155,11 +156,11 @@ public class AnalyzerTest extends TestCase {
     }
 
     public void testInfiniteEmpty() throws Exception {
-        String grammar = "A = {B} 'a' ; B = 'b' | ;";
+        String grammar = "A : {B} 'a' ; B : 'b' | ;";
         String source = "a";
         CompiledGrammar g = null;
         try {
-            g = new GaGrammar().parse(new StringReader(grammar));
+            g = new GaGrammar().compile(new StringReader(grammar));
             fail("GrammarException expected");
         } catch (GrammarException expected) {
             System.out.println(expected.getMessage());
@@ -167,9 +168,9 @@ public class AnalyzerTest extends TestCase {
     }
 
     public void testEmptyBrackets() throws Exception {
-        String grammar = "A = 'a' [] 'b' ;";
+        String grammar = "A : 'a' [] 'b' ;";
         String source = "ab";
-        CompiledGrammar g = new GaGrammar().parse(new StringReader(grammar));
+        CompiledGrammar g = new GaGrammar().compile(new StringReader(grammar));
         List<SyntaxTree> forest = new Parser(g).parse("A", new StringReader(source));
         Assert.assertEquals(1, forest.size());
         SyntaxTree tree = forest.get(0);
@@ -177,10 +178,10 @@ public class AnalyzerTest extends TestCase {
     }
 
     public void testEmptyBraces() throws Exception {
-        String grammar = "A = 'a' {} 'b' ;";
+        String grammar = "A : 'a' {} 'b' ;";
         String source = "ab";
         try {
-            CompiledGrammar g = new GaGrammar().parse(new StringReader(grammar));
+            CompiledGrammar g = new GaGrammar().compile(new StringReader(grammar));
             fail("GrammarException expected");
         } catch (GrammarException expected) {
             Assert.assertTrue(expected.getMessage().startsWith("Infinite recursion"));
@@ -190,9 +191,9 @@ public class AnalyzerTest extends TestCase {
 
 
     public void testEmptyInTheEnd() throws Exception {
-        String grammar = "T = 'a' B; B = 'b' | ;";
+        String grammar = "T : 'a' B; B : 'b' | ;";
         String source = "a";
-        CompiledGrammar g = new GaGrammar().parse(new StringReader(grammar));
+        CompiledGrammar g = new GaGrammar().compile(new StringReader(grammar));
         List<SyntaxTree> forest = new Parser(g).parse("T", new StringReader(source));
         Assert.assertEquals(1, forest.size());
         SyntaxTree tree = forest.get(0);
@@ -200,9 +201,9 @@ public class AnalyzerTest extends TestCase {
     }
 
     public void testEmptyInTheEnd2() throws Exception {
-        String grammar = "T = 'a' ['b']; ";
+        String grammar = "T : 'a' ['b']; ";
         String source = "a";
-        CompiledGrammar g = new GaGrammar().parse(new StringReader(grammar));
+        CompiledGrammar g = new GaGrammar().compile(new StringReader(grammar));
         List<SyntaxTree> forest = new Parser(g).parse("T", new StringReader(source));
         Assert.assertEquals(1, forest.size());
         SyntaxTree tree = forest.get(0);
@@ -210,9 +211,9 @@ public class AnalyzerTest extends TestCase {
     }
 
     public void testEmptyInTheEnd3() throws Exception {
-        String grammar = "T = 'a' B; B = ['b']; ";
+        String grammar = "T : 'a' B; B : ['b']; ";
         String source = "a";
-        CompiledGrammar g = new GaGrammar().parse(new StringReader(grammar));
+        CompiledGrammar g = new GaGrammar().compile(new StringReader(grammar));
         List<SyntaxTree> forest = new Parser(g).parse("T", new StringReader(source));
         Assert.assertEquals(1, forest.size());
         SyntaxTree tree = forest.get(0);
@@ -220,7 +221,7 @@ public class AnalyzerTest extends TestCase {
     }
 
     public void testLalrFail() throws Exception {
-        CompiledGrammar g = new GaGrammar().parse(new InputStreamReader(getClass().getClassLoader().getResourceAsStream("lalr_fail.napa")));
+        CompiledGrammar g = new GaGrammar().compile(new InputStreamReader(getClass().getClassLoader().getResourceAsStream("lalr_fail.napa")));
         String source = "bed";
         List<SyntaxTree> forest = new Parser(g).parse("S", new StringReader(source));
         Assert.assertEquals(1, forest.size());
@@ -233,7 +234,7 @@ public class AnalyzerTest extends TestCase {
     public void testTheVeryEndDecides() throws Exception {
         String grammar = "T = {A} 'x' | {B} 'y'; A = 'a'; B = 'a' ;";
         String source = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaay";
-        CompiledGrammar g = new GaGrammar().parse(new StringReader(grammar));
+        CompiledGrammar g = new GaGrammar().compile(new StringReader(grammar));
         List<SyntaxTree> forest = new Parser(g).parse("T", new StringReader(source));
         Assert.assertEquals(1, forest.size());
         SyntaxTree tree = forest.iterator().next();
@@ -244,7 +245,7 @@ public class AnalyzerTest extends TestCase {
 
     public void testIgnoreConflict() throws Exception {
         CompiledGrammar g = null;
-        g = new GaGrammar().parse(new InputStreamReader(getClass().getClassLoader().getResourceAsStream("ignorable.napa"), "UTF-8"));
+        g = new GaGrammar().compile(new InputStreamReader(getClass().getClassLoader().getResourceAsStream("ignorable.napa"), "UTF-8"));
         String source = "/*abc*/ class class";
         List<SyntaxTree> forest = new Parser(g).parse("class_definition", new StringReader(source));
         Assert.assertEquals(1, forest.size());
@@ -253,7 +254,7 @@ public class AnalyzerTest extends TestCase {
     }
 
     public void testPackratFailure() throws Exception {
-        CompiledGrammar g = new GaGrammar().parse(new StringReader("S = 'x' S 'x' | 'x' ;"));
+        CompiledGrammar g = new GaGrammar().compile(new StringReader("S : 'x' S 'x' | 'x' ;"));
         String source = "xxx";
         List<SyntaxTree> forest = new Parser(g).parse("S", new StringReader(source));
         Assert.assertEquals(1, forest.size());
@@ -263,8 +264,8 @@ public class AnalyzerTest extends TestCase {
     }
 
     public void testFirstFirstConflict() throws Exception {
-        CompiledGrammar g = new GaGrammar().parse(new StringReader("S = E | E 'a' ;\n" +
-                " E = 'b' | ;"));
+        CompiledGrammar g = new GaGrammar().compile(new StringReader("S : E | E 'a' ;\n" +
+                " E : 'b' | ;"));
         for (String source : Arrays.asList("a", "b", "ba")) {
             List<SyntaxTree> forest = new Parser(g).parse("S", new StringReader(source));
             Assert.assertEquals(1, forest.size());
@@ -276,8 +277,8 @@ public class AnalyzerTest extends TestCase {
     }
 
     public void testFirstFollowConflict() throws Exception {
-        CompiledGrammar g = new GaGrammar().parse(new StringReader("S = A 'a' 'b' ;\n" +
-                " A = 'a' | ;"));
+        CompiledGrammar g = new GaGrammar().compile(new StringReader("S : A 'a' 'b' ;\n" +
+                " A : 'a' | ;"));
         for (String source : Arrays.asList("ab", "aab")) {
             List<SyntaxTree> forest = new Parser(g).parse("S", new StringReader(source));
             Assert.assertEquals(1, forest.size());
@@ -289,8 +290,8 @@ public class AnalyzerTest extends TestCase {
     }
 
     public void testManyAmbuguities() throws Exception {
-        CompiledGrammar g = new GaGrammar().parse(new StringReader("S = {A|B} ;\n" +
-                " A = 'a' ; B = 'a' ; "));
+        CompiledGrammar g = new GaGrammar().compile(new StringReader("S : {A|B} ;\n" +
+                " A : 'a' ; B : 'a' ; "));
         String source = "aaaaaaa";
         Parser parser = new Parser(g);
         List<SyntaxTree> forest = parser.parse("S", new StringReader(source));

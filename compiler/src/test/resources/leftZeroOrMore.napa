@@ -1,4 +1,4 @@
-! " +" ;
-field_definition = type name ";" ;
-type = "int" | "boolean" | { name "\." } name ;
+~ " +" ;
+field_definition : type name ";" ;
+type : "int" | "boolean" | { name "\." } name ;
 name = "[a-zA-Z]+" ;

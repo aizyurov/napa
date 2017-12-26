@@ -8,14 +8,14 @@ import java.util.stream.Collectors;
 /**
  * @author lvovich
  */
-public class TerminalNode implements RawSyntaxNode {
+public class TerminalNode<T> implements RawSyntaxNode {
 
     private final int tag;
     private final String name;
-    private final List<Token<TokenProperties>> preface;
-    private final Token<TokenProperties> token;
+    private final List<Token<T>> preface;
+    private final Token<T> token;
 
-    public TerminalNode(final int tag, final String name, final List<Token<TokenProperties>> preface, final Token<TokenProperties> token) {
+    public TerminalNode(final int tag, final String name, final List<Token<T>> preface, final Token<T> token) {
         this.tag = tag;
         this.name = name;
         this.preface = preface;

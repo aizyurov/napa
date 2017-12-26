@@ -27,18 +27,20 @@ public class GaLexer {
         def("[a-zA-Z][a-zA-Z0-9_]*", IDENTIFIER),
         def(";", SEMICOLON),
         def("=", EQUALS),
+        def(":", COLON),
         def("{", LEFT_BRACE),
         def("}", RIGHT_BRACE),
         def("[\\[]", LEFT_BRACKET),
         def("[\\]]", RIGHT_BRACKET),
         def("\\(", LPAREN),
         def("\\)", RPAREN),
-        def("!", EXCLAMATION),
+        def("~", TILDE),
         def("[ \\r\\n\\t]+", IGNORE),
         def("#[^\\r\\n]*[\\r\\n]", IGNORE),
         def("\"([^\"]|[\\\\][\"])+\"", STRING),
-        def("'([^']|\\\\')+'", STRING),
-        def("\\|", BAR)
+        def("'([^']|\\\\')+'", LITERAL_STRING),
+        def("\\|", BAR),
+        def("+", PLUS)
     );
 
     public PackedDfa<GaTokenType> compile() {

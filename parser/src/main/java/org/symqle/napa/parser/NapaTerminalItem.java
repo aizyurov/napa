@@ -2,9 +2,9 @@ package org.symqle.napa.parser;
 
 import org.symqle.napa.tokenizer.Token;
 
+import java.util.BitSet;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 /**
  * @author lvovich
@@ -13,10 +13,13 @@ public class NapaTerminalItem implements NapaRuleItem {
 
     private final int value;
     private final String name;
+    private final BitSet first;
 
     public NapaTerminalItem(final int value, String name) {
         this.value = value;
         this.name = name;
+        first = new BitSet();
+        first.set(value);
     }
 
     @Override
@@ -44,8 +47,8 @@ public class NapaTerminalItem implements NapaRuleItem {
     }
 
     @Override
-    public Set<Integer> first() {
-        return Collections.singleton(value);
+    public BitSet first() {
+        return first;
     }
 
     @Override

@@ -7,6 +7,7 @@ public enum GaTokenType {
     IDENTIFIER,
     SEMICOLON,
     EQUALS,
+    COLON,
     LEFT_BRACE,
     RIGHT_BRACE,
     LEFT_BRACKET,
@@ -16,6 +17,9 @@ public enum GaTokenType {
     EXCLAMATION,
     IGNORE,
     STRING,
+    LITERAL_STRING,
     BAR,
+    TILDE,
+    PLUS,
     ERROR
 }

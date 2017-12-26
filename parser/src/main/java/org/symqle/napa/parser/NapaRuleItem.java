@@ -2,8 +2,8 @@ package org.symqle.napa.parser;
 
 import org.symqle.napa.tokenizer.Token;
 
+import java.util.BitSet;
 import java.util.List;
-import java.util.Set;
 
 /**
  * @author lvovich
@@ -22,6 +22,6 @@ public interface NapaRuleItem {
 
     boolean hasEmptyDerivation();
 
-    Set<Integer> first();
+    BitSet first();
 
 }
