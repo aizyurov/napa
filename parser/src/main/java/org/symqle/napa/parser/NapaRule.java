@@ -14,7 +14,7 @@ public class NapaRule {
 
     public NapaRule(final int target, final List<NapaRuleItem> items) {
         this.target = target;
-        this.items = Collections.unmodifiableList(new ArrayList<>(items));
+        this.items = new ImmutableList<>(items);
     }
 
     public List<NapaRuleItem> getItems() {
