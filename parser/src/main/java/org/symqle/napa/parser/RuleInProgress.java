@@ -40,17 +40,13 @@ public class RuleInProgress {
     public List<RuleInProgress> predict(Token<TokenProperties> lookAhead, CompiledGrammar grammar) {
         if (currentItem != null) {
             List<List<NapaRuleItem>> predict = currentItem.predict(lookAhead, grammar);
-            if (predict.isEmpty()) {
-                return Collections.emptyList();
-            } else {
-                List<RuleInProgress>  result = new ArrayList<>(predict.size());
-                for (int i=0; i<predict.size(); i++) {
-                    List<NapaRuleItem> items = predict.get(i);
-                    final RuleInProgress ruleInProgress = new RuleInProgress(currentItem.getValue(), items, 0, NO_NODES);
-                    result.add(ruleInProgress);
-                }
-                return result;
+            List<RuleInProgress>  result = new ArrayList<>(predict.size());
+            for (int i=0; i<predict.size(); i++) {
+                List<NapaRuleItem> items = predict.get(i);
+                final RuleInProgress ruleInProgress = new RuleInProgress(currentItem.getValue(), items, 0, NO_NODES);
+                result.add(ruleInProgress);
             }
+            return result;
         } else {
             return Collections.emptyList();
         }
