@@ -15,7 +15,7 @@ import static org.symqle.napa.parser.RuleItemType.TERMINAL;
 public class RuleInProgress {
 
     private final int target;
-    private final NapaRuleItem[] items;
+    private final List<NapaRuleItem> items;
     private final int offset;
     private final RawSyntaxNode[] syntaxNodes;
     private final NapaRuleItem currentItem;
@@ -24,17 +24,17 @@ public class RuleInProgress {
     private static final RuleInProgress[] NO_RULES = {};
 
     // Note: no protective copying. The caller should not modify items and syntaxNodes, provide a copy when necessary.
-    private RuleInProgress(final int target, final NapaRuleItem[] items, final int offset, final RawSyntaxNode[] syntaxNodes) {
+    private RuleInProgress(final int target, List<NapaRuleItem> items, final int offset, final RawSyntaxNode[] syntaxNodes) {
         this.target = target;
         this.items = items;
         this.offset = offset;
         this.syntaxNodes = syntaxNodes;
-        this.currentItem = offset < items.length ? items[offset] : null;
+        this.currentItem = offset < items.size() ? items.get(offset) : null;
 
     }
 
     static RuleInProgress startRule(NapaRule rule, CompiledGrammar grammar) {
-        return new RuleInProgress(rule.getTarget(), rule.getItems().toArray(new NapaRuleItem[rule.getItems().size()]), 0, NO_NODES);
+        return new RuleInProgress(rule.getTarget(), rule.getItems(), 0, NO_NODES);
     }
 
     public List<RuleInProgress> predict(Token<TokenProperties> lookAhead, CompiledGrammar grammar) {
@@ -45,7 +45,7 @@ public class RuleInProgress {
             } else {
                 List<RuleInProgress>  result = new ArrayList<>(predict.size());
                 for (List<NapaRuleItem> items : predict) {
-                    final RuleInProgress ruleInProgress = new RuleInProgress(currentItem.getValue(), items.toArray(new NapaRuleItem[items.size()]), 0, NO_NODES);
+                    final RuleInProgress ruleInProgress = new RuleInProgress(currentItem.getValue(), items, 0, NO_NODES);
                     result.add(ruleInProgress);
                 }
                 return result;
@@ -73,11 +73,11 @@ public class RuleInProgress {
         int length = syntaxNodes.length;
         TokenProperties type = lookAhead.getType();
 
-        for (int i = offset + 1; i < items.length ; i++) {
-            NapaRuleItem item = items[i];
+        for (int i = offset + 1; i < items.size() ; i++) {
+            final NapaRuleItem item = items.get(i);
             if (type != null && type.matches(item.first())) {
                 break;
-            } else if (!items[i].hasEmptyDerivation()){
+            } else if (!item.hasEmptyDerivation()){
                 return Collections.emptyList();
             }
         }
@@ -93,12 +93,10 @@ public class RuleInProgress {
         }
         List<RuleInProgress> newNodes = new ArrayList<>();
         for (List<NapaRuleItem> expansion: currentItem.expand(lookAhead)) {
-            NapaRuleItem[] expanded = new NapaRuleItem[items.length + expansion.size() - 1];
-            System.arraycopy(items, 0, expanded, 0, offset);
-            for (int i = 0; i < expansion.size(); i ++) {
-                expanded[offset + i] = expansion.get(i);
-            }
-            System.arraycopy(items, offset + 1, expanded, offset + expansion.size(), items.length - offset - 1);
+            List<NapaRuleItem> expanded = new ArrayList<>(items.size() + expansion.size());
+            expanded.addAll(items.subList(0, offset));
+            expanded.addAll(expansion);
+            expanded.addAll(items.subList(offset + 1, items.size()));
             newNodes.add(new RuleInProgress(target, expanded, offset, syntaxNodes));
         }
         return newNodes;
@@ -138,14 +136,14 @@ public class RuleInProgress {
     public String toString(CompiledGrammar grammar) {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(grammar.nonTerminalName(target)).append(" =");
-        for (int i = 0; i<items.length; i++) {
+        for (int i = 0; i<items.size(); i++) {
             if (offset == i) {
                 stringBuilder.append(" ^");
             }
-            final NapaRuleItem item = items[i];
+            final NapaRuleItem item = items.get(i);
             stringBuilder.append(" ").append(item.toString());
         }
-        if (offset == items.length) {
+        if (offset == items.size()) {
             stringBuilder.append(" ^");
         }
         return stringBuilder.toString();
@@ -155,14 +153,14 @@ public class RuleInProgress {
     public String toString() {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(target).append(" =");
-        for (int i = 0; i<items.length; i++) {
+        for (int i = 0; i<items.size(); i++) {
             if (offset == i) {
                 stringBuilder.append(" ^");
             }
-            final NapaRuleItem item = items[i];
+            final NapaRuleItem item = items.get(i);
             stringBuilder.append(" ").append(item.toString());
         }
-        if (offset == items.length) {
+        if (offset == items.size()) {
             stringBuilder.append(" ^");
         }
         return stringBuilder.toString();
@@ -175,7 +173,7 @@ public class RuleInProgress {
         final RuleInProgress that = (RuleInProgress) o;
         return target == that.target &&
                 offset == that.offset &&
-                Arrays.equals(items, that.items) &&
+                items.equals(that.items) &&
                 Arrays.equals(syntaxNodes, that.syntaxNodes);
     }
 
@@ -185,7 +183,7 @@ public class RuleInProgress {
         int h = hash;
         if (h == 0) {
             h = target;
-            h = h * 31 + Arrays.hashCode(items);
+            h = h * 31 + items.hashCode();
             h = h * 31 + offset;
             h = h * 31 + Arrays.hashCode(syntaxNodes);
             hash = h;

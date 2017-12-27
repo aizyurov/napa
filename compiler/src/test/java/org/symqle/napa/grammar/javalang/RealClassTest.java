@@ -26,6 +26,7 @@ public class RealClassTest extends TestCase {
         Assert.assertEquals(1, forest.size());
     }
 
+
     public void testEDS() throws Exception {
         System.out.println("=== Benchmark ===");
         for (int i=0; i< 50; i++)
