@@ -66,8 +66,9 @@ public class NapaNonTerminalItem implements NapaRuleItem {
     public List<List<NapaRuleItem>> predict(final Token<TokenProperties> lookAhead, final CompiledGrammar grammar) {
         if (lookAhead.getType() != null && lookAhead.getType().matches(first) || hasEmptyDerivation) {
             final List<NapaRule> napaRules = grammar.getNapaRules(value);
-            final List<List<NapaRuleItem>> result = new ArrayList<>(napaRules.size());
-            for (int i=0; i < napaRules.size(); i++) {
+            final int size = napaRules.size();
+            final List<List<NapaRuleItem>> result = new ArrayList<>(size);
+            for (int i = 0; i < size; i++) {
                 NapaRule rule = napaRules.get(i);
                 result.add(rule.getItems());
              }
