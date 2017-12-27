@@ -48,8 +48,14 @@ public class AppendableList<T> {
 
     @Override
     public int hashCode() {
-        int result = parent != null ? parent.hashCode() : 0;
+        if (hash != 0) {
+            return hash;
+        }
+        int result = parent != null ? parent.hashCode() : 13;
         result = 31 * result + (element != null ? element.hashCode() : 0);
+        hash = result;
         return result;
     }
+
+    private int hash = 0;
 }
