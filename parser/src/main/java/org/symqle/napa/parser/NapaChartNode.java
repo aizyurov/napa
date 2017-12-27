@@ -65,7 +65,8 @@ public class NapaChartNode {
     private List<NapaChartNode> acceptNonTerminal(RawSyntaxNode node, Token<TokenProperties> lookAhead) {
         List<RuleInProgress> newRules = ruleInProgress.acceptNonTerminal(node, lookAhead);
         List<NapaChartNode> newNodes = new ArrayList<>(newRules.size());
-        for (RuleInProgress rule: newRules) {
+        for (int i=0; i<newRules.size(); i++) {
+            RuleInProgress rule = newRules.get(i);
             newNodes.add(new NapaChartNode(rule, enclosing));
         }
         return newNodes;

@@ -17,14 +17,13 @@ public class RuleInProgress {
     private final int target;
     private final List<NapaRuleItem> items;
     private final int offset;
-    private final RawSyntaxNode[] syntaxNodes;
+    private final AppendableList<RawSyntaxNode> syntaxNodes;
     private final NapaRuleItem currentItem;
 
-    private static final RawSyntaxNode[] NO_NODES = {};
-    private static final RuleInProgress[] NO_RULES = {};
+    private static final AppendableList<RawSyntaxNode> NO_NODES = AppendableList.empty();
 
     // Note: no protective copying. The caller should not modify items and syntaxNodes, provide a copy when necessary.
-    private RuleInProgress(final int target, List<NapaRuleItem> items, final int offset, final RawSyntaxNode[] syntaxNodes) {
+    private RuleInProgress(final int target, List<NapaRuleItem> items, final int offset, final AppendableList<RawSyntaxNode> syntaxNodes) {
         this.target = target;
         this.items = items;
         this.offset = offset;
@@ -55,10 +54,10 @@ public class RuleInProgress {
     public List<RawSyntaxNode> reduce(Token<TokenProperties> lookAhead, CompiledGrammar grammar) {
         if (currentItem == null) {
             RawSyntaxNode newNode;
-            if (syntaxNodes.length == 0) {
+            if (syntaxNodes == NO_NODES) {
                 newNode = new EmptyNode(target, grammar.nonTerminalName(target), lookAhead.getLine(), lookAhead.getPos());
             } else {
-                newNode = new NonTerminalNode(target, grammar.nonTerminalName(target), Arrays.asList(syntaxNodes));
+                newNode = new NonTerminalNode(target, grammar.nonTerminalName(target), syntaxNodes.asList());
             }
             return Collections.singletonList(newNode);
         } else {
@@ -67,7 +66,6 @@ public class RuleInProgress {
     }
 
     public List<RuleInProgress> acceptNonTerminal(RawSyntaxNode node, Token<TokenProperties> lookAhead) {
-        int length = syntaxNodes.length;
         TokenProperties type = lookAhead.getType();
 
         for (int i = offset + 1; i < items.size() ; i++) {
@@ -78,9 +76,7 @@ public class RuleInProgress {
                 return Collections.emptyList();
             }
         }
-        RawSyntaxNode[] nodes = new RawSyntaxNode[length + 1];
-        System.arraycopy(syntaxNodes, 0, nodes, 0, length);
-        nodes[length] = node;
+        AppendableList<RawSyntaxNode> nodes = this.syntaxNodes.append(node);
         return Collections.singletonList(new RuleInProgress(target, items, offset + 1, nodes));
     }
 
@@ -107,9 +103,7 @@ public class RuleInProgress {
         if (!token.getType().matches(currentItem.getValue())) {
             return Collections.emptyList();
         }
-        RawSyntaxNode[] newSyntaxNodes = new RawSyntaxNode[syntaxNodes.length + 1];
-        System.arraycopy(syntaxNodes, 0, newSyntaxNodes, 0, syntaxNodes.length);
-        newSyntaxNodes[syntaxNodes.length] = new TerminalNode<TokenProperties>(currentItem.getValue(), currentItem.getName(), preface, token);
+        AppendableList<RawSyntaxNode> newSyntaxNodes = this.syntaxNodes.append(new TerminalNode<TokenProperties>(currentItem.getValue(), currentItem.getName(), preface, token));
         return Collections.singletonList(new RuleInProgress(target, items, offset + 1, newSyntaxNodes));
     }
 
@@ -118,7 +112,8 @@ public class RuleInProgress {
             return Action.reduce;
         }
         TokenProperties tokenType = lookAhead.getType();
-        switch (currentItem.getType()) {
+        final RuleItemType type = currentItem.getType();
+        switch (type) {
             case TERMINAL:
                 return tokenType != null && tokenType.matches(currentItem.first()) ? Action.shift : Action.none;
             case NON_TERMINAL:
@@ -126,7 +121,7 @@ public class RuleInProgress {
             case COMPOUND:
                 return currentItem.hasEmptyDerivation() || tokenType != null && tokenType.matches(currentItem.first()) ? Action.expand : Action.none;
             default:
-                throw new IllegalArgumentException("Unexpected item type: " + currentItem.getType());
+                throw new IllegalArgumentException("Unexpected item type: " + type);
         }
     }
 
@@ -171,7 +166,7 @@ public class RuleInProgress {
         return target == that.target &&
                 offset == that.offset &&
                 items.equals(that.items) &&
-                Arrays.equals(syntaxNodes, that.syntaxNodes);
+                syntaxNodes.equals(that.syntaxNodes);
     }
 
 
@@ -182,7 +177,7 @@ public class RuleInProgress {
             h = target;
             h = h * 31 + items.hashCode();
             h = h * 31 + offset;
-            h = h * 31 + Arrays.hashCode(syntaxNodes);
+            h = h * 31 + syntaxNodes.hashCode();
             hash = h;
         }
         return h;
