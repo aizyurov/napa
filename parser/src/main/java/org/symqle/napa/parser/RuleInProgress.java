@@ -44,7 +44,8 @@ public class RuleInProgress {
                 return Collections.emptyList();
             } else {
                 List<RuleInProgress>  result = new ArrayList<>(predict.size());
-                for (List<NapaRuleItem> items : predict) {
+                for (int i=0; i<predict.size(); i++) {
+                    List<NapaRuleItem> items = predict.get(i);
                     final RuleInProgress ruleInProgress = new RuleInProgress(currentItem.getValue(), items, 0, NO_NODES);
                     result.add(ruleInProgress);
                 }

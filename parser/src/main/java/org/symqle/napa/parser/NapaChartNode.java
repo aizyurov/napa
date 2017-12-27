@@ -14,7 +14,7 @@ public class NapaChartNode {
 
     public NapaChartNode(final RuleInProgress ruleInProgress, final List<NapaChartNode> enclosing) {
         this.ruleInProgress = ruleInProgress;
-        this.enclosing = Collections.unmodifiableList(enclosing);
+        this.enclosing = enclosing;
     }
 
     public NapaChartNode merge(NapaChartNode other) {
@@ -41,7 +41,8 @@ public class NapaChartNode {
         List<RuleInProgress> predicted = ruleInProgress.predict(lookAhead, grammar);
         List<NapaChartNode> newNodes = new ArrayList<>(predicted.size());
         List<NapaChartNode> thisNode = Collections.singletonList(this);
-        for (RuleInProgress rule: predicted) {
+        for (int i=0; i<predicted.size(); i++) {
+            RuleInProgress rule = predicted.get(i);
             newNodes.add(new NapaChartNode(rule, thisNode));
         }
         return newNodes;
