@@ -53,11 +53,14 @@ public class NapaChartNode {
             return Collections.emptyList();
         } else {
             List<NapaChartNode> result = new ArrayList<>();
-            ruleInProgress.reduce(lookAhead, grammar).stream().forEach(s -> {
-                for (NapaChartNode parent: enclosing) {
-                    result.addAll(parent.acceptNonTerminal(s, lookAhead));
+            final List<RawSyntaxNode> reduce = ruleInProgress.reduce(lookAhead, grammar);
+            for (int i=0; i< reduce.size(); i++) {
+                RawSyntaxNode syntaxNode = reduce.get(i);
+                for (int j = 0; j < enclosing.size(); j++) {
+                    NapaChartNode parent = enclosing.get(j);
+                    result.addAll(parent.acceptNonTerminal(syntaxNode, lookAhead));
                 }
-            });
+            }
             return result;
         }
     }

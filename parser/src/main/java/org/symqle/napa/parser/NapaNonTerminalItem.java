@@ -70,7 +70,7 @@ public class NapaNonTerminalItem implements NapaRuleItem {
             for (int i=0; i < napaRules.size(); i++) {
                 NapaRule rule = napaRules.get(i);
                 result.add(rule.getItems());
-         }
+             }
             return result;
         } else {
             return Collections.emptyList();
