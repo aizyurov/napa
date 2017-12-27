@@ -53,6 +53,7 @@ public class RealClassTest extends TestCase {
         {
             List<SyntaxTree> forest = g.parse("CompilationUnit", new InputStreamReader(new BufferedInputStream(getClass().getClassLoader().getResourceAsStream("ManyStringsConcat.txt"))));
             Assert.assertEquals(1, forest.size());
+            System.out.println(g.stats());
         }
     }
 

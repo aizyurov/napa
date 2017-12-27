@@ -235,11 +235,13 @@ public class AnalyzerTest extends TestCase {
         String grammar = "T : {A} 'x' | {B} 'y'; A : 'a'; B : 'a' ;";
         String source = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaay";
         CompiledGrammar g = new GaGrammar().compile(new StringReader(grammar));
-        List<SyntaxTree> forest = new Parser(g).parse("T", new StringReader(source));
+        final Parser parser = new Parser(g);
+        List<SyntaxTree> forest = parser.parse("T", new StringReader(source));
         Assert.assertEquals(1, forest.size());
         SyntaxTree tree = forest.iterator().next();
         Assert.assertEquals("B", tree.getChildren().get(0).getName());
         System.out.println("Tree size: " + tree.treeSize());
+        System.out.println(parser.stats());
 
     }
 
