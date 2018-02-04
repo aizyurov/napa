@@ -1,4 +1,4 @@
-package org.symqle.napa.grammar;
+package org.symqle.java.lexer;
 
 import junit.framework.Assert;
 import junit.framework.TestCase;
@@ -134,16 +134,16 @@ public class RegexpParsingTest extends TestCase {
             for (Token<Set<String>> token = tokenizer.nextToken(); token.getType() != null; token = tokenizer.nextToken()) {
                 switch (i++) {
                     case 0:
-                        Assert.assertEquals(token.getType(), Collections.emptySet());
+                        assertEquals(token.getType(), Collections.emptySet());
                         break;
                     case 1:
-                        Assert.assertEquals(token.getType(), Collections.singleton(whitespace));
+                        assertEquals(token.getType(), Collections.singleton(whitespace));
                         break;
                     case 2:
-                        Assert.assertEquals(token.getType(), Collections.singleton(identifier));
+                        assertEquals(token.getType(), Collections.singleton(identifier));
                         break;
                     default:
-                        Assert.fail("Too many tokens");
+                        fail("Too many tokens");
                 }
             }
         }
@@ -155,10 +155,10 @@ public class RegexpParsingTest extends TestCase {
             for (Token<Set<String>> token = tokenizer.nextToken(); token.getType() != null; token = tokenizer.nextToken()) {
                 switch (i++) {
                     case 0:
-                        Assert.assertEquals(token.getType(), Collections.emptySet());
+                        assertEquals(token.getType(), Collections.emptySet());
                         break;
                     default:
-                        Assert.fail("Too many tokens");
+                        fail("Too many tokens");
                 }
                 System.out.println(token);
             }

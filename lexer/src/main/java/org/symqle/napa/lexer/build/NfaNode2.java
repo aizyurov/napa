@@ -12,13 +12,11 @@ import java.util.Set;
 class NfaNode2 {
 
     private final Set<Integer> tags;
-    protected Set<NfaNode1> emptyEdges = new HashSet<>();
+    private final List<Edge> edges = new ArrayList<>();
 
     public NfaNode2(Set<Integer> tags) {
         this.tags = new HashSet<>(tags);
     }
-
-    private final List<Edge> edges = new ArrayList<>();
 
     public void addEdge(Edge edge) {
         edges.add(edge);

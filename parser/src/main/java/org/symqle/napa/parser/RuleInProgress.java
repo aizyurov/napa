@@ -43,13 +43,28 @@ public class RuleInProgress {
             List<RuleInProgress>  result = new ArrayList<>(size);
             for (int i = 0; i< size; i++) {
                 List<NapaRuleItem> items = predict.get(i);
-                final RuleInProgress ruleInProgress = new RuleInProgress(currentItem.getValue(), items, 0, NO_NODES);
-                result.add(ruleInProgress);
+                if (canBeEmptyOrStartWith(items, lookAhead)) {
+                    final RuleInProgress ruleInProgress = new RuleInProgress(currentItem.getValue(), items, 0, NO_NODES);
+                    result.add(ruleInProgress);
+                }
             }
             return result;
         } else {
             return Collections.emptyList();
         }
+    }
+
+    private boolean canBeEmptyOrStartWith(List<NapaRuleItem> tested, Token<TokenProperties> lookAhead) {
+        final TokenProperties type = lookAhead.getType();
+        for (int i=0; i<tested.size(); i++) {
+            if (type != null && type.matches(tested.get(i).first())) {
+                return true;
+            }
+            if (!tested.get(i).hasEmptyDerivation()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public List<RawSyntaxNode> reduce(Token<TokenProperties> lookAhead, CompiledGrammar grammar) {

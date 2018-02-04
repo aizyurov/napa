@@ -850,9 +850,9 @@ UnaryExpressionNotPlusMinus :
 # 15.16. Cast Expressions
 
 CastExpression :
-'(' PrimitiveType ')' UnaryExpression
-'(' ReferenceType {AdditionalBound} ')' UnaryExpressionNotPlusMinus
-'(' ReferenceType {AdditionalBound} ')' LambdaExpression ;
+    '(' PrimitiveType ')' UnaryExpression
+|   '(' ReferenceType {AdditionalBound} ')' UnaryExpressionNotPlusMinus
+|   '(' ReferenceType {AdditionalBound} ')' LambdaExpression ;
 
 
 # 15.17. Multiplicative Operators

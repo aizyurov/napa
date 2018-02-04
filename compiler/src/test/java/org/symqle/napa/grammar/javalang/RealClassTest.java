@@ -28,26 +28,54 @@ public class RealClassTest extends TestCase {
 
 
     public void testEDS() throws Exception {
-        System.out.println("=== Benchmark ===");
-        for (int i=0; i< 50; i++)
-        {
-            final long startTs = System.currentTimeMillis();
-            List<SyntaxTree> forest = g.parse("CompilationUnit", new InputStreamReader(new BufferedInputStream(getClass().getClassLoader().getResourceAsStream("EnvironmentDeploymentService.txt"))));
-            Assert.assertEquals(1, forest.size());
-            System.out.println(System.currentTimeMillis() -startTs);
-        }
-        System.out.println(g.stats());
-        System.out.println("=== Benchmark end ===");
+//        System.out.println("=== Benchmark ===");
+//        for (int i=0; i< 50; i++)
+//        {
+//            final long startTs = System.currentTimeMillis();
+//            List<SyntaxTree> forest = g.parse("CompilationUnit", new InputStreamReader(new BufferedInputStream(getClass().getClassLoader().getResourceAsStream("EnvironmentDeploymentService.txt"))));
+//            Assert.assertEquals(1, forest.size());
+//            System.out.println(System.currentTimeMillis() -startTs);
+//        }
+//        System.out.println(g.stats());
+//        System.out.println("=== Benchmark end ===");
         {
             List<SyntaxTree> forest = g.parse("CompilationUnit", new InputStreamReader(new BufferedInputStream(getClass().getClassLoader().getResourceAsStream("EnvironmentDeploymentService.txt"))));
             Assert.assertEquals(1, forest.size());
             SyntaxTree tree = forest.get(0);
             System.out.println("Tree size: " + tree.treeSize());
+            System.out.println(g.stats());
 
 
             tree.print(new FileOutputStream("master.tree"));
 
         }
+    }
+
+    public void testAbstractList() throws Exception {
+        List<SyntaxTree> forest = g.parse("CompilationUnit", new InputStreamReader(new BufferedInputStream(getClass().getClassLoader().getResourceAsStream("AbstractList.j8"))));
+        Assert.assertEquals(1, forest.size());
+        SyntaxTree tree = forest.get(0);
+        System.out.println("Tree size: " + tree.treeSize());
+        System.out.println(g.stats());
+
+    }
+
+    public void testHashMap() throws Exception {
+        List<SyntaxTree> forest = g.parse("CompilationUnit", new InputStreamReader(new BufferedInputStream(getClass().getClassLoader().getResourceAsStream("HashMap.j8"))));
+        Assert.assertEquals(1, forest.size());
+        SyntaxTree tree = forest.get(0);
+        System.out.println("Tree size: " + tree.treeSize());
+        System.out.println(g.stats());
+
+    }
+
+    public void testConcurrentHashMap() throws Exception {
+        List<SyntaxTree> forest = g.parse("CompilationUnit", new InputStreamReader(new BufferedInputStream(getClass().getClassLoader().getResourceAsStream("ConcurrentHashMap.j8"))));
+        Assert.assertEquals(1, forest.size());
+        SyntaxTree tree = forest.get(0);
+        System.out.println("Tree size: " + tree.treeSize());
+        System.out.println(g.stats());
+
     }
 
     public void testManyStringsConcat() throws Exception {

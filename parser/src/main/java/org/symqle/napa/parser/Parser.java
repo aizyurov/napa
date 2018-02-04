@@ -20,9 +20,12 @@ public class Parser {
     private int maxWorkset = 0;
     private int maxComplexity = 0;
     private int totalIterations= 0;
+    private int predictCount = 0;
+    private int reduceCount = 0;
+    private int shiftCount = 0;
+    private int expandCount = 0;
     private int tokenCount = 0;
     private int lineCount = 0;
-    private int totalSyntaxTreeNodes = 0;
     private long parseTime = 0;
 
 
@@ -74,6 +77,7 @@ public class Parser {
             }
             int iterations = 0;
 //            System.out.println("Workset size: " + workSet.size());
+//            System.out.println("=== " + nextToken.getText() + " ===");
 
             workSetCopy.clear();
             workSetCopy.putAll(workSet);
@@ -90,13 +94,22 @@ public class Parser {
                 }
                 RuleInProgress nextRule = workSet.keySet().iterator().next();
                 NapaChartNode nextNode = workSet.remove(nextRule);
+//                System.out.println("-> " + nextRule.toString(grammar));
                 List<NapaChartNode> processingResult;
                 switch(nextNode.getRuleInProgress().availableAction(nextToken)) {
                     case expand:
                         processingResult = nextNode.expand(nextToken);
+                        expandCount += processingResult.size();
+//                        for (NapaChartNode node: processingResult) {
+//                            System.out.println("expand <- " + node.getRuleInProgress().toString(grammar));
+//                        }
                         break;
                     case predict:
                         processingResult = nextNode.predict(nextToken, grammar);
+                        predictCount += processingResult.size();
+//                        for (NapaChartNode node: processingResult) {
+//                            System.out.println("predict <- " + node.getRuleInProgress().toString(grammar));
+//                        }
                         break;
                     case reduce:
                         if (nextNode.getEnclosing().isEmpty()) {
@@ -106,6 +119,10 @@ public class Parser {
                             processingResult = Collections.emptyList();
                         } else {
                             processingResult = nextNode.reduce(nextToken, grammar);
+//                            for (NapaChartNode node: processingResult) {
+//                                System.out.println("reduce <- " + node.getRuleInProgress().toString(grammar));
+//                            }
+                            reduceCount += processingResult.size();
                         }
                         break;
                     case shift:
@@ -149,7 +166,6 @@ public class Parser {
             if (nextToken.getType() == null) {
                 lineCount += nextToken.getLine();
                 parseTime += (System.currentTimeMillis() - startTime);
-                totalSyntaxTreeNodes += syntaxTreeCandidates.stream().mapToInt(RawSyntaxNode::treeSize).sum();
                 return syntaxTreeCandidates.stream().map(s -> s.toSyntaxTreeNode(null)).collect(Collectors.toList());
             }
             maxComplexity = Math.max(iterations, maxComplexity);
@@ -171,6 +187,7 @@ public class Parser {
                 ArrayList<Token<TokenProperties>> prefaceCopy = new ArrayList<>(preface);
                 for (NapaChartNode candidate : shiftCandidates.values()) {
                     List<NapaChartNode> shifted = candidate.shift(nextToken, prefaceCopy);
+                    shiftCount += shifted.size();
                     for (NapaChartNode node : shifted) {
                         RuleInProgress ruleInProgress = node.getRuleInProgress();
                         workSet.put(ruleInProgress, node.merge(workSet.get(ruleInProgress)));
@@ -214,7 +231,9 @@ public class Parser {
     }
 
     public Stats stats() {
-        return new Stats(maxWorkset, maxComplexity, totalIterations, tokenCount, lineCount, totalSyntaxTreeNodes, parseTime);
+        return new Stats(maxWorkset, maxComplexity, totalIterations,
+                predictCount, reduceCount, shiftCount, expandCount,
+                tokenCount, lineCount, parseTime);
     }
 
 
@@ -222,18 +241,26 @@ public class Parser {
         private final int maxWorkset;
         private final int maxComplexity;
         private final int totalIterations;
+        private final int predictCount;
+        private final int reduceCount;
+        private final int shiftCount;
+        private final int expandCount;
         private final int tokenCount;
         private final int lineCount;
-        private final int totalSyntaxTreeNodes;
         private final long parseTime;
 
-        public Stats(final int maxWorkset, final int maxComplexity, final int totalIterations, final int tokenCount, final int lineCount, final int totalSyntaxTreeNodes, final long parseTime) {
+        public Stats(int maxWorkset, int maxComplexity, int totalIterations,
+                     int predictCount, int reduceCount, int shiftCount,
+                     int expandCount, int tokenCount, int lineCount, long parseTime) {
             this.maxWorkset = maxWorkset;
             this.maxComplexity = maxComplexity;
             this.totalIterations = totalIterations;
+            this.predictCount = predictCount;
+            this.reduceCount = reduceCount;
+            this.shiftCount = shiftCount;
+            this.expandCount = expandCount;
             this.tokenCount = tokenCount;
             this.lineCount = lineCount;
-            this.totalSyntaxTreeNodes = totalSyntaxTreeNodes;
             this.parseTime = parseTime;
         }
 
@@ -257,9 +284,6 @@ public class Parser {
             return lineCount;
         }
 
-        public int getTotalSyntaxTreeNodes() {
-            return totalSyntaxTreeNodes;
-        }
 
         public long getParseTime() {
             return parseTime;
@@ -270,9 +294,12 @@ public class Parser {
             return "maxWorkset=" + maxWorkset +
                     "\nmaxComplexity=" + maxComplexity +
                     "\ntotalIterations=" + totalIterations +
+                    "\npredictCount=" + predictCount +
+                    "\nreduceCount=" + reduceCount +
+                    "\nshiftCount=" + shiftCount +
+                    "\nexpandCount=" + expandCount +
                     "\ntokenCount=" + tokenCount +
                     "\nlineCount=" + lineCount +
-                    "\ntotalSyntaxTreeNodes=" + totalSyntaxTreeNodes +
                     "\nparseTime=" + parseTime;
         }
     }
