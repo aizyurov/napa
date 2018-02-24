@@ -30,23 +30,23 @@ public class RealClassTest extends TestCase {
     public void testEDS() throws Exception {
         System.out.println("=== Benchmark ===");
         final long startTs = System.currentTimeMillis();
-        for (int i=0; i< 50; i++)
+        for (int i=0; i< 100; i++)
         {
             final Parser g = JavaGrammar.createParser();
-            List<SyntaxTree> forest = this.g.parse("CompilationUnit", new InputStreamReader(new BufferedInputStream(getClass().getClassLoader().getResourceAsStream("EnvironmentDeploymentService.txt"))));
+            List<SyntaxTree> forest = g.parse("CompilationUnit", new InputStreamReader(new BufferedInputStream(getClass().getClassLoader().getResourceAsStream("EnvironmentDeploymentService.txt"))));
             Assert.assertEquals(1, forest.size());
         }
-        System.out.println(System.currentTimeMillis() -startTs);
+        System.out.println("=== " + (System.currentTimeMillis() -startTs));
         System.out.println("=== Benchmark end ===");
         {
-            List<SyntaxTree> forest = g.parse("CompilationUnit", new InputStreamReader(new BufferedInputStream(getClass().getClassLoader().getResourceAsStream("EnvironmentDeploymentService.txt"))));
+            List<SyntaxTree> forest = this.g.parse("CompilationUnit", new InputStreamReader(new BufferedInputStream(getClass().getClassLoader().getResourceAsStream("EnvironmentDeploymentService.txt"))));
             Assert.assertEquals(1, forest.size());
             SyntaxTree tree = forest.get(0);
             System.out.println("Tree size: " + tree.treeSize());
-            System.out.println(g.stats());
+            System.out.println(this.g.stats());
 
 
-            tree.print(new FileOutputStream("master.tree"));
+            tree.print(new FileOutputStream("lexer2.tree"));
 
         }
     }

@@ -1,12 +1,17 @@
 package org.symqle.napa.lexer.build;
 
 import java.util.BitSet;
+import java.util.stream.IntStream;
 
 /**
  * Created by aizyurov on 9/27/17.
  */
 public class CharacterSet {
     private BitSet bitSet = new BitSet(Character.MAX_VALUE + 1);
+
+    public IntStream stream() {
+        return bitSet.stream();
+    }
 
     @Override
     public boolean equals(Object o) {
