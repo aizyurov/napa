@@ -29,14 +29,14 @@ public class RealClassTest extends TestCase {
 
     public void testEDS() throws Exception {
         System.out.println("=== Benchmark ===");
-        for (int i=0; i< 50; i++)
+        final long startTs = System.currentTimeMillis();
+        for (int i=0; i< 100; i++)
         {
-            final long startTs = System.currentTimeMillis();
             final Parser g = JavaGrammar.createParser();
             List<SyntaxTree> forest = g.parse("CompilationUnit", new InputStreamReader(new BufferedInputStream(getClass().getClassLoader().getResourceAsStream("EnvironmentDeploymentService.txt"))));
             Assert.assertEquals(1, forest.size());
-            System.out.println("=== " + (System.currentTimeMillis() -startTs));
         }
+        System.out.println("=== " + (System.currentTimeMillis() -startTs));
         System.out.println("=== Benchmark end ===");
         {
             List<SyntaxTree> forest = this.g.parse("CompilationUnit", new InputStreamReader(new BufferedInputStream(getClass().getClassLoader().getResourceAsStream("EnvironmentDeploymentService.txt"))));
