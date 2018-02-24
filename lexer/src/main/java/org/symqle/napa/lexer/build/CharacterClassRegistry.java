@@ -1,10 +1,6 @@
 package org.symqle.napa.lexer.build;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 
 /**
  * @author lvovich
@@ -46,20 +42,20 @@ class CharacterClassRegistry {
     }
 
     private void init() {
+        Map<Character, List<CharacterSet>> characterClassMap = new HashMap<>();
+        for (CharacterSet characterSet: allCharacterSets) {
+            characterSet.stream().forEach(index -> {
+                final Character key = Character.valueOf((char) index);
+                final List<CharacterSet> characterSets = characterClassMap.getOrDefault(key, new ArrayList<>());
+                characterSets.add(characterSet);
+                characterClassMap.put(key, characterSets);
+            });
+        }
         for (char c = Character.MIN_VALUE; c < Character.MAX_VALUE; c++) {
-            addChar(c);
+            characterClasses[c] = indexOf(new ImmutableSet<>(characterClassMap.getOrDefault(c, new ArrayList<>())));
         }
-        addChar(Character.MAX_VALUE);
-    }
-
-    private void addChar(char c) {
-        Set<CharacterSet> characterSets = new HashSet<>();
-        for (CharacterSet candidate: allCharacterSets) {
-            if (candidate.contains(c)) {
-                characterSets.add(candidate);
-            }
-        }
-        characterClasses[c] = indexOf(new ImmutableSet<>(characterSets));
+        char c = Character.MAX_VALUE;
+        characterClasses[c] = indexOf(new ImmutableSet<>(characterClassMap.getOrDefault(c, new ArrayList<>())));
     }
 
     public int classOf(char c) {
@@ -80,8 +76,8 @@ class CharacterClassRegistry {
 
         private Set<T> theSet;
 
-        public ImmutableSet(final Set<T> theSet) {
-            this.theSet = theSet;
+        public ImmutableSet(final Collection<T> theSet) {
+            this.theSet = new HashSet<>(theSet);
         }
 
         @Override

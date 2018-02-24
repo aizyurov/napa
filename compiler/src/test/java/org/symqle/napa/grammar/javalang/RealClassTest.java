@@ -28,16 +28,16 @@ public class RealClassTest extends TestCase {
 
 
     public void testEDS() throws Exception {
-//        System.out.println("=== Benchmark ===");
-//        for (int i=0; i< 50; i++)
-//        {
-//            final long startTs = System.currentTimeMillis();
-//            List<SyntaxTree> forest = g.parse("CompilationUnit", new InputStreamReader(new BufferedInputStream(getClass().getClassLoader().getResourceAsStream("EnvironmentDeploymentService.txt"))));
-//            Assert.assertEquals(1, forest.size());
-//            System.out.println(System.currentTimeMillis() -startTs);
-//        }
-//        System.out.println(g.stats());
-//        System.out.println("=== Benchmark end ===");
+        System.out.println("=== Benchmark ===");
+        for (int i=0; i< 50; i++)
+        {
+            final long startTs = System.currentTimeMillis();
+            List<SyntaxTree> forest = g.parse("CompilationUnit", new InputStreamReader(new BufferedInputStream(getClass().getClassLoader().getResourceAsStream("EnvironmentDeploymentService.txt"))));
+            Assert.assertEquals(1, forest.size());
+            System.out.println(System.currentTimeMillis() -startTs);
+        }
+        System.out.println(g.stats());
+        System.out.println("=== Benchmark end ===");
         {
             List<SyntaxTree> forest = g.parse("CompilationUnit", new InputStreamReader(new BufferedInputStream(getClass().getClassLoader().getResourceAsStream("EnvironmentDeploymentService.txt"))));
             Assert.assertEquals(1, forest.size());
@@ -46,7 +46,7 @@ public class RealClassTest extends TestCase {
             System.out.println(g.stats());
 
 
-            tree.print(new FileOutputStream("master.tree"));
+            tree.print(new FileOutputStream("lexer2.tree"));
 
         }
     }

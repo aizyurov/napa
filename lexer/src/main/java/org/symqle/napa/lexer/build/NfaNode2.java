@@ -1,10 +1,7 @@
 package org.symqle.napa.lexer.build;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Created by aizyurov on 9/27/17.
@@ -12,18 +9,24 @@ import java.util.Set;
 class NfaNode2 {
 
     private final Set<Integer> tags;
-    private final List<Edge> edges = new ArrayList<>();
+    private final Map<NfaNode2, CharacterSet> edges = new HashMap<>();
 
     public NfaNode2(Set<Integer> tags) {
         this.tags = new HashSet<>(tags);
     }
 
     public void addEdge(Edge edge) {
-        edges.add(edge);
+
+        final CharacterSet characterSet = edges.get(edge.getTo());
+        if (characterSet == null) {
+            edges.put(edge.getTo(), edge.getCharacterSet());
+        } else {
+            edges.put(edge.getTo(), CharacterSet.union(characterSet, edge.getCharacterSet()));
+        }
     }
 
     public List<Edge> getEdges() {
-        return Collections.unmodifiableList(edges);
+        return edges.entrySet().stream().map(e -> new Edge(e.getValue(), e.getKey())).collect(Collectors.toList());
     }
 
     public Set<Integer> getTags() {
