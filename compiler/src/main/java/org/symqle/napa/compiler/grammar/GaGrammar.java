@@ -98,7 +98,8 @@ public class GaGrammar {
             }
 
             System.out.println("Prepare compilation: "  + (System.currentTimeMillis() - beforeStart));
-            PackedDfa<Set<Integer>> packedDfa= new Lexer<Integer>(tokenDefinitions).compile();
+            final long beforeLexer = System.currentTimeMillis();
+            PackedDfa<Set<Integer>> packedDfa = new Lexer<Integer>(tokenDefinitions).compile();
             PackedDfa<TokenProperties> napaDfa = packedDfa.transform(s -> {
                 Set<Integer> usedDiff = new HashSet<Integer>(usedTags);
                 usedDiff.retainAll(s);
@@ -109,7 +110,7 @@ public class GaGrammar {
                 return new TokenProperties(ignoreOnly, ignorable, s);
             });
             napaDfa.printStats();
-            System.out.println("Lexer time: "  + (System.currentTimeMillis() - beforeStart));
+            System.out.println("Lexer time: "  + (System.currentTimeMillis() - beforeLexer));
             return new Assembler(dictionary.nonTerminals(), terminals, compiledRules, napaDfa).assemble();
         } finally {
             System.err.println("Grammar compiled in " + (System.currentTimeMillis() - beforeStart));
@@ -179,11 +180,10 @@ public class GaGrammar {
         return stringBuilder.toString();
     }
 
+    private final PackedDfa<GaTokenType> napaDfa = new GaLexer().compile();
+
     private RawSyntaxNode parse(Reader source) throws IOException {
-        final long startTs = System.currentTimeMillis();
-        PackedDfa<GaTokenType> dfa = new GaLexer().compile();
-        System.out.println("NApa dfa time: "  + (System.currentTimeMillis() - startTs));
-        tokenizer = new AsyncTokenizer<>(new GaTokenizer(new DfaTokenizer<>(dfa, source, GaTokenType.ERROR)));
+        tokenizer = new AsyncTokenizer<>(new GaTokenizer(new DfaTokenizer<>(napaDfa, source, GaTokenType.ERROR)));
         nextToken = tokenizer.nextToken();
         return grammar();
     }

@@ -32,18 +32,18 @@ public class RealClassTest extends TestCase {
         for (int i=0; i< 50; i++)
         {
             final long startTs = System.currentTimeMillis();
+            final Parser g = JavaGrammar.createParser();
             List<SyntaxTree> forest = g.parse("CompilationUnit", new InputStreamReader(new BufferedInputStream(getClass().getClassLoader().getResourceAsStream("EnvironmentDeploymentService.txt"))));
             Assert.assertEquals(1, forest.size());
-            System.out.println(System.currentTimeMillis() -startTs);
+            System.out.println("=== " + (System.currentTimeMillis() -startTs));
         }
-        System.out.println(g.stats());
         System.out.println("=== Benchmark end ===");
         {
-            List<SyntaxTree> forest = g.parse("CompilationUnit", new InputStreamReader(new BufferedInputStream(getClass().getClassLoader().getResourceAsStream("EnvironmentDeploymentService.txt"))));
+            List<SyntaxTree> forest = this.g.parse("CompilationUnit", new InputStreamReader(new BufferedInputStream(getClass().getClassLoader().getResourceAsStream("EnvironmentDeploymentService.txt"))));
             Assert.assertEquals(1, forest.size());
             SyntaxTree tree = forest.get(0);
             System.out.println("Tree size: " + tree.treeSize());
-            System.out.println(g.stats());
+            System.out.println(this.g.stats());
 
 
             tree.print(new FileOutputStream("lexer2.tree"));

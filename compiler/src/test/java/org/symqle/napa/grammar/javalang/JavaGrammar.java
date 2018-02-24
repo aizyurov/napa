@@ -13,7 +13,7 @@ public class JavaGrammar {
 
     private static Parser parser = createParser();
 
-    private static Parser createParser() {
+    public static Parser createParser() {
         try {
             return new Parser(new GaGrammar().compile(new InputStreamReader(JavaGrammar.class.getClassLoader().getResourceAsStream("java.napa"), "UTF-8")));
         } catch (IOException e) {
