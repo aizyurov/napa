@@ -7,10 +7,7 @@ import org.symqle.napa.gparser.*;
 import org.symqle.napa.lexer.TokenDefinition;
 import org.symqle.napa.lexer.build.Lexer;
 import org.symqle.napa.parser.*;
-import org.symqle.napa.tokenizer.DfaTokenizer;
-import org.symqle.napa.tokenizer.PackedDfa;
-import org.symqle.napa.tokenizer.Token;
-import org.symqle.napa.tokenizer.Tokenizer;
+import org.symqle.napa.tokenizer.*;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -36,6 +33,7 @@ public class GaGrammar {
         try {
             RawSyntaxNode rawSyntaxNode = parse(source);
             SyntaxTree tree = rawSyntaxNode.toSyntaxTreeNode(null);
+            System.out.println("Parse grammar: "  + (System.currentTimeMillis() - beforeStart));
             final Dictionary dictionary = new Dictionary();
 
             List<SyntaxTree> patterns = tree.find("patternDef");
@@ -99,6 +97,7 @@ public class GaGrammar {
                 tokenDefinitions.add(new TokenDefinition<Integer>(normalize(regexp), i, regexp.startsWith("'")));
             }
 
+            System.out.println("Prepare compilation: "  + (System.currentTimeMillis() - beforeStart));
             PackedDfa<Set<Integer>> packedDfa= new Lexer<Integer>(tokenDefinitions).compile();
             PackedDfa<TokenProperties> napaDfa = packedDfa.transform(s -> {
                 Set<Integer> usedDiff = new HashSet<Integer>(usedTags);
@@ -110,6 +109,7 @@ public class GaGrammar {
                 return new TokenProperties(ignoreOnly, ignorable, s);
             });
             napaDfa.printStats();
+            System.out.println("Lexer time: "  + (System.currentTimeMillis() - beforeStart));
             return new Assembler(dictionary.nonTerminals(), terminals, compiledRules, napaDfa).assemble();
         } finally {
             System.err.println("Grammar compiled in " + (System.currentTimeMillis() - beforeStart));
@@ -180,8 +180,10 @@ public class GaGrammar {
     }
 
     private RawSyntaxNode parse(Reader source) throws IOException {
+        final long startTs = System.currentTimeMillis();
         PackedDfa<GaTokenType> dfa = new GaLexer().compile();
-        tokenizer = new GaTokenizer(new DfaTokenizer<>(dfa, source, GaTokenType.ERROR));
+        System.out.println("NApa dfa time: "  + (System.currentTimeMillis() - startTs));
+        tokenizer = new AsyncTokenizer<>(new GaTokenizer(new DfaTokenizer<>(dfa, source, GaTokenType.ERROR)));
         nextToken = tokenizer.nextToken();
         return grammar();
     }
