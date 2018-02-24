@@ -95,7 +95,12 @@ public class RegexpParsingTest extends TestCase {
         List<TokenDefinition<String>> tokenDefinitions = new ArrayList<>();
         tokenDefinitions.addAll(meaningful.stream().map(x -> new TokenDefinition<>(quote(x), quote(x))).collect(Collectors.toList()));
         tokenDefinitions.addAll(ignored.stream().map(x -> new TokenDefinition<>(quote(x), quote(x))).collect(Collectors.toList()));
-        PackedDfa<Set<String>> packedDfa = new Lexer<>(tokenDefinitions).compile();
+        PackedDfa<Set<String>> packedDfa = null;
+        for (int i = 0; i<50; i++) {
+            final long startTs = System.currentTimeMillis();
+            packedDfa = new Lexer<>(tokenDefinitions).compile();
+            System.out.println("Lexer time: " + (System.currentTimeMillis() - startTs));
+        }
         packedDfa.printStats();
         System.out.println("==================");
 //        Reader reader = new StringReader("public  class  Lexer {}");
