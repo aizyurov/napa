@@ -14,55 +14,17 @@ class Nfa2 {
         this.nodes = nodes;
     }
 
-    public Dfa toDfa() {
-
-        Set<CharacterSet> allCharacterSets = nodes.stream().flatMap(x -> x.getEdges().stream()).map(NfaNode2.Edge::getCharacterSet).collect(Collectors.toSet());
-        CharacterClassRegistry registry = new CharacterClassRegistry(allCharacterSets);
-
-        Map<Set<NfaNode2>, DfaNode> dfaNodeMap = new LinkedHashMap<>();
-        Set<Set<NfaNode2>> processed = new LinkedHashSet<>();
-        Set<Set<NfaNode2>> queue = new HashSet<>();
-
-
-        Set<NfaNode2> startSet = Collections.singleton(nodes.iterator().next());
-        queue.add(startSet);
-        DfaNode startDfa = new DfaNode(collectTags(startSet));
-        dfaNodeMap.put(startSet, startDfa);
-
-        while (!queue.isEmpty()) {
-            Set<NfaNode2> nfaSet = queue.iterator().next();
-            queue.remove(nfaSet);
-            processed.add(nfaSet);
-            Map<Integer, Set<NfaNode2>> nodeSetsByCharacterClass = new HashMap<>();
-            for (NfaNode2 nfaNode : nfaSet) {
-                for (NfaNode2.Edge edge : nfaNode.getEdges()) {
-                    Set<Integer> characterClasses = registry.getCharacterClasses(edge.getCharacterSet());
-                    for (Integer characterClass : characterClasses) {
-                        Set<NfaNode2> nodeSet = nodeSetsByCharacterClass.getOrDefault(characterClass, new HashSet<>());
-                        nodeSet.add(edge.getTo());
-                        nodeSetsByCharacterClass.put(characterClass, nodeSet);
-                    }
-                }
-            }
-            for (Set<NfaNode2> nfaNodeSet : nodeSetsByCharacterClass.values()) {
-                DfaNode dfaNode = dfaNodeMap.getOrDefault(nfaNodeSet, new DfaNode(collectTags(nfaNodeSet)));
-                dfaNodeMap.put(nfaNodeSet, dfaNode);
-                if (!processed.contains(nfaNodeSet)) {
-                    queue.add(new HashSet<>(nfaNodeSet));
-                }
-            }
-            DfaNode currentDfaNode = dfaNodeMap.get(nfaSet);
-            for (Map.Entry<Integer, Set<NfaNode2>> entry: nodeSetsByCharacterClass.entrySet()) {
-                currentDfaNode.addEdge(entry.getKey(), dfaNodeMap.get(entry.getValue()));
+    public Nfa3 toNfa3() {
+        Map<NfaNode2, NfaNode3> nodeMap = nodes.stream().collect(Collectors.toMap(x -> x, x -> new NfaNode3(x.getTags()), (a,b) -> a, LinkedHashMap::new));
+        for (NfaNode2 node2: nodes) {
+            NfaNode3 node3 = nodeMap.get(node2);
+            for (NfaNode2.Edge edge: node2.getEdges()) {
+                NfaNode3 target = nodeMap.get(edge.getTo());
+                node3.addEdge(target, edge.getCharacterSet());
             }
         }
-        return new Dfa(new ArrayList<>(dfaNodeMap.values()), registry);
+        return new Nfa3(nodeMap.values());
     }
 
-    private Set<Integer> collectTags(final Set<NfaNode2> nfaNodeSet) {
-        return nfaNodeSet.stream()
-                .flatMap(n -> n.getTags().stream())
-                .collect(Collectors.toSet());
-    }
 
 }

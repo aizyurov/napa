@@ -25,6 +25,7 @@ public class Lexer<T> {
     public PackedDfa<Set<T>> compile() {
         return createNfa()
                 .removeEmptyEdges()
+                .toNfa3()
                 .toDfa()
                 .pack()
                 .transform(this::transformTags);
