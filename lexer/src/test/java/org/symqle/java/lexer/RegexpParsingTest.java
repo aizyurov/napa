@@ -1,6 +1,5 @@
 package org.symqle.java.lexer;
 
-import junit.framework.Assert;
 import junit.framework.TestCase;
 import org.symqle.napa.lexer.TokenDefinition;
 import org.symqle.napa.lexer.build.Lexer;
@@ -105,6 +104,28 @@ public class RegexpParsingTest extends TestCase {
             System.out.println(token);
         }
         System.out.println("================");
+    }
+
+    public void testBottlenecks() throws Exception {
+        final String comment = "/[*]([^*]|[*][^/])*[*]/";
+        final String whitespace = "[ \\n\\r\\t]+";
+        List<String> ignored = Arrays.asList(whitespace, comment);
+        String identifier = "[a-zA-Z_][a-zA-Z0-9_]*";
+        String number = "[0-9]+";
+        List<String> separators = Arrays.asList("[.]", ",", ";", "[+]", "-", "[*]", "/", "<", ">", "=", "==", "<=", ">=", "!=", "!", "{", "}");
+        List<String> keywords = Arrays.asList("class", "interface", "package", "extends", "implements", "private", "public", "final", "void", "int", "long", "boolean", "char", "import", "volatile", "transient", "default");
+
+        final List<String> meaningful = new ArrayList<>();
+        meaningful.addAll(keywords);
+        meaningful.addAll(separators);
+        meaningful.add(identifier);
+        meaningful.add(number);
+        List<TokenDefinition<String>> tokenDefinitions = new ArrayList<>();
+        tokenDefinitions.addAll(meaningful.stream().map(x -> new TokenDefinition<>(quote(x), quote(x))).collect(Collectors.toList()));
+        tokenDefinitions.addAll(ignored.stream().map(x -> new TokenDefinition<>(quote(x), quote(x))).collect(Collectors.toList()));
+        for (int i=0; i<100; i++) {
+            PackedDfa<Set<String>> packedDfa = new Lexer<>(tokenDefinitions).compile();
+        }
     }
 
     public void testUnexpected() throws Exception {
