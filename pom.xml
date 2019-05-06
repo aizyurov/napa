@@ -41,7 +41,7 @@
 
     <issueManagement>
       <system>Redmine</system>
-      <url>https://symqle.org/redmine/projects/symqle-tools/issues/</url>
+      <url>https://symqle.org/redmine/projects/napa/issues/</url>
     </issueManagement>
     <ciManagement>
       <system>Jenkins</system>
@@ -69,7 +69,7 @@
 
       <!-- override in settings.xml in release environment -->
       <sitesDeployUrlBase>file:///tmp</sitesDeployUrlBase>
-      <releaseDeployUrl>${sitesDeployUrlBase}/symqle-tools/${project.version}</releaseDeployUrl>
+      <releaseDeployUrl>${sitesDeployUrlBase}/napa/${project.version}</releaseDeployUrl>
     </properties>
 
   <build>
