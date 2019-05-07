@@ -1,10 +1,6 @@
 package org.symqle.napa.lexer.build;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 
 /**
  * @author lvovich
@@ -15,7 +11,7 @@ class CharacterClassRegistry {
 
     private final int[]  characterClasses = new int[1 + Character.MAX_VALUE];
 
-    private final Map<ImmutableSet<CharacterSet>, Integer> index = new HashMap<>();
+    private final Map<ImmutableList<CharacterSet>, Integer> index = new HashMap<>();
 
     private final Map<CharacterSet, Set<Integer>> reverseIndex = new HashMap<>();
 
@@ -31,7 +27,7 @@ class CharacterClassRegistry {
     private void revertIndex() {
         for (CharacterSet characterSet: allCharacterSets) {
             Set<Integer> characterClasses = new TreeSet<>();
-            for (ImmutableSet<CharacterSet> key: index.keySet()) {
+            for (ImmutableList<CharacterSet> key: index.keySet()) {
                 if (key.contains(characterSet)) {
                     Integer setIndex = index.get(key);
                     characterClasses.add(setIndex);
@@ -46,20 +42,20 @@ class CharacterClassRegistry {
     }
 
     private void init() {
+        Map<Character, List<CharacterSet>> characterClassMap = new HashMap<>();
+        for (CharacterSet characterSet: allCharacterSets) {
+            characterSet.stream().forEach(index -> {
+                final Character key = (char) index;
+                final List<CharacterSet> characterSets = characterClassMap.getOrDefault(key, new ArrayList<>());
+                characterSets.add(characterSet);
+                characterClassMap.put(key, characterSets);
+            });
+        }
         for (char c = Character.MIN_VALUE; c < Character.MAX_VALUE; c++) {
-            addChar(c);
+            characterClasses[c] = indexOf(new ImmutableList<>(characterClassMap.getOrDefault(c, new ArrayList<>())));
         }
-        addChar(Character.MAX_VALUE);
-    }
-
-    private void addChar(char c) {
-        Set<CharacterSet> characterSets = new HashSet<>();
-        for (CharacterSet candidate: allCharacterSets) {
-            if (candidate.contains(c)) {
-                characterSets.add(candidate);
-            }
-        }
-        characterClasses[c] = indexOf(new ImmutableSet<>(characterSets));
+        char c = Character.MAX_VALUE;
+        characterClasses[c] = indexOf(new ImmutableList<>(characterClassMap.getOrDefault(c, new ArrayList<>())));
     }
 
     public int classOf(char c) {
@@ -70,26 +66,26 @@ class CharacterClassRegistry {
         return index.size();
     }
 
-    private int indexOf(ImmutableSet<CharacterSet> characterClass) {
+    private int indexOf(ImmutableList<CharacterSet> characterClass) {
         Integer i = this.index.getOrDefault(characterClass, this.index.size());
         index.put(characterClass, i);
         return i;
     }
 
-    private static class ImmutableSet<T> {
+    private static class ImmutableList<T> {
 
-        private Set<T> theSet;
+        private List<T> theList;
 
-        public ImmutableSet(final Set<T> theSet) {
-            this.theSet = theSet;
+        public ImmutableList(final Collection<T> source) {
+            this.theList = new ArrayList<>(source);
         }
 
         @Override
         public boolean equals(final Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
-            final ImmutableSet<?> that = (ImmutableSet<?>) o;
-            return theSet.equals(that.theSet);
+            final ImmutableList<?> that = (ImmutableList<?>) o;
+            return theList.equals(that.theList);
         }
 
         private int hash;
@@ -98,14 +94,14 @@ class CharacterClassRegistry {
         public int hashCode() {
             int h = hash;
             if (h == 0) {
-                h = theSet.hashCode();
+                h = theList.hashCode();
                 hash = h;
             }
             return h;
         }
 
         public boolean contains(final Object o) {
-            return theSet.contains(o);
+            return theList.contains(o);
         }
     }
 
