@@ -8,12 +8,12 @@ import java.util.stream.Collectors;
 /**
  * @author lvovich
  */
-abstract class AbstractNapaCompoundItem implements NapaRuleItem {
+public abstract class AbstractNapaCompoundItem implements NapaRuleItem {
     private final List<RuleItemSequence> options;
     private final BitSet first;
     private final boolean canBeEmpty;
 
-    AbstractNapaCompoundItem(final List<List<NapaRuleItem>> options, boolean canBeEmpty, Set<Integer> first) {
+    public AbstractNapaCompoundItem(final List<List<NapaRuleItem>> options, boolean canBeEmpty, Set<Integer> first) {
         this.options = options.stream().map(RuleItemSequence::new).collect(Collectors.toList());
         this.canBeEmpty = canBeEmpty;
         this.first = new BitSet();

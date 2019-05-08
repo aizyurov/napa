@@ -2,7 +2,6 @@ package org.symqle.napa.grammar.javalang;
 
 import junit.framework.Assert;
 import junit.framework.TestCase;
-import org.symqle.napa.parser.CompiledGrammar;
 import org.symqle.napa.parser.Parser;
 import org.symqle.napa.parser.SyntaxTree;
 
@@ -16,10 +15,10 @@ import java.util.stream.Collectors;
  * Created by aizyurov on 10/28/17.
  */
 public class AnnotationDeclarationTest extends TestCase {
-    private final CompiledGrammar g;
+    private final Parser g;
 
     public AnnotationDeclarationTest() {
-        g = JavaGrammar.getGrammar();
+        g = JavaGrammar.getParser();
     }
 
     public void testAll() throws Exception {
@@ -31,7 +30,7 @@ public class AnnotationDeclarationTest extends TestCase {
     }
 
     private SyntaxTree parse(final String source) throws IOException {
-        List<SyntaxTree> forest = new Parser().parse(g, "AnnotationTypeDeclaration", new StringReader(source));
+        List<SyntaxTree> forest = g.parse("AnnotationTypeDeclaration", new StringReader(source));
         Assert.assertEquals(1, forest.size());
         SyntaxTree tree = forest.iterator().next();
         Assert.assertEquals(source, tree.getSource());

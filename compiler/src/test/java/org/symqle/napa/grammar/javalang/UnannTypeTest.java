@@ -2,7 +2,6 @@ package org.symqle.napa.grammar.javalang;
 
 import junit.framework.Assert;
 import junit.framework.TestCase;
-import org.symqle.napa.parser.CompiledGrammar;
 import org.symqle.napa.parser.Parser;
 import org.symqle.napa.parser.SyntaxTree;
 
@@ -15,10 +14,10 @@ import java.util.List;
  */
 public class UnannTypeTest extends TestCase {
 
-    private final CompiledGrammar g;
+    private final Parser g;
 
     public UnannTypeTest() throws IOException {
-        g = JavaGrammar.getGrammar();
+        g = JavaGrammar.getParser();
     }
 
     public void testPrimitive() throws Exception {
@@ -61,7 +60,7 @@ public class UnannTypeTest extends TestCase {
 
 
     private void runTest(final String source, final String expected) throws IOException {
-        List<SyntaxTree> forest = new Parser().parse(g, expected, new StringReader(source));
+        List<SyntaxTree> forest = g.parse(expected, new StringReader(source));
         Assert.assertEquals(1, forest.size());
         SyntaxTree tree = forest.iterator().next();
         Assert.assertEquals(source, tree.getSource());

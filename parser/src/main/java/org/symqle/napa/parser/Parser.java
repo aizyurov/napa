@@ -15,6 +15,8 @@ import java.util.stream.Collectors;
  */
 public class Parser {
 
+    private final CompiledGrammar compiledGrammar;
+
     private int maxWorkset = 0;
     private int maxComplexity = 0;
     private int totalIterations= 0;
@@ -26,20 +28,26 @@ public class Parser {
     private int lineCount = 0;
     private long parseTime = 0;
 
-    public List<SyntaxTree> parse(final CompiledGrammar grammar, final String target, final Reader reader) throws IOException {
-        return parse(grammar, target, reader, null);
+
+    public Parser(final CompiledGrammar compiledGrammar) throws IOException {
+        this.compiledGrammar = compiledGrammar;
     }
 
-    public List<SyntaxTree> parse(final CompiledGrammar grammar, final String target, final Reader reader, final String filename) throws IOException {
-        return parse(grammar, target, reader, filename, new FailFastSyntaxErrorListener());
+    public List<SyntaxTree> parse(final String target, final Reader reader) throws IOException {
+        return parse(target, reader, null);
     }
 
-    public List<SyntaxTree> parse(final CompiledGrammar grammar, final String target, final Reader reader, final String filename, SyntaxErrorListener errorListener) throws IOException {
-        return parse(grammar, target, reader, filename, errorListener, 500);
+    public List<SyntaxTree> parse(final String target, final Reader reader, final String filename) throws IOException {
+        return parse(target, reader, filename, new FailFastSyntaxErrorListener());
     }
 
-    public List<SyntaxTree> parse(final CompiledGrammar grammar, final String target, final Reader reader, final String filename, SyntaxErrorListener errorListener, final int complexityLimit) throws IOException {
-        final Tokenizer<TokenProperties> tokenizer = grammar.createTokenizer(reader);
+    public List<SyntaxTree> parse(final String target, final Reader reader, final String filename, SyntaxErrorListener errorListener) throws IOException {
+        return parse(target, reader, filename, errorListener, 500);
+    }
+
+    public List<SyntaxTree> parse(final String target, final Reader reader, final String filename, SyntaxErrorListener errorListener, final int complexityLimit) throws IOException {
+        final CompiledGrammar grammar = this.compiledGrammar;
+        final Tokenizer<TokenProperties> tokenizer = new AsyncTokenizer<>(new DfaTokenizer<>(grammar.getTokenizerDfa(), reader, new TokenProperties(false, false, Collections.emptySet())));
 //        final Tokenizer<TokenProperties> tokenizer = new DfaTokenizer<>(grammar.getTokenizerDfa(), reader);
         final Map<RuleInProgress, NapaChartNode> workSet = new LinkedHashMap<>();
         final Map<RuleInProgress, NapaChartNode> workSetCopy = new LinkedHashMap<>();

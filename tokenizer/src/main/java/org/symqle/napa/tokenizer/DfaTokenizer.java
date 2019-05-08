@@ -21,7 +21,7 @@ public class DfaTokenizer<T> implements Tokenizer<T> {
     private List<QueuedCharacter> queue = new ArrayList<>();
     private final T errorTokenType;
 
-    public DfaTokenizer(final PackedDfa<T> dfa, final Reader reader, final T errorTokenType) {
+    public DfaTokenizer(final PackedDfa<T> dfa, final Reader reader, final T errorTokenType) throws IOException {
         this.dfa = dfa;
         this.reader = reader;
         this.errorTokenType = errorTokenType;

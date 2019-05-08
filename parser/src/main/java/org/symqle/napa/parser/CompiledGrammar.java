@@ -1,12 +1,7 @@
 package org.symqle.napa.parser;
 
-import org.symqle.napa.tokenizer.AsyncTokenizer;
-import org.symqle.napa.tokenizer.DfaTokenizer;
 import org.symqle.napa.tokenizer.PackedDfa;
-import org.symqle.napa.tokenizer.Tokenizer;
 
-import java.io.Reader;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -25,8 +20,8 @@ public class CompiledGrammar {
         this.nonTerminals = nonTerminals;
     }
 
-    public Tokenizer<TokenProperties> createTokenizer(Reader reader) {
-        return new AsyncTokenizer<>(new DfaTokenizer<>(tokenizerDfa, reader, new TokenProperties(false, false, Collections.emptySet())));
+    public PackedDfa<TokenProperties> getTokenizerDfa() {
+        return tokenizerDfa;
     }
 
     public List<NapaRule> getNapaRules(int target) {

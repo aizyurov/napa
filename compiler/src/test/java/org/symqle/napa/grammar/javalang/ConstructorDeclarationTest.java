@@ -2,7 +2,6 @@ package org.symqle.napa.grammar.javalang;
 
 import junit.framework.Assert;
 import junit.framework.TestCase;
-import org.symqle.napa.parser.CompiledGrammar;
 import org.symqle.napa.parser.Parser;
 import org.symqle.napa.parser.SyntaxTree;
 
@@ -17,10 +16,10 @@ import java.util.stream.Collectors;
  * Created by aizyurov on 10/28/17.
  */
 public class ConstructorDeclarationTest extends TestCase {
-    private final CompiledGrammar g;
+    private final Parser g;
 
     public ConstructorDeclarationTest() {
-        g = JavaGrammar.getGrammar();
+        g = JavaGrammar.getParser();
     }
 
     public void testBasic() throws Exception {
@@ -57,7 +56,7 @@ public class ConstructorDeclarationTest extends TestCase {
     }
 
     private SyntaxTree parse(final String source) throws IOException {
-        List<SyntaxTree> forest = new Parser().parse(g, "ConstructorDeclaration", new StringReader(source));
+        List<SyntaxTree> forest = g.parse("ConstructorDeclaration", new StringReader(source));
         Assert.assertEquals(1, forest.size());
         SyntaxTree tree = forest.iterator().next();
         Assert.assertEquals(source, tree.getSource());

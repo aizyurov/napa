@@ -16,19 +16,21 @@ import java.util.stream.Collectors;
 public class Assembler implements Vocabulary {
 
     private final String[] nonTerminals;
+    private final String[] terminals;
     private final List<CompiledRule> rules;
     private final PackedDfa<TokenProperties> tokenizerDfa;
     private final Map<RuleItem, Set<Integer>> firstSets = new HashMap<>();
     private final Set<RuleItem> haveEmptyDerivation = new HashSet<>();
 
-    Assembler(final String[] nonTerminals, List<CompiledRule> rules, final PackedDfa<TokenProperties> tokenizerDfa) {
+    public Assembler(final String[] nonTerminals, final String[] terminals, List<CompiledRule> rules, final PackedDfa<TokenProperties> tokenizerDfa) {
         verify(nonTerminals, rules.stream().map(CompiledRule::getTarget).collect(Collectors.toSet()));
         this.nonTerminals = nonTerminals;
+        this.terminals = terminals;
         this.tokenizerDfa = tokenizerDfa;
         this.rules = rules;
     }
 
-    CompiledGrammar assemble() {
+    public CompiledGrammar assemble() {
         Map<Integer, List<CompiledRule>> ruleMap = rules.stream().collect(Collectors.groupingBy(CompiledRule::getTarget));
         Set<RuleItem> allItems = new HashSet<>();
         for (CompiledRule rule: rules) {
@@ -47,6 +49,11 @@ public class Assembler implements Vocabulary {
         }
         System.err.println("Analyser: " + (System.currentTimeMillis() - startTs) );
         System.err.println("Max iterations: " + maxIterations.get());
+        Map<String, Integer> nonTerminalMap = new HashMap<>(nonTerminals.length);
+        for (int i = 0; i < nonTerminals.length; i++) {
+            nonTerminalMap.put(nonTerminals[i], i);
+        }
+
         return new CompiledGrammar(rules.stream().map(x -> x.toNapaRule(this)).collect(Collectors.groupingBy(NapaRule::getTarget)), tokenizerDfa, nonTerminals);
     }
 
@@ -166,9 +173,19 @@ public class Assembler implements Vocabulary {
     }
 
 
+
+    @Override
+    public String getTerminalName(int index) {
+        return terminals[index];
+    }
+
     @Override
     public String getNonTerminalName(int index) {
         return nonTerminals[index];
+    }
+
+    public PackedDfa<TokenProperties> getTokenizerDfa() {
+        return tokenizerDfa;
     }
 
     @Override
