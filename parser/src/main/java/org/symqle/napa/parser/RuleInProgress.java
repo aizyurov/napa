@@ -3,7 +3,6 @@ package org.symqle.napa.parser;
 import org.symqle.napa.tokenizer.Token;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -32,11 +31,11 @@ public class RuleInProgress {
 
     }
 
-    static RuleInProgress startRule(NapaRule rule, CompiledGrammar grammar) {
+    static RuleInProgress startRule(NapaRule rule, Grammar grammar) {
         return new RuleInProgress(rule.getTarget(), rule.getItems(), 0, NO_NODES);
     }
 
-    public List<RuleInProgress> predict(Token<TokenProperties> lookAhead, CompiledGrammar grammar) {
+    public List<RuleInProgress> predict(Token<TokenProperties> lookAhead, Grammar grammar) {
         if (currentItem != null) {
             List<List<NapaRuleItem>> predict = currentItem.predict(lookAhead, grammar);
             final int size = predict.size();
@@ -67,7 +66,7 @@ public class RuleInProgress {
         return true;
     }
 
-    public List<RawSyntaxNode> reduce(Token<TokenProperties> lookAhead, CompiledGrammar grammar) {
+    public List<RawSyntaxNode> reduce(Token<TokenProperties> lookAhead, Grammar grammar) {
         if (currentItem == null) {
             RawSyntaxNode newNode;
             if (syntaxNodes == NO_NODES) {
@@ -141,7 +140,7 @@ public class RuleInProgress {
         }
     }
 
-    public String toString(CompiledGrammar grammar) {
+    public String toString(Grammar grammar) {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(grammar.nonTerminalName(target)).append(" =");
         for (int i = 0; i<items.size(); i++) {

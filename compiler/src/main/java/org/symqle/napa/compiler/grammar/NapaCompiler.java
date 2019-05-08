@@ -110,8 +110,7 @@ public class NapaCompiler {
             });
             napaDfa.printStats();
             System.out.println("Lexer time: "  + (System.currentTimeMillis() - beforeLexer));
-            CompiledGrammar compiledGrammar = new Assembler(dictionary.nonTerminals(), compiledRules, napaDfa).assemble();
-            return new Parser(compiledGrammar);
+            return new Assembler(dictionary.nonTerminals(), compiledRules, napaDfa).assemble();
         } finally {
             System.err.println("Grammar compiled in " + (System.currentTimeMillis() - beforeStart));
         }

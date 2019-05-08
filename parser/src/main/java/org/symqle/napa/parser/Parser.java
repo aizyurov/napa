@@ -1,9 +1,6 @@
 package org.symqle.napa.parser;
 
-import org.symqle.napa.tokenizer.AsyncTokenizer;
-import org.symqle.napa.tokenizer.DfaTokenizer;
-import org.symqle.napa.tokenizer.Token;
-import org.symqle.napa.tokenizer.Tokenizer;
+import org.symqle.napa.tokenizer.*;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -13,9 +10,11 @@ import java.util.stream.Collectors;
 /**
  * @author lvovich
  */
-public class Parser {
+public class Parser implements Grammar {
 
-    private final CompiledGrammar compiledGrammar;
+    private final Map<Integer, List<NapaRule>> napaRules;
+    private final PackedDfa<TokenProperties> tokenizerDfa;
+    private final String[] nonTerminals;
 
     private int maxWorkset = 0;
     private int maxComplexity = 0;
@@ -28,9 +27,10 @@ public class Parser {
     private int lineCount = 0;
     private long parseTime = 0;
 
-
-    public Parser(final CompiledGrammar compiledGrammar) throws IOException {
-        this.compiledGrammar = compiledGrammar;
+    public Parser(Map<Integer, List<NapaRule>> napaRules, PackedDfa<TokenProperties> tokenizerDfa, String[] nonTerminals) {
+        this.napaRules = napaRules;
+        this.tokenizerDfa = tokenizerDfa;
+        this.nonTerminals = nonTerminals;
     }
 
     public List<SyntaxTree> parse(final String target, final Reader reader) throws IOException {
@@ -46,9 +46,9 @@ public class Parser {
     }
 
     public List<SyntaxTree> parse(final String target, final Reader reader, final String filename, SyntaxErrorListener errorListener, final int complexityLimit) throws IOException {
-        final CompiledGrammar grammar = this.compiledGrammar;
-        final Tokenizer<TokenProperties> tokenizer = new AsyncTokenizer<>(new DfaTokenizer<>(grammar.getTokenizerDfa(), reader, new TokenProperties(false, false, Collections.emptySet())));
-//        final Tokenizer<TokenProperties> tokenizer = new DfaTokenizer<>(grammar.getTokenizerDfa(), reader);
+        final Grammar grammar = this;
+        final Tokenizer<TokenProperties> tokenizer = new AsyncTokenizer<>(new DfaTokenizer<>(tokenizerDfa, reader, new TokenProperties(false, false, Collections.emptySet())));
+//        final Tokenizer<TokenProperties> tokenizer = new DfaTokenizer<>(tokenizerDfa, reader, new TokenProperties(false, false, Collections.emptySet()));
         final Map<RuleInProgress, NapaChartNode> workSet = new LinkedHashMap<>();
         final Map<RuleInProgress, NapaChartNode> workSetCopy = new LinkedHashMap<>();
         final Map<RuleInProgress, NapaChartNode> shiftCandidates = new HashMap<>();
@@ -216,6 +216,26 @@ public class Parser {
         }
     }
 
+    @Override
+    public List<NapaRule> getNapaRules(int target) {
+        return napaRules.get(target);
+    }
+
+    @Override
+    public int findNonTerminalByName(String name) {
+        for (int i = 0; i < nonTerminals.length; i++) {
+            if (nonTerminals[i].equals(name)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    @Override
+    public String nonTerminalName(int tag) {
+        return nonTerminals[tag];
+    }
+
     int countChartNodes(Collection<NapaChartNode> start) {
         Set<NapaChartNode> toSearch = new HashSet<>(start);
         Set<NapaChartNode> result = new HashSet<>();
@@ -303,13 +323,5 @@ public class Parser {
                     "\nparseTime=" + parseTime;
         }
     }
-
-
-
-
-
-
-
-
 }
 

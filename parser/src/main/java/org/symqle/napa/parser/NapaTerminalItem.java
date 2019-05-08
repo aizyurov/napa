@@ -57,7 +57,7 @@ public class NapaTerminalItem implements NapaRuleItem {
     }
 
     @Override
-    public List<List<NapaRuleItem>> predict(final Token<TokenProperties> lookAhead, final CompiledGrammar grammar) {
+    public List<List<NapaRuleItem>> predict(final Token<TokenProperties> lookAhead, final Grammar grammar) {
         return Collections.emptyList();
     }
 

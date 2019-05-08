@@ -3,7 +3,6 @@ package org.symqle.napa.grammar;
 import junit.framework.Assert;
 import junit.framework.TestCase;
 import org.symqle.napa.compiler.grammar.NapaCompiler;
-import org.symqle.napa.parser.CompiledGrammar;
 import org.symqle.napa.parser.GrammarException;
 import org.symqle.napa.parser.Parser;
 import org.symqle.napa.parser.SyntaxTree;

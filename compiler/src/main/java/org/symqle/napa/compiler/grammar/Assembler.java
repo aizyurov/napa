@@ -1,9 +1,6 @@
 package org.symqle.napa.compiler.grammar;
 
-import org.symqle.napa.parser.CompiledGrammar;
-import org.symqle.napa.parser.GrammarException;
-import org.symqle.napa.parser.NapaRule;
-import org.symqle.napa.parser.TokenProperties;
+import org.symqle.napa.parser.*;
 import org.symqle.napa.tokenizer.PackedDfa;
 
 import java.util.*;
@@ -28,7 +25,7 @@ class Assembler implements Vocabulary {
         this.rules = rules;
     }
 
-    public CompiledGrammar assemble() {
+    public Parser assemble() {
         Map<Integer, List<CompiledRule>> ruleMap = rules.stream().collect(Collectors.groupingBy(CompiledRule::getTarget));
         Set<RuleItem> allItems = new HashSet<>();
         for (CompiledRule rule: rules) {
@@ -52,7 +49,7 @@ class Assembler implements Vocabulary {
             nonTerminalMap.put(nonTerminals[i], i);
         }
 
-        return new CompiledGrammar(rules.stream().map(x -> x.toNapaRule(this)).collect(Collectors.groupingBy(NapaRule::getTarget)), tokenizerDfa, nonTerminals);
+        return new Parser(rules.stream().map(x -> x.toNapaRule(this)).collect(Collectors.groupingBy(NapaRule::getTarget)), tokenizerDfa, nonTerminals);
     }
 
     private void addItems(Set<RuleItem> allITems, List<RuleItem> items) {

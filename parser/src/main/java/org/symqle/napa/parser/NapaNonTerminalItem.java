@@ -3,7 +3,6 @@ package org.symqle.napa.parser;
 import org.symqle.napa.tokenizer.Token;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * @author lvovich
@@ -63,7 +62,7 @@ public class NapaNonTerminalItem implements NapaRuleItem {
     }
 
     @Override
-    public List<List<NapaRuleItem>> predict(final Token<TokenProperties> lookAhead, final CompiledGrammar grammar) {
+    public List<List<NapaRuleItem>> predict(final Token<TokenProperties> lookAhead, final Grammar grammar) {
         if (lookAhead.getType() != null && lookAhead.getType().matches(first) || hasEmptyDerivation) {
             final List<NapaRule> napaRules = grammar.getNapaRules(value);
             final int size = napaRules.size();
