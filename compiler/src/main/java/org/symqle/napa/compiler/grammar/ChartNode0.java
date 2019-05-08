@@ -1,4 +1,4 @@
-package org.symqle.napa.gparser;
+package org.symqle.napa.compiler.grammar;
 
 import org.symqle.napa.parser.GrammarException;
 import org.symqle.napa.parser.TokenProperties;

@@ -15,7 +15,7 @@ public class PackedDfa<T> {
     private final int[] characterClasses;
     // length = nodeCount * classCount. index = node * classCount + class
     private final int[] edges;
-    // length = nodeCount. Each position contains token types if this is a final state, empty set if not final state
+    // length = nodeCount. Each position contains token type if this is a final state, null if not final state
     private final List<T> tokenTypes;
 
     public PackedDfa(final int characterClassCount, final int[] characterClasses, final int[] edges, List<T> tokenTypes) {

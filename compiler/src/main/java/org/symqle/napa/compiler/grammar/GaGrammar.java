@@ -3,7 +3,6 @@ package org.symqle.napa.compiler.grammar;
 import org.symqle.napa.compiler.lexis.GaLexer;
 import org.symqle.napa.compiler.lexis.GaTokenType;
 import org.symqle.napa.compiler.lexis.GaTokenizer;
-import org.symqle.napa.gparser.*;
 import org.symqle.napa.lexer.TokenDefinition;
 import org.symqle.napa.lexer.build.Lexer;
 import org.symqle.napa.parser.*;
@@ -165,6 +164,9 @@ public class GaGrammar {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("\"");
         for (SyntaxTree fragment: expression.getChildren()) {
+            if (fragment.getName().equals("PLUS")) {
+                continue;
+            }
             SyntaxTree child = fragment.getChildren().get(0);
             if (child.getName().equals("STRING")) {
                 stringBuilder.append(normalize(child.getValue()));
@@ -294,21 +296,6 @@ public class GaGrammar {
                 + nextToken.getType()
                 + "(" + nextToken.getText() + ") at "
                 + nextToken.getLine() + ":" +nextToken.getPos());
-    }
-
-    private IgnoreStatement ignoreStatement() throws IOException {
-        List<String> ignoredPatterns = new ArrayList<>();
-        nextToken = tokenizer.nextToken();
-        while (nextToken != null && nextToken.getType() == GaTokenType.STRING) {
-            ignoredPatterns.add(nextToken.getText());
-            nextToken = tokenizer.nextToken();
-        }
-
-        if (nextToken == null || nextToken.getType() != GaTokenType.SEMICOLON) {
-            throw unexpectedTokenException();
-        }
-        nextToken = tokenizer.nextToken();
-        return new IgnoreStatement(ignoredPatterns);
     }
 
     private RawSyntaxNode choice() throws IOException {

@@ -1,7 +1,7 @@
-package org.symqle.napa.gparser;
+package org.symqle.napa.compiler.grammar;
 
+import org.symqle.napa.parser.NapaChoiceItem;
 import org.symqle.napa.parser.NapaRuleItem;
-import org.symqle.napa.parser.NapaZeroOrMoreItem;
 import org.symqle.napa.parser.RuleItemType;
 
 import java.util.ArrayList;
@@ -12,11 +12,11 @@ import java.util.stream.Collectors;
 /**
  * @author lvovich
  */
-public class ZeroOrMoreItem implements RuleItem {
+public class ChoiceItem implements RuleItem {
 
     private final List<List<RuleItem>> options;
 
-    public ZeroOrMoreItem(final List<List<RuleItem>> options) {
+    public ChoiceItem(final List<List<RuleItem>> options) {
         this.options = options;
     }
 
@@ -33,11 +33,8 @@ public class ZeroOrMoreItem implements RuleItem {
     @Override
     public List<List<RuleItem>> expand() {
         List<List<RuleItem>> expansion = new ArrayList<>();
-        expansion.add(Collections.emptyList()); // zero
         for (List<RuleItem> option: options) {
-            ArrayList<RuleItem> sequence = new ArrayList<>(option);
-            sequence.add(this);
-            expansion.add(sequence);
+            expansion.add(Collections.unmodifiableList(option));
         }
         return expansion;
     }
@@ -45,7 +42,7 @@ public class ZeroOrMoreItem implements RuleItem {
     @Override
     public String toString(Vocabulary grammar) {
         StringBuilder builder = new StringBuilder();
-        builder.append("{");
+        builder.append("(");
         for (int i = 0; i < options.size(); i++) {
             if (i != 0) {
                 builder.append(" |");
@@ -54,7 +51,7 @@ public class ZeroOrMoreItem implements RuleItem {
                 builder.append(" ").append(item.toString(grammar));
             }
         }
-        builder.append("}");
+        builder.append(")");
         return builder.toString();
     }
 
@@ -64,7 +61,7 @@ public class ZeroOrMoreItem implements RuleItem {
         for (List<RuleItem> items: options) {
             napaOptions.add(items.stream().map(x -> x.toNapaRuleItem(grammar)).collect(Collectors.toList()));
         }
-        return new NapaZeroOrMoreItem(napaOptions, grammar.hasEmptyDerivation(this), grammar.getFirstSet(this));
+        return new NapaChoiceItem(napaOptions, grammar.hasEmptyDerivation(this), grammar.getFirstSet(this));
     }
 
     @Override
@@ -72,7 +69,7 @@ public class ZeroOrMoreItem implements RuleItem {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        final ZeroOrMoreItem that = (ZeroOrMoreItem) o;
+        final ChoiceItem that = (ChoiceItem) o;
 
         return options.equals(that.options);
 
@@ -88,5 +85,4 @@ public class ZeroOrMoreItem implements RuleItem {
     }
 
     private int hash;
-
 }

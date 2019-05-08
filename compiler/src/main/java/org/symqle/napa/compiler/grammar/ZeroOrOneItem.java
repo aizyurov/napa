@@ -1,4 +1,4 @@
-package org.symqle.napa.gparser;
+package org.symqle.napa.compiler.grammar;
 
 import org.symqle.napa.parser.NapaRuleItem;
 import org.symqle.napa.parser.NapaZeroOrOneItem;
