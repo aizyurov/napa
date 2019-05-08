@@ -22,12 +22,12 @@ import java.util.stream.Collectors;
 /**
  * @author lvovich
  */
-public class GaGrammar {
+public class NapaCompiler {
 
     private Token<GaTokenType> nextToken;
     private Tokenizer<GaTokenType> tokenizer;
 
-    public CompiledGrammar compile(Reader source) throws IOException {
+    public Parser compile(Reader source) throws IOException {
         final long beforeStart = System.currentTimeMillis();
         try {
             RawSyntaxNode rawSyntaxNode = parse(source);
@@ -110,7 +110,8 @@ public class GaGrammar {
             });
             napaDfa.printStats();
             System.out.println("Lexer time: "  + (System.currentTimeMillis() - beforeLexer));
-            return new Assembler(dictionary.nonTerminals(), terminals, compiledRules, napaDfa).assemble();
+            CompiledGrammar compiledGrammar = new Assembler(dictionary.nonTerminals(), compiledRules, napaDfa).assemble();
+            return new Parser(compiledGrammar);
         } finally {
             System.err.println("Grammar compiled in " + (System.currentTimeMillis() - beforeStart));
         }

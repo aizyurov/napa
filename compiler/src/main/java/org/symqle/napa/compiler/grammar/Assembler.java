@@ -13,19 +13,17 @@ import java.util.stream.Collectors;
 /**
  * @author lvovich
  */
-public class Assembler implements Vocabulary {
+class Assembler implements Vocabulary {
 
     private final String[] nonTerminals;
-    private final String[] terminals;
     private final List<CompiledRule> rules;
     private final PackedDfa<TokenProperties> tokenizerDfa;
     private final Map<RuleItem, Set<Integer>> firstSets = new HashMap<>();
     private final Set<RuleItem> haveEmptyDerivation = new HashSet<>();
 
-    public Assembler(final String[] nonTerminals, final String[] terminals, List<CompiledRule> rules, final PackedDfa<TokenProperties> tokenizerDfa) {
+    Assembler(final String[] nonTerminals, List<CompiledRule> rules, final PackedDfa<TokenProperties> tokenizerDfa) {
         verify(nonTerminals, rules.stream().map(CompiledRule::getTarget).collect(Collectors.toSet()));
         this.nonTerminals = nonTerminals;
-        this.terminals = terminals;
         this.tokenizerDfa = tokenizerDfa;
         this.rules = rules;
     }
@@ -172,12 +170,6 @@ public class Assembler implements Vocabulary {
         }
     }
 
-
-
-    @Override
-    public String getTerminalName(int index) {
-        return terminals[index];
-    }
 
     @Override
     public String getNonTerminalName(int index) {
