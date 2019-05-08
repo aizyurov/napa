@@ -1,6 +1,7 @@
 package org.symqle.napa.grammar.javalang;
 
-import org.symqle.napa.compiler.grammar.GaGrammar;
+import org.symqle.napa.compiler.grammar.NapaCompiler;
+import org.symqle.napa.parser.CompiledGrammar;
 import org.symqle.napa.parser.Parser;
 
 import java.io.IOException;
@@ -11,18 +12,18 @@ import java.io.InputStreamReader;
  */
 public class JavaGrammar {
 
-    private static Parser parser = createParser();
+    private static CompiledGrammar grammar = compile();
 
-    public static Parser createParser() {
+    private static CompiledGrammar compile() {
         try {
-            return new Parser(new GaGrammar().compile(new InputStreamReader(JavaGrammar.class.getClassLoader().getResourceAsStream("java.napa"), "UTF-8")));
+            return new NapaCompiler().compile(new InputStreamReader(JavaGrammar.class.getClassLoader().getResourceAsStream("java.napa"), "UTF-8"));
         } catch (IOException e) {
             e.printStackTrace();
             throw new IllegalArgumentException("Invalid java grammar");
         }
     }
 
-    public static Parser getParser() {
-        return parser;
+    public static CompiledGrammar getGrammar() {
+        return grammar;
     }
 }

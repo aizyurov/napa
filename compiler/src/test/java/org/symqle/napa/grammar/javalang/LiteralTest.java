@@ -2,6 +2,7 @@ package org.symqle.napa.grammar.javalang;
 
 import junit.framework.Assert;
 import junit.framework.TestCase;
+import org.symqle.napa.parser.CompiledGrammar;
 import org.symqle.napa.parser.Parser;
 import org.symqle.napa.parser.SyntaxTree;
 
@@ -14,10 +15,10 @@ import java.util.List;
  */
 public class LiteralTest extends TestCase {
     
-    private final Parser g;
+    private final CompiledGrammar g;
 
     public LiteralTest() throws IOException {
-        g = JavaGrammar.getParser();
+        g = JavaGrammar.getGrammar();
     }
 
     public void testInteger() throws Exception {
@@ -75,7 +76,7 @@ public class LiteralTest extends TestCase {
     }
 
     private void runTest(final String source) throws IOException {
-        List<SyntaxTree> forest = g.parse("Literal", new StringReader(source));
+        List<SyntaxTree> forest = new Parser().parse(g, "Literal", new StringReader(source));
         Assert.assertEquals(1, forest.size());
         SyntaxTree tree = forest.iterator().next();
         Assert.assertEquals(source, tree.getValue());

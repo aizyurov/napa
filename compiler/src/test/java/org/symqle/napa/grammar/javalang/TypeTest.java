@@ -2,6 +2,7 @@ package org.symqle.napa.grammar.javalang;
 
 import junit.framework.Assert;
 import junit.framework.TestCase;
+import org.symqle.napa.parser.CompiledGrammar;
 import org.symqle.napa.parser.Parser;
 import org.symqle.napa.parser.SyntaxTree;
 
@@ -14,10 +15,10 @@ import java.util.List;
  */
 public class TypeTest extends TestCase {
 
-    private final Parser g;
+    private final CompiledGrammar g;
 
-    public TypeTest() throws IOException {
-        g = JavaGrammar.getParser();
+    public TypeTest() {
+        g = JavaGrammar.getGrammar();
     }
 
     public void testPrimitive() throws Exception {
@@ -32,7 +33,7 @@ public class TypeTest extends TestCase {
 
     public void testAnnotatedPrimitive() throws Exception {
         String source = "@Transient int";
-        List<SyntaxTree> forest = g.parse("PrimitiveType", new StringReader(source));
+        List<SyntaxTree> forest = new Parser().parse(g, "PrimitiveType", new StringReader(source));
         Assert.assertEquals(1, forest.size());
         SyntaxTree tree = forest.iterator().next();
         Assert.assertEquals("PrimitiveType", tree.getName());
@@ -83,7 +84,7 @@ public class TypeTest extends TestCase {
 
 
     private void runTest(final String source, final String expected) throws IOException {
-        List<SyntaxTree> forest = g.parse(expected, new StringReader(source));
+        List<SyntaxTree> forest = new Parser().parse(g, expected, new StringReader(source));
         Assert.assertEquals(1, forest.size());
         SyntaxTree tree = forest.iterator().next();
         Assert.assertEquals(source, tree.getSource());

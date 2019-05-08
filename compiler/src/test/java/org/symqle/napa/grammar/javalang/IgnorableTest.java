@@ -2,6 +2,7 @@ package org.symqle.napa.grammar.javalang;
 
 import junit.framework.Assert;
 import junit.framework.TestCase;
+import org.symqle.napa.parser.CompiledGrammar;
 import org.symqle.napa.parser.GrammarException;
 import org.symqle.napa.parser.Parser;
 import org.symqle.napa.parser.SyntaxTree;
@@ -15,10 +16,10 @@ import java.util.List;
  */
 public class IgnorableTest extends TestCase {
 
-    private final Parser g;
+    private final CompiledGrammar g;
 
     public IgnorableTest() throws IOException {
-        g = JavaGrammar.getParser();
+        g = JavaGrammar.getGrammar();
     }
 
     public void testWhitespace() throws Exception {
@@ -51,7 +52,7 @@ public class IgnorableTest extends TestCase {
 
     private void runTest(final String preface, String source) throws IOException {
 
-        List<SyntaxTree> forest = g.parse("Literal", new StringReader(preface + source));
+        List<SyntaxTree> forest = new Parser().parse(g,  "Literal", new StringReader(preface + source));
         Assert.assertEquals(1, forest.size());
         SyntaxTree tree = forest.iterator().next();
         Assert.assertEquals(source, tree.getValue());

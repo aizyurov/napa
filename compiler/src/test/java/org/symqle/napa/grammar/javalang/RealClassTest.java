@@ -2,6 +2,7 @@ package org.symqle.napa.grammar.javalang;
 
 import junit.framework.Assert;
 import junit.framework.TestCase;
+import org.symqle.napa.parser.CompiledGrammar;
 import org.symqle.napa.parser.Parser;
 import org.symqle.napa.parser.SyntaxTree;
 
@@ -15,35 +16,36 @@ import java.util.List;
  * Created by aizyurov on 10/28/17.
  */
 public class RealClassTest extends TestCase {
-    private final Parser g;
+    private final CompiledGrammar g;
 
     public RealClassTest() {
-        g = JavaGrammar.getParser();
+        g = JavaGrammar.getGrammar();
     }
 
     public void testAll() throws Exception {
-        List<SyntaxTree> forest = g.parse("CompilationUnit", new InputStreamReader(getClass().getClassLoader().getResourceAsStream("sample.txt")));
+        List<SyntaxTree> forest = new Parser().parse(g, "CompilationUnit", new InputStreamReader(getClass().getClassLoader().getResourceAsStream("sample.txt")));
         Assert.assertEquals(1, forest.size());
     }
 
 
     public void testEDS() throws Exception {
+        Parser parser = new Parser();
         System.out.println("=== Benchmark ===");
         for (int i=0; i< 50; i++)
         {
             final long startTs = System.currentTimeMillis();
-            List<SyntaxTree> forest = g.parse("CompilationUnit", new InputStreamReader(new BufferedInputStream(getClass().getClassLoader().getResourceAsStream("EnvironmentDeploymentService.txt"))));
+            List<SyntaxTree> forest = parser.parse(g, "CompilationUnit", new InputStreamReader(new BufferedInputStream(getClass().getClassLoader().getResourceAsStream("EnvironmentDeploymentService.txt"))));
             Assert.assertEquals(1, forest.size());
             System.out.println(System.currentTimeMillis() -startTs);
         }
-        System.out.println(g.stats());
+        System.out.println(parser.stats());
         System.out.println("=== Benchmark end ===");
         {
-            List<SyntaxTree> forest = this.g.parse("CompilationUnit", new InputStreamReader(new BufferedInputStream(getClass().getClassLoader().getResourceAsStream("EnvironmentDeploymentService.txt"))));
+            List<SyntaxTree> forest = parser.parse(g, "CompilationUnit", new InputStreamReader(new BufferedInputStream(getClass().getClassLoader().getResourceAsStream("EnvironmentDeploymentService.txt"))));
             Assert.assertEquals(1, forest.size());
             SyntaxTree tree = forest.get(0);
             System.out.println("Tree size: " + tree.treeSize());
-            System.out.println(this.g.stats());
+            System.out.println(parser.stats());
 
 
             tree.print(new FileOutputStream("lexer2.tree"));
@@ -52,43 +54,43 @@ public class RealClassTest extends TestCase {
     }
 
     public void testAbstractList() throws Exception {
-        List<SyntaxTree> forest = g.parse("CompilationUnit", new InputStreamReader(new BufferedInputStream(getClass().getClassLoader().getResourceAsStream("AbstractList.j8"))));
+        Parser parser = new Parser();
+        List<SyntaxTree> forest = parser.parse(g, "CompilationUnit", new InputStreamReader(new BufferedInputStream(getClass().getClassLoader().getResourceAsStream("AbstractList.j8"))));
         Assert.assertEquals(1, forest.size());
         SyntaxTree tree = forest.get(0);
         System.out.println("Tree size: " + tree.treeSize());
-        System.out.println(g.stats());
+        System.out.println(parser.stats());
 
     }
 
     public void testHashMap() throws Exception {
-        List<SyntaxTree> forest = g.parse("CompilationUnit", new InputStreamReader(new BufferedInputStream(getClass().getClassLoader().getResourceAsStream("HashMap.j8"))));
+        Parser parser = new Parser();
+        List<SyntaxTree> forest = parser.parse(g, "CompilationUnit", new InputStreamReader(new BufferedInputStream(getClass().getClassLoader().getResourceAsStream("HashMap.j8"))));
         Assert.assertEquals(1, forest.size());
         SyntaxTree tree = forest.get(0);
         System.out.println("Tree size: " + tree.treeSize());
-        System.out.println(g.stats());
+        System.out.println(parser.stats());
 
     }
 
     public void testConcurrentHashMap() throws Exception {
-        List<SyntaxTree> forest = g.parse("CompilationUnit", new InputStreamReader(new BufferedInputStream(getClass().getClassLoader().getResourceAsStream("ConcurrentHashMap.j8"))));
+        Parser parser = new Parser();
+        List<SyntaxTree> forest = parser.parse(g, "CompilationUnit", new InputStreamReader(new BufferedInputStream(getClass().getClassLoader().getResourceAsStream("ConcurrentHashMap.j8"))));
         Assert.assertEquals(1, forest.size());
         SyntaxTree tree = forest.get(0);
         System.out.println("Tree size: " + tree.treeSize());
-        System.out.println(g.stats());
+        System.out.println(parser.stats());
 
     }
 
     public void testManyStringsConcat() throws Exception {
+        Parser parser = new Parser();
         {
-            List<SyntaxTree> forest = g.parse("CompilationUnit", new InputStreamReader(new BufferedInputStream(getClass().getClassLoader().getResourceAsStream("ManyStringsConcat.txt"))));
+            List<SyntaxTree> forest = parser.parse(g, "CompilationUnit", new InputStreamReader(new BufferedInputStream(getClass().getClassLoader().getResourceAsStream("ManyStringsConcat.txt"))));
             Assert.assertEquals(1, forest.size());
-            System.out.println(g.stats());
+            System.out.println(parser.stats());
         }
     }
 
-
-    private BufferedReader reader() {
-        return new BufferedReader(new InputStreamReader(getClass().getClassLoader().getResourceAsStream("EnvironmentDeploymentService.txt")));
-    }
 
 }

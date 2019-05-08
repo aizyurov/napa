@@ -2,6 +2,7 @@ package org.symqle.napa.grammar.javalang;
 
 import junit.framework.Assert;
 import junit.framework.TestCase;
+import org.symqle.napa.parser.CompiledGrammar;
 import org.symqle.napa.parser.Parser;
 import org.symqle.napa.parser.PrintingSyntaxErrorListener;
 import org.symqle.napa.parser.SyntaxTree;
@@ -17,10 +18,10 @@ import java.util.stream.Collectors;
  * Created by aizyurov on 10/28/17.
  */
 public class FieldDeclarationTest extends TestCase {
-    private final Parser g;
+    private final CompiledGrammar g;
 
     public FieldDeclarationTest() {
-        g = JavaGrammar.getParser();
+        g = JavaGrammar.getGrammar();
     }
 
     public void testSimple() throws Exception {
@@ -69,7 +70,7 @@ public class FieldDeclarationTest extends TestCase {
     }
 
     public void testMissingComma() throws Exception {
-        List<SyntaxTree> forest = g.parse("FieldDeclaration", new StringReader("private static final String s1 s2;"), null, new PrintingSyntaxErrorListener(System.err));
+        List<SyntaxTree> forest = new Parser().parse(g, "FieldDeclaration", new StringReader("private static final String s1 s2;"), null, new PrintingSyntaxErrorListener(System.err));
         Assert.assertEquals(1, forest.size());
         SyntaxTree tree = forest.iterator().next();
         Assert.assertEquals("private static final String s1 s2;", tree.getSource());
@@ -97,7 +98,7 @@ public class FieldDeclarationTest extends TestCase {
     }
 
     private SyntaxTree parse(final String source) throws IOException {
-        List<SyntaxTree> forest = g.parse("FieldDeclaration", new StringReader(source));
+        List<SyntaxTree> forest = new Parser().parse(g, "FieldDeclaration", new StringReader(source));
         Assert.assertEquals(1, forest.size());
         SyntaxTree tree = forest.iterator().next();
         Assert.assertEquals(source, tree.getSource());

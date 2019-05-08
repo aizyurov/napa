@@ -2,6 +2,7 @@ package org.symqle.napa.grammar.javalang;
 
 import junit.framework.Assert;
 import junit.framework.TestCase;
+import org.symqle.napa.parser.CompiledGrammar;
 import org.symqle.napa.parser.Parser;
 import org.symqle.napa.parser.SyntaxTree;
 
@@ -16,15 +17,15 @@ import java.util.stream.Collectors;
  */
 public class ImportTest extends TestCase {
 
-    private final Parser g;
+    private final CompiledGrammar g;
 
     public ImportTest() throws IOException {
-        g = JavaGrammar.getParser();
+        g = JavaGrammar.getGrammar();
     }
 
     public void testSingleClass() throws Exception {
         final String source = "import java.util.stream.Collectors;";
-        List<SyntaxTree> forest = g.parse("ImportDeclaration", new StringReader(source));
+        List<SyntaxTree> forest = new Parser().parse(g, "ImportDeclaration", new StringReader(source));
         Assert.assertEquals(1, forest.size());
         SyntaxTree tree = forest.iterator().next();
         Assert.assertEquals(source, tree.getSource());
@@ -41,7 +42,7 @@ public class ImportTest extends TestCase {
     public void testOnDemandType() throws Exception {
         final String source = "import java.util.stream.*;";
         System.out.println("Before parse");
-        List<SyntaxTree> forest = g.parse("ImportDeclaration", new StringReader(source));
+        List<SyntaxTree> forest = new Parser().parse(g, "ImportDeclaration", new StringReader(source));
         System.out.println("After parse");
         Assert.assertEquals(1, forest.size());
         SyntaxTree tree = forest.iterator().next();
@@ -58,7 +59,7 @@ public class ImportTest extends TestCase {
 
     public void testSingleStatic() throws Exception {
         final String source = "import static java.util.stream.Collectors.toMap;";
-        List<SyntaxTree> forest = g.parse("ImportDeclaration", new StringReader(source));
+        List<SyntaxTree> forest = new Parser().parse(g, "ImportDeclaration", new StringReader(source));
         Assert.assertEquals(1, forest.size());
         SyntaxTree tree = forest.iterator().next();
         Assert.assertEquals(source, tree.getSource());
@@ -76,7 +77,7 @@ public class ImportTest extends TestCase {
 
     public void testStaticOnDemand() throws Exception {
         final String source = "import static java.util.stream.Collectors.*;";
-        List<SyntaxTree> forest = g.parse("ImportDeclaration", new StringReader(source));
+        List<SyntaxTree> forest = new Parser().parse(g, "ImportDeclaration", new StringReader(source));
         Assert.assertEquals(1, forest.size());
         SyntaxTree tree = forest.iterator().next();
         Assert.assertEquals(source, tree.getSource());
